@@ -3,17 +3,12 @@
     <el-form ref="loginRef" :model="loginForm" :rules="loginRules" class="login-form">
       <div class="title-box">
         <h3 class="title">{{ title }}</h3>
-        <lang-select />
       </div>
-      <el-form-item v-if="tenantEnabled" prop="tenantId">
-        <el-select v-model="loginForm.tenantId" filterable :placeholder="proxy.$t('login.selectPlaceholder')" style="width: 100%">
-          <el-option v-for="item in tenantList" :key="item.tenantId" :label="item.companyName" :value="item.tenantId"></el-option>
-          <template #prefix><svg-icon icon-class="company" class="el-input__icon input-icon" /></template>
-        </el-select>
-      </el-form-item>
       <el-form-item prop="username">
         <el-input v-model="loginForm.username" type="text" size="large" auto-complete="off" :placeholder="proxy.$t('login.username')">
-          <template #prefix><svg-icon icon-class="user" class="el-input__icon input-icon" /></template>
+          <template #prefix>
+            <svg-icon icon-class="user" class="el-input__icon input-icon" />
+          </template>
         </el-input>
       </el-form-item>
       <el-form-item prop="password">
@@ -25,7 +20,9 @@
           :placeholder="proxy.$t('login.password')"
           @keyup.enter="handleLogin"
         >
-          <template #prefix><svg-icon icon-class="password" class="el-input__icon input-icon" /></template>
+          <template #prefix>
+            <svg-icon icon-class="password" class="el-input__icon input-icon" />
+          </template>
         </el-input>
       </el-form-item>
       <el-form-item v-if="captchaEnabled" prop="code">
@@ -37,7 +34,9 @@
           style="width: 63%"
           @keyup.enter="handleLogin"
         >
-          <template #prefix><svg-icon icon-class="validCode" class="el-input__icon input-icon" /></template>
+          <template #prefix>
+            <svg-icon icon-class="validCode" class="el-input__icon input-icon" />
+          </template>
         </el-input>
         <div class="login-code">
           <img :src="codeUrl" class="login-code-img" @click="getCode" />
@@ -47,18 +46,6 @@
       <el-form-item style="float: right">
         <el-button circle :title="proxy.$t('login.social.wechat')" @click="doSocialLogin('wechat')">
           <svg-icon icon-class="wechat" />
-        </el-button>
-        <el-button circle :title="proxy.$t('login.social.maxkey')" @click="doSocialLogin('maxkey')">
-          <svg-icon icon-class="maxkey" />
-        </el-button>
-        <el-button circle :title="proxy.$t('login.social.topiam')" @click="doSocialLogin('topiam')">
-          <svg-icon icon-class="topiam" />
-        </el-button>
-        <el-button circle :title="proxy.$t('login.social.gitee')" @click="doSocialLogin('gitee')">
-          <svg-icon icon-class="gitee" />
-        </el-button>
-        <el-button circle :title="proxy.$t('login.social.github')" @click="doSocialLogin('github')">
-          <svg-icon icon-class="github" />
         </el-button>
       </el-form-item>
       <el-form-item style="width: 100%">
@@ -71,18 +58,14 @@
         </div>
       </el-form-item>
     </el-form>
-    <!--  底部  -->
-    <div class="el-login-footer">
-      <span>Copyright © 2018-2025 疯狂的狮子Li All Rights Reserved.</span>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { getCodeImg, getTenantList } from '@/api/login';
+import { getCodeImg } from '@/api/login';
 import { authBinding } from '@/api/system/social/auth';
 import { useUserStore } from '@/store/modules/user';
-import { LoginData, TenantVO } from '@/api/types';
+import { LoginData } from '@/api/types';
 import { to } from 'await-to-js';
 import { HttpStatus } from '@/enums/RespEnum';
 import { useI18n } from 'vue-i18n';
@@ -95,7 +78,6 @@ const router = useRouter();
 const { t } = useI18n();
 
 const loginForm = ref<LoginData>({
-  tenantId: '000000',
   username: 'admin',
   password: 'admin123',
   rememberMe: false,
@@ -104,7 +86,6 @@ const loginForm = ref<LoginData>({
 } as LoginData);
 
 const loginRules: ElFormRules = {
-  tenantId: [{ required: true, trigger: 'blur', message: t('login.rule.tenantId.required') }],
   username: [{ required: true, trigger: 'blur', message: t('login.rule.username.required') }],
   password: [{ required: true, trigger: 'blur', message: t('login.rule.password.required') }],
   code: [{ required: true, trigger: 'change', message: t('login.rule.code.required') }]
@@ -114,15 +95,10 @@ const codeUrl = ref('');
 const loading = ref(false);
 // 验证码开关
 const captchaEnabled = ref(true);
-// 租户开关
-const tenantEnabled = ref(true);
-
 // 注册开关
-const register = ref(false);
+const register = ref(true);
 const redirect = ref('/');
 const loginRef = ref<ElFormInstance>();
-// 租户列表
-const tenantList = ref<TenantVO[]>([]);
 
 watch(
   () => router.currentRoute.value,
@@ -138,13 +114,11 @@ const handleLogin = () => {
       loading.value = true;
       // 勾选了需要记住密码设置在 localStorage 中设置记住用户名和密码
       if (loginForm.value.rememberMe) {
-        localStorage.setItem('tenantId', String(loginForm.value.tenantId));
         localStorage.setItem('username', String(loginForm.value.username));
         localStorage.setItem('password', String(loginForm.value.password));
         localStorage.setItem('rememberMe', String(loginForm.value.rememberMe));
       } else {
         // 否则移除
-        localStorage.removeItem('tenantId');
         localStorage.removeItem('username');
         localStorage.removeItem('password');
         localStorage.removeItem('rememberMe');
@@ -182,12 +156,10 @@ const getCode = async () => {
 };
 
 const getLoginData = () => {
-  const tenantId = localStorage.getItem('tenantId');
   const username = localStorage.getItem('username');
   const password = localStorage.getItem('password');
   const rememberMe = localStorage.getItem('rememberMe');
   loginForm.value = {
-    tenantId: tenantId === null ? String(loginForm.value.tenantId) : tenantId,
     username: username === null ? String(loginForm.value.username) : username,
     password: password === null ? String(loginForm.value.password) : String(password),
     rememberMe: rememberMe === null ? false : Boolean(rememberMe)
@@ -195,25 +167,11 @@ const getLoginData = () => {
 };
 
 /**
- * 获取租户列表
- */
-const initTenantList = async () => {
-  const { data } = await getTenantList(false);
-  tenantEnabled.value = data.tenantEnabled === undefined ? true : data.tenantEnabled;
-  if (tenantEnabled.value) {
-    tenantList.value = data.voList;
-    if (tenantList.value != null && tenantList.value.length !== 0) {
-      loginForm.value.tenantId = tenantList.value[0].tenantId;
-    }
-  }
-};
-
-/**
  * 第三方登录
  * @param type
  */
 const doSocialLogin = (type: string) => {
-  authBinding(type, loginForm.value.tenantId).then((res: any) => {
+  authBinding(type).then((res: any) => {
     if (res.code === HttpStatus.SUCCESS) {
       // 获取授权地址跳转
       window.location.href = res.data;
@@ -225,7 +183,6 @@ const doSocialLogin = (type: string) => {
 
 onMounted(() => {
   getCode();
-  initTenantList();
   getLoginData();
 });
 </script>
@@ -236,7 +193,6 @@ onMounted(() => {
   justify-content: center;
   align-items: center;
   height: 100%;
-  background-image: url('../assets/images/login-background.jpg');
   background-size: cover;
 }
 
@@ -244,7 +200,7 @@ onMounted(() => {
   display: flex;
 
   .title {
-    margin: 0px auto 30px auto;
+    margin: 0 auto 30px auto;
     text-align: center;
     color: #707070;
   }
@@ -271,7 +227,7 @@ onMounted(() => {
   .input-icon {
     height: 39px;
     width: 14px;
-    margin-left: 0px;
+    margin-left: 0;
   }
 }
 
