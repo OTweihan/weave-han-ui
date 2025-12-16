@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from 'vite';
 import createPlugins from './vite/plugins';
+import tailwindcss from '@tailwindcss/vite';
 import autoprefixer from 'autoprefixer'; // css自动添加兼容性前缀
 import path from 'path';
 
@@ -17,7 +18,7 @@ export default defineConfig(({ mode, command }) => {
       extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.vue']
     },
     // https://cn.vitejs.dev/config/#resolve-extensions
-    plugins: createPlugins(env, command === 'build'),
+    plugins: [createPlugins(env, command === 'build'), tailwindcss()],
     server: {
       host: '0.0.0.0',
       port: Number(env.VITE_APP_PORT),
