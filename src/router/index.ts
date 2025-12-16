@@ -64,14 +64,24 @@ export const constantRoutes: RouteRecordRaw[] = [
   },
   {
     path: '',
+    redirect: '/main'
+  },
+  {
+    path: '/main',
+    component: () => import('@/views/main.vue'),
+    name: 'Main',
+    hidden: true
+  },
+  {
+    path: '/index',
     component: Layout,
-    redirect: '/index',
+    redirect: '/index/home',
     children: [
       {
-        path: '/index',
+        path: 'home',
         component: () => import('@/views/index.vue'),
         name: 'Index',
-        meta: { title: '首页', icon: 'dashboard', affix: true }
+        meta: { title: '个人中心', icon: 'dashboard', affix: true }
       }
     ]
   },
@@ -92,9 +102,7 @@ export const constantRoutes: RouteRecordRaw[] = [
 ];
 
 // 动态路由，基于用户权限动态去加载
-export const dynamicRoutes: RouteRecordRaw[] = [
-
-];
+export const dynamicRoutes: RouteRecordRaw[] = [];
 
 /**
  * 创建路由
