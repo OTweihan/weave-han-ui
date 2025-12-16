@@ -1,63 +1,103 @@
 <template>
-  <div class="login">
-    <el-form ref="loginRef" :model="loginForm" :rules="loginRules" class="login-form">
-      <div class="title-box">
-        <h3 class="title">{{ title }}</h3>
+  <div class="relative flex min-h-screen flex-col justify-center items-center bg-gray-50 px-4 sm:px-6 lg:px-8">
+    <div class="w-full max-w-md space-y-8 flex flex-col items-center">
+      <div class="text-center">
+        <h1 class="text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+          {{ title }}
+        </h1>
       </div>
-      <el-form-item prop="username">
-        <el-input v-model="loginForm.username" type="text" size="large" auto-complete="off" :placeholder="proxy.$t('login.username')">
-          <template #prefix>
-            <svg-icon icon-class="user" class="el-input__icon input-icon" />
-          </template>
-        </el-input>
-      </el-form-item>
-      <el-form-item prop="password">
-        <el-input
-          v-model="loginForm.password"
-          type="password"
-          size="large"
-          auto-complete="off"
-          :placeholder="proxy.$t('login.password')"
-          @keyup.enter="handleLogin"
-        >
-          <template #prefix>
-            <svg-icon icon-class="password" class="el-input__icon input-icon" />
-          </template>
-        </el-input>
-      </el-form-item>
-      <el-form-item v-if="captchaEnabled" prop="code">
-        <el-input
-          v-model="loginForm.code"
-          size="large"
-          auto-complete="off"
-          :placeholder="proxy.$t('login.code')"
-          style="width: 63%"
-          @keyup.enter="handleLogin"
-        >
-          <template #prefix>
-            <svg-icon icon-class="validCode" class="el-input__icon input-icon" />
-          </template>
-        </el-input>
-        <div class="login-code">
-          <img :src="codeUrl" class="login-code-img" @click="getCode" />
+
+      <div class="w-full bg-white rounded-2xl shadow-xl ring-1 ring-gray-900/5 p-8 sm:p-10">
+        <el-form ref="loginRef" :model="loginForm" :rules="loginRules" class="space-y-6">
+          <el-form-item prop="username" class="!mb-5">
+            <div class="font-medium text-gray-700 mb-1.5 text-sm ml-1">{{ proxy.$t('login.username') }}</div>
+            <el-input
+              v-model="loginForm.username"
+              type="text"
+              size="large"
+              auto-complete="off"
+              :placeholder="proxy.$t('login.username')"
+              class="!h-11 login-input"
+            >
+              <template #prefix><svg-icon icon-class="user" class="text-gray-400 text-lg" /></template>
+            </el-input>
+          </el-form-item>
+
+          <el-form-item prop="password" class="!mb-5">
+            <div class="font-medium text-gray-700 mb-1.5 text-sm ml-1">{{ proxy.$t('login.password') }}</div>
+            <el-input
+              v-model="loginForm.password"
+              type="password"
+              size="large"
+              auto-complete="off"
+              :placeholder="proxy.$t('login.password')"
+              @keyup.enter="handleLogin"
+              show-password
+              class="!h-11 login-input"
+            >
+              <template #prefix><svg-icon icon-class="password" class="text-gray-400 text-lg" /></template>
+            </el-input>
+          </el-form-item>
+
+          <el-form-item v-if="captchaEnabled" prop="code" class="!mb-5">
+            <div class="font-medium text-gray-700 mb-1.5 text-sm ml-1">{{ proxy.$t('login.code') }}</div>
+            <div class="flex items-center gap-3 w-full">
+              <el-input
+                v-model="loginForm.code"
+                size="large"
+                auto-complete="off"
+                :placeholder="proxy.$t('login.code')"
+                class="flex-1 !h-11 login-input"
+                @keyup.enter="handleLogin"
+              >
+                <template #prefix><svg-icon icon-class="validCode" class="text-gray-400 text-lg" /></template>
+              </el-input>
+              <div class="w-[110px] h-[44px] overflow-hidden rounded-md border border-gray-200 hover:shadow-sm transition-shadow">
+                <img :src="codeUrl" class="w-full h-full object-cover cursor-pointer" @click="getCode" title="点击切换验证码" />
+              </div>
+            </div>
+          </el-form-item>
+
+          <div class="flex items-center justify-between">
+            <el-checkbox v-model="loginForm.rememberMe" class="!text-gray-600">{{ proxy.$t('login.rememberPassword') }}</el-checkbox>
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-gray-400">其他登录</span>
+              <div
+                class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 hover:bg-green-50 text-gray-400 hover:text-green-600 cursor-pointer transition-colors duration-300 border border-gray-100"
+                :title="proxy.$t('login.social.wechat')"
+                @click="doSocialLogin('wechat')"
+              >
+                <svg-icon icon-class="wechat" class="text-lg" />
+              </div>
+            </div>
+          </div>
+
+          <el-form-item class="!mb-0">
+            <el-button
+              :loading="loading"
+              size="large"
+              type="primary"
+              class="!w-full !h-11 !rounded-lg !text-base !font-semibold !bg-blue-600 hover:!bg-blue-700 !border-none shadow-md hover:shadow-lg transition-all duration-300"
+              @click.prevent="handleLogin"
+            >
+              <span v-if="!loading">{{ proxy.$t('login.login') }}</span>
+              <span v-else>{{ proxy.$t('login.logging') }}</span>
+            </el-button>
+          </el-form-item>
+        </el-form>
+
+        <div class="mt-6 flex items-center justify-between text-sm">
+          <router-link v-if="register" to="/register" class="font-medium text-blue-600 hover:text-blue-500 transition-colors">
+            {{ proxy.$t('login.switchRegisterPage') }}
+          </router-link>
+          <div class="text-gray-400 hover:text-gray-600 cursor-pointer transition-colors" @click="goToMain">返回网站 &rarr;</div>
         </div>
-      </el-form-item>
-      <el-checkbox v-model="loginForm.rememberMe" style="margin: 0 0 25px 0">{{ proxy.$t('login.rememberPassword') }}</el-checkbox>
-      <el-form-item style="float: right">
-        <el-button circle :title="proxy.$t('login.social.wechat')" @click="doSocialLogin('wechat')">
-          <svg-icon icon-class="wechat" />
-        </el-button>
-      </el-form-item>
-      <el-form-item style="width: 100%">
-        <el-button :loading="loading" size="large" type="primary" style="width: 100%" @click.prevent="handleLogin">
-          <span v-if="!loading">{{ proxy.$t('login.login') }}</span>
-          <span v-else>{{ proxy.$t('login.logging') }}</span>
-        </el-button>
-        <div v-if="register" style="float: right">
-          <router-link class="link-type" :to="'/register'">{{ proxy.$t('login.switchRegisterPage') }}</router-link>
-        </div>
-      </el-form-item>
-    </el-form>
+      </div>
+    </div>
+
+    <div class="absolute bottom-6 w-full text-center text-xs text-gray-400">
+      &copy; {{ new Date().getFullYear() }} {{ title }}. All rights reserved.
+    </div>
   </div>
 </template>
 
@@ -93,9 +133,7 @@ const loginRules: ElFormRules = {
 
 const codeUrl = ref('');
 const loading = ref(false);
-// 验证码开关
 const captchaEnabled = ref(true);
-// 注册开关
 const register = ref(true);
 const redirect = ref('/');
 const loginRef = ref<ElFormInstance>();
@@ -112,18 +150,15 @@ const handleLogin = () => {
   loginRef.value?.validate(async (valid: boolean, fields: any) => {
     if (valid) {
       loading.value = true;
-      // 勾选了需要记住密码设置在 localStorage 中设置记住用户名和密码
       if (loginForm.value.rememberMe) {
         localStorage.setItem('username', String(loginForm.value.username));
         localStorage.setItem('password', String(loginForm.value.password));
         localStorage.setItem('rememberMe', String(loginForm.value.rememberMe));
       } else {
-        // 否则移除
         localStorage.removeItem('username');
         localStorage.removeItem('password');
         localStorage.removeItem('rememberMe');
       }
-      // 调用action的登录方法
       const [err] = await to(userStore.login(loginForm.value));
       if (!err) {
         const redirectUrl = redirect.value || '/';
@@ -131,7 +166,6 @@ const handleLogin = () => {
         loading.value = false;
       } else {
         loading.value = false;
-        // 重新获取验证码
         if (captchaEnabled.value) {
           await getCode();
         }
@@ -142,9 +176,6 @@ const handleLogin = () => {
   });
 };
 
-/**
- * 获取验证码
- */
 const getCode = async () => {
   const res = await getCodeImg();
   const { data } = res;
@@ -166,14 +197,13 @@ const getLoginData = () => {
   } as LoginData;
 };
 
-/**
- * 第三方登录
- * @param type
- */
+const goToMain = () => {
+  router.push('/main');
+};
+
 const doSocialLogin = (type: string) => {
   authBinding(type).then((res: any) => {
     if (res.code === HttpStatus.SUCCESS) {
-      // 获取授权地址跳转
       window.location.href = res.data;
     } else {
       ElMessage.error(res.msg);
@@ -186,83 +216,3 @@ onMounted(() => {
   getLoginData();
 });
 </script>
-
-<style lang="scss" scoped>
-.login {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  background-size: cover;
-}
-
-.title-box {
-  display: flex;
-
-  .title {
-    margin: 0 auto 30px auto;
-    text-align: center;
-    color: #707070;
-  }
-
-  :deep(.lang-select--style) {
-    line-height: 0;
-    color: #7483a3;
-  }
-}
-
-.login-form {
-  border-radius: 6px;
-  background: #ffffff;
-  width: 400px;
-  padding: 25px 25px 5px 25px;
-  z-index: 1;
-  .el-input {
-    height: 40px;
-    input {
-      height: 40px;
-    }
-  }
-
-  .input-icon {
-    height: 39px;
-    width: 14px;
-    margin-left: 0;
-  }
-}
-
-.login-tip {
-  font-size: 13px;
-  text-align: center;
-  color: #bfbfbf;
-}
-
-.login-code {
-  width: 33%;
-  height: 40px;
-  float: right;
-
-  img {
-    cursor: pointer;
-    vertical-align: middle;
-  }
-}
-
-.el-login-footer {
-  height: 40px;
-  line-height: 40px;
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  text-align: center;
-  color: #fff;
-  font-family: Arial, serif;
-  font-size: 12px;
-  letter-spacing: 1px;
-}
-
-.login-code-img {
-  height: 40px;
-  padding-left: 12px;
-}
-</style>
