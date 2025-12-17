@@ -1,24 +1,6 @@
 <template>
   <div class="p-2">
     <el-row :gutter="20">
-      <!-- 部门树 -->
-      <el-col :lg="4" :xs="24" style="">
-        <el-card shadow="hover">
-          <el-input v-model="deptName" placeholder="请输入部门名称" prefix-icon="Search" clearable />
-          <el-tree
-            ref="deptTreeRef"
-            class="mt-2"
-            node-key="id"
-            :data="deptOptions"
-            :props="{ label: 'label', children: 'children' } as any"
-            :expand-on-click-node="false"
-            :filter-node-method="filterNode"
-            highlight-current
-            default-expand-all
-            @node-click="handleNodeClick"
-          />
-        </el-card>
-      </el-col>
       <el-col :lg="20" :xs="24">
         <transition :enter-active-class="proxy?.animate.searchAnimate.enter" :leave-active-class="proxy?.animate.searchAnimate.leave">
           <div v-show="showSearch" class="mb-[10px]">
@@ -100,7 +82,6 @@
             <el-table-column v-if="columns[0].visible" key="userId" label="用户编号" align="center" prop="userId" />
             <el-table-column v-if="columns[1].visible" key="userName" label="用户名称" align="center" prop="userName" :show-overflow-tooltip="true" />
             <el-table-column v-if="columns[2].visible" key="nickName" label="用户昵称" align="center" prop="nickName" :show-overflow-tooltip="true" />
-            <el-table-column v-if="columns[3].visible" key="deptName" label="部门" align="center" prop="deptName" :show-overflow-tooltip="true" />
             <el-table-column v-if="columns[4].visible" key="phonenumber" label="手机号码" align="center" prop="phonenumber" width="120" />
             <el-table-column v-if="columns[5].visible" key="status" label="状态" align="center">
               <template #default="scope">
@@ -154,19 +135,7 @@
               <el-input v-model="form.nickName" placeholder="请输入用户昵称" maxlength="30" />
             </el-form-item>
           </el-col>
-          <el-col :span="12" v-if="form.userId == null || form.userId != useUserStore().userId">
-            <el-form-item label="归属部门" prop="deptId">
-              <el-tree-select
-                v-model="form.deptId"
-                :data="enabledDeptOptions"
-                :props="{ value: 'id', label: 'label', children: 'children' } as any"
-                value-key="id"
-                placeholder="请选择归属部门"
-                check-strictly
-                @change="handleDeptChange"
-              />
-            </el-form-item>
-          </el-col>
+          <el-col :span="12" v-if="form.userId == null || form.userId != useUserStore().userId"> </el-col>
         </el-row>
         <el-row>
           <el-col :span="12">
@@ -209,19 +178,6 @@
           </el-col>
         </el-row>
         <el-row>
-          <el-col :span="12" v-if="form.userId == null || form.userId != useUserStore().userId">
-            <el-form-item label="岗位">
-              <el-select v-model="form.postIds" multiple placeholder="请选择">
-                <el-option
-                  v-for="item in postOptions"
-                  :key="item.postId"
-                  :label="item.postName"
-                  :value="item.postId"
-                  :disabled="item.status == '1'"
-                ></el-option>
-              </el-select>
-            </el-form-item>
-          </el-col>
           <el-col :span="12" v-if="form.userId == null || form.userId != useUserStore().userId">
             <el-form-item label="角色" prop="roleIds">
               <el-select v-model="form.roleIds" filterable multiple placeholder="请选择">
@@ -291,14 +247,12 @@
 <script setup name="User" lang="ts">
 import api from '@/api/system/user';
 import { UserForm, UserQuery, UserVO } from '@/api/system/user/types';
-import { DeptTreeVO, DeptVO } from '@/api/system/dept/types';
 import { RoleVO } from '@/api/system/role/types';
-import { PostVO } from '@/api/system/post/types';
 import { globalHeaders } from '@/utils/request';
 import { to } from 'await-to-js';
-import { optionselect } from '@/api/system/post';
 import { checkPermi } from '@/utils/permission';
 import { useUserStore } from '@/store/modules/user';
+import { ArrowDown } from '@element-plus/icons-vue';
 
 const router = useRouter();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
@@ -311,11 +265,7 @@ const single = ref(true);
 const multiple = ref(true);
 const total = ref(0);
 const dateRange = ref<[DateModelType, DateModelType]>(['', '']);
-const deptName = ref('');
-const deptOptions = ref<DeptTreeVO[]>([]);
-const enabledDeptOptions = ref<DeptTreeVO[]>([]);
 const initPassword = ref<string>('');
-const postOptions = ref<PostVO[]>([]);
 const roleOptions = ref<RoleVO[]>([]);
 /*** 用户导入参数 */
 const upload = reactive<ImportOption>({
@@ -343,7 +293,6 @@ const columns = ref<FieldOption[]>([
   { key: 6, label: `创建时间`, visible: true, children: [] }
 ]);
 
-const deptTreeRef = ref<ElTreeInstance>();
 const queryFormRef = ref<ElFormInstance>();
 const userFormRef = ref<ElFormInstance>();
 const uploadRef = ref<ElUploadInstance>();
@@ -422,21 +371,6 @@ const data = reactive<PageData<UserForm, UserQuery>>(initData);
 
 const { queryParams, form, rules } = toRefs<PageData<UserForm, UserQuery>>(data);
 
-/** 通过条件过滤节点  */
-const filterNode = (value: string, data: any) => {
-  if (!value) return true;
-  return data.label.indexOf(value) !== -1;
-};
-/** 根据名称筛选部门树 */
-watchEffect(
-  () => {
-    deptTreeRef.value?.filter(deptName.value);
-  },
-  {
-    flush: 'post' // watchEffect会在DOM挂载或者更新之前就会触发，此属性控制在DOM元素更新后运行
-  }
-);
-
 /** 查询用户列表 */
 const getList = async () => {
   loading.value = true;
@@ -444,32 +378,6 @@ const getList = async () => {
   loading.value = false;
   userList.value = res.rows;
   total.value = res.total;
-};
-
-/** 查询部门下拉树结构 */
-const getDeptTree = async () => {
-  const res = await api.deptTreeSelect();
-  deptOptions.value = res.data;
-  enabledDeptOptions.value = filterDisabledDept(res.data);
-};
-
-/** 过滤禁用的部门 */
-const filterDisabledDept = (deptList: DeptTreeVO[]) => {
-  return deptList.filter((dept) => {
-    if (dept.disabled) {
-      return false;
-    }
-    if (dept.children && dept.children.length) {
-      dept.children = filterDisabledDept(dept.children);
-    }
-    return true;
-  });
-};
-
-/** 节点单击事件 */
-const handleNodeClick = (data: DeptVO) => {
-  queryParams.value.deptId = data.id;
-  handleQuery();
 };
 
 /** 搜索按钮操作 */
@@ -483,7 +391,6 @@ const resetQuery = () => {
   queryFormRef.value?.resetFields();
   queryParams.value.pageNum = 1;
   queryParams.value.deptId = undefined;
-  deptTreeRef.value?.setCurrentKey(undefined);
   handleQuery();
 };
 
@@ -601,7 +508,6 @@ const handleAdd = async () => {
   const { data } = await api.getUser();
   dialog.visible = true;
   dialog.title = '新增用户';
-  postOptions.value = data.posts;
   roleOptions.value = data.roles;
   form.value.password = initPassword.value.toString();
 };
@@ -614,10 +520,7 @@ const handleUpdate = async (row?: UserForm) => {
   dialog.visible = true;
   dialog.title = '修改用户';
   Object.assign(form.value, data.user);
-  postOptions.value = data.posts;
-  roleOptions.value = Array.from(
-    new Map([...data.roles, ...data.user.roles].map(role => [role.roleId, role])).values()
-  );
+  roleOptions.value = Array.from(new Map([...data.roles, ...data.user.roles].map((role) => [role.roleId, role])).values());
   form.value.postIds = data.postIds;
   form.value.roleIds = data.roleIds;
   form.value.password = '';
@@ -663,17 +566,11 @@ const resetForm = () => {
   form.value.id = undefined;
   form.value.status = '1';
 };
+
 onMounted(() => {
-  getDeptTree(); // 初始化部门数据
   getList(); // 初始化列表数据
   proxy?.getConfigKey('sys.user.initPassword').then((response) => {
     initPassword.value = response.data;
   });
 });
-
-async function handleDeptChange(value: number | string) {
-  const response = await optionselect(value);
-  postOptions.value = response.data;
-  form.value.postIds = [];
-}
 </script>
