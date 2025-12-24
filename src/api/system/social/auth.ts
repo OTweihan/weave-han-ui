@@ -18,6 +18,7 @@ export function authUnlock(authId: string) {
     method: 'delete'
   });
 }
+
 //获取授权列表
 export function getAuthList() {
   return request({

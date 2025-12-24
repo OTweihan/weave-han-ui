@@ -1,7 +1,7 @@
 import { UserVO } from '@/api/system/user/types';
 import { UserQuery } from '@/api/system/user/types';
 import { AxiosPromise } from 'axios';
-import { RoleQuery, RoleVO, RoleDeptTree } from './types';
+import { RoleQuery, RoleVO } from './types';
 import request from '@/utils/request';
 
 export const listRole = (query: RoleQuery): AxiosPromise<RoleVO[]> => {
@@ -144,13 +144,6 @@ export const authUserSelectAll = (data: any) => {
     url: '/system/role/authUser/selectAll',
     method: 'put',
     params: data
-  });
-};
-// 根据角色ID查询部门树结构
-export const deptTreeSelect = (roleId: string | number): AxiosPromise<RoleDeptTree> => {
-  return request({
-    url: '/system/role/deptTree/' + roleId,
-    method: 'get'
   });
 };
 

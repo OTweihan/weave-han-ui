@@ -10,7 +10,6 @@ export interface OperLogQuery extends PageQuery {
 
 export interface OperLogVO extends BaseEntity {
   operId: string | number;
-  tenantId: string;
   title: string;
   businessType: number;
   businessTypes: number[] | undefined;
@@ -18,7 +17,6 @@ export interface OperLogVO extends BaseEntity {
   requestMethod: string;
   operatorType: number;
   operName: string;
-  deptName: string;
   operUrl: string;
   operIp: string;
   operLocation: string;
@@ -32,7 +30,6 @@ export interface OperLogVO extends BaseEntity {
 
 export interface OperLogForm {
   operId: number | string | undefined;
-  tenantId: string | number | undefined;
   title: string;
   businessType: number;
   businessTypes: number[] | undefined;
@@ -40,7 +37,6 @@ export interface OperLogForm {
   requestMethod: string;
   operatorType: number;
   operName: string;
-  deptName: string;
   operUrl: string;
   operIp: string;
   operLocation: string;

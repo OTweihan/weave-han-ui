@@ -4,8 +4,6 @@ export interface OnlineQuery extends PageQuery {
 }
 
 export interface OnlineVO extends BaseEntity {
-  tokenId: string;
-  deptName: string;
   userName: string;
   ipaddr: string;
   loginLocation: string;

@@ -15,9 +15,6 @@ export default {
     rememberPassword: 'Remember me',
     switchRegisterPage: 'Sign up now',
     rule: {
-      tenantId: {
-        required: 'Please enter your tenant id'
-      },
       username: {
         required: 'Please enter your account'
       },
@@ -48,9 +45,6 @@ export default {
     code: 'Verification Code',
     switchLoginPage: 'Log in with an existing account',
     rule: {
-      tenantId: {
-        required: 'Please enter your tenant id'
-      },
       username: {
         required: 'Please enter your account',
         length: 'The length of the user account must be between {min} and {max}'
@@ -77,7 +71,6 @@ export default {
     document: 'Document',
     message: 'Message',
     layoutSize: 'Layout Size',
-    selectTenant: 'Select Tenant',
     layoutSetting: 'Layout Setting',
     personalCenter: 'Personal Center',
     logout: 'Logout'

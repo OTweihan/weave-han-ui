@@ -1,5 +1,4 @@
 export interface TableVO extends BaseEntity {
-  createDept: number | string;
   tableId: string | number;
   dataName: string;
   tableName: string;
@@ -36,7 +35,6 @@ export interface TableQuery extends PageQuery {
 }
 
 export interface DbColumnVO extends BaseEntity {
-  createDept?: any;
   columnId?: any;
   tableId?: any;
   columnName?: any;
@@ -68,7 +66,6 @@ export interface DbColumnVO extends BaseEntity {
 }
 
 export interface DbTableVO {
-  createDept?: any;
   tableId?: any;
   tableName: string;
   tableComment: string;
@@ -110,7 +107,6 @@ export interface GenTableVO {
 }
 
 export interface DbColumnForm extends BaseEntity {
-  createDept: number;
   columnId: string;
   tableId: string;
   columnName: string;
@@ -149,7 +145,6 @@ export interface DbParamForm {
 }
 
 export interface DbTableForm extends BaseEntity {
-  createDept?: any;
   tableId: string | string;
   tableName: string;
   tableComment: string;

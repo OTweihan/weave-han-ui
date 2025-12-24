@@ -151,7 +151,6 @@ const queryFormRef = ref<ElFormInstance>();
 const data = reactive<PageData<OperLogForm, OperLogQuery>>({
   form: {
     operId: undefined,
-    tenantId: undefined,
     title: '',
     businessType: 0,
     businessTypes: undefined,
@@ -159,7 +158,6 @@ const data = reactive<PageData<OperLogForm, OperLogQuery>>({
     requestMethod: '',
     operatorType: 0,
     operName: '',
-    deptName: '',
     operUrl: '',
     operIp: '',
     operLocation: '',

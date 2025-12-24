@@ -164,22 +164,6 @@
             <el-option v-for="item in dataScopeOptions" :key="item.value" :label="item.label" :value="item.value"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item v-show="form.dataScope === '2'" label="数据权限">
-          <el-checkbox v-model="deptExpand" @change="handleCheckedTreeExpand($event, 'dept')">展开/折叠</el-checkbox>
-          <el-checkbox v-model="deptNodeAll" @change="handleCheckedTreeNodeAll($event, 'dept')">全选/全不选</el-checkbox>
-          <el-checkbox v-model="form.deptCheckStrictly" @change="handleCheckedTreeConnect($event, 'dept')">父子联动</el-checkbox>
-          <el-tree
-            ref="deptRef"
-            class="tree-border"
-            :data="deptOptions"
-            show-checkbox
-            default-expand-all
-            node-key="id"
-            :check-strictly="!form.deptCheckStrictly"
-            empty-text="加载中，请稍候"
-            :props="{ label: 'label', children: 'children' } as any"
-          ></el-tree>
-        </el-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -192,9 +176,9 @@
 </template>
 
 <script setup name="Role" lang="ts">
-import { addRole, changeRoleStatus, dataScope, delRole, getRole, listRole, updateRole, deptTreeSelect } from '@/api/system/role';
+import { addRole, changeRoleStatus, dataScope, delRole, getRole, listRole, updateRole } from '@/api/system/role';
 import { roleMenuTreeselect, treeselect as menuTreeselect } from '@/api/system/menu/index';
-import { RoleVO, RoleForm, RoleQuery, DeptTreeOption } from '@/api/system/role/types';
+import { RoleVO, RoleForm, RoleQuery } from '@/api/system/role/types';
 import { MenuTreeOption, RoleMenuTree } from '@/api/system/menu/types';
 
 const router = useRouter();
@@ -214,7 +198,6 @@ const menuExpand = ref(false);
 const menuNodeAll = ref(false);
 const deptExpand = ref(true);
 const deptNodeAll = ref(false);
-const deptOptions = ref<DeptTreeOption[]>([]);
 const openDataScope = ref(false);
 
 /** 数据范围选项*/
@@ -240,11 +223,9 @@ const initForm: RoleForm = {
   roleName: '',
   roleKey: '',
   menuCheckStrictly: true,
-  deptCheckStrictly: true,
   remark: '',
   dataScope: '1',
   menuIds: [],
-  deptIds: []
 };
 
 const data = reactive<PageData<RoleForm, RoleQuery>>({
@@ -295,6 +276,7 @@ const resetQuery = () => {
   queryFormRef.value?.resetFields();
   handleQuery();
 };
+
 /**删除按钮操作 */
 const handleDelete = async (row?: RoleVO) => {
   const roleids = row?.roleId || ids.value;
@@ -343,17 +325,7 @@ const getMenuTreeselect = async () => {
   const res = await menuTreeselect();
   menuOptions.value = res.data;
 };
-/** 所有部门节点数据 */
-const getDeptAllCheckedKeys = (): any => {
-  // 目前被选中的部门节点
-  const checkedKeys = deptRef.value?.getCheckedKeys();
-  // 半选中的部门节点
-  const halfCheckedKeys = deptRef.value?.getHalfCheckedKeys();
-  if (halfCheckedKeys) {
-    checkedKeys?.unshift(...halfCheckedKeys);
-  }
-  return checkedKeys;
-};
+
 /** 重置新增的表单以及其他数据  */
 const reset = () => {
   menuRef.value?.setCheckedKeys([]);
@@ -372,6 +344,7 @@ const handleAdd = () => {
   dialog.visible = true;
   dialog.title = '添加角色';
 };
+
 /** 修改角色 */
 const handleUpdate = async (row?: RoleVO) => {
   reset();
@@ -388,6 +361,7 @@ const handleUpdate = async (row?: RoleVO) => {
     });
   });
 };
+
 /** 根据角色ID查询菜单树结构 */
 const getRoleMenuTreeselect = (roleId: string | number) => {
   return roleMenuTreeselect(roleId).then((res): RoleMenuTree => {
@@ -395,12 +369,7 @@ const getRoleMenuTreeselect = (roleId: string | number) => {
     return res.data;
   });
 };
-/** 根据角色ID查询部门树结构 */
-const getRoleDeptTreeSelect = async (roleId: string | number) => {
-  const res = await deptTreeSelect(roleId);
-  deptOptions.value = res.data.depts;
-  return res.data;
-};
+
 /** 树权限（展开/折叠）*/
 const handleCheckedTreeExpand = (value: boolean, type: string) => {
   if (type == 'menu') {
@@ -410,31 +379,23 @@ const handleCheckedTreeExpand = (value: boolean, type: string) => {
         menuRef.value.store.nodesMap[treeList[i].id].expanded = value;
       }
     }
-  } else if (type == 'dept') {
-    const treeList = deptOptions.value;
-    for (let i = 0; i < treeList.length; i++) {
-      if (deptRef.value) {
-        deptRef.value.store.nodesMap[treeList[i].id].expanded = value;
-      }
-    }
   }
 };
+
 /** 树权限（全选/全不选） */
 const handleCheckedTreeNodeAll = (value: any, type: string) => {
   if (type == 'menu') {
     menuRef.value?.setCheckedNodes(value ? (menuOptions.value as any) : []);
-  } else if (type == 'dept') {
-    deptRef.value?.setCheckedNodes(value ? (deptOptions.value as any) : []);
   }
 };
+
 /** 树权限（父子联动） */
 const handleCheckedTreeConnect = (value: any, type: string) => {
   if (type == 'menu') {
     form.value.menuCheckStrictly = value;
-  } else if (type == 'dept') {
-    form.value.deptCheckStrictly = value;
   }
 };
+
 /** 所有菜单节点数据 */
 const getMenuAllCheckedKeys = (): any => {
   // 目前被选中的菜单节点
@@ -446,6 +407,7 @@ const getMenuAllCheckedKeys = (): any => {
   }
   return checkedKeys;
 };
+
 /** 提交按钮 */
 const submitForm = () => {
   roleFormRef.value?.validate(async (valid: boolean) => {
@@ -458,38 +420,38 @@ const submitForm = () => {
     }
   });
 };
+
 /** 取消按钮 */
 const cancel = () => {
   reset();
   dialog.visible = false;
 };
+
 /** 选择角色权限范围触发 */
 const dataScopeSelectChange = (value: string) => {
   if (value !== '2') {
     deptRef.value?.setCheckedKeys([]);
   }
 };
+
 /** 分配数据权限操作 */
 const handleDataScope = async (row: RoleVO) => {
   const response = await getRole(row.roleId);
   Object.assign(form.value, response.data);
-  const res = await getRoleDeptTreeSelect(row.roleId);
   openDataScope.value = true;
   dialog.title = '分配数据权限';
-  await nextTick(() => {
-    deptRef.value?.setCheckedKeys(res.checkedKeys);
-  });
 };
+
 /** 提交按钮（数据权限） */
 const submitDataScope = async () => {
   if (form.value.roleId) {
-    form.value.deptIds = getDeptAllCheckedKeys();
     await dataScope(form.value);
     proxy?.$modal.msgSuccess('修改成功');
     openDataScope.value = false;
     getList();
   }
 };
+
 /** 取消按钮（数据权限）*/
 const cancelDataScope = () => {
   dataScopeRef.value?.resetFields();

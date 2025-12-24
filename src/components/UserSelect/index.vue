@@ -2,24 +2,6 @@
   <div>
     <el-dialog v-model="userDialog.visible.value" :title="userDialog.title.value" width="80%" append-to-body>
       <el-row :gutter="20">
-        <!-- 部门树 -->
-        <el-col :lg="4" :xs="24" style="">
-          <el-card shadow="hover">
-            <el-input v-model="deptName" placeholder="请输入部门名称" prefix-icon="Search" clearable />
-            <el-tree
-              ref="deptTreeRef"
-              class="mt-2"
-              node-key="id"
-              :data="deptOptions"
-              :props="{ label: 'label', children: 'children' } as any"
-              :expand-on-click-node="false"
-              :filter-node-method="filterNode"
-              highlight-current
-              default-expand-all
-              @node-click="handleNodeClick"
-            />
-          </el-card>
-        </el-col>
         <el-col :lg="20" :xs="24">
           <transition :enter-active-class="proxy?.animate.searchAnimate.enter" :leave-active-class="proxy?.animate.searchAnimate.leave">
             <div v-show="showSearch" class="mb-[10px]">
@@ -63,7 +45,6 @@
               <vxe-column key="userId" title="用户编号" align="center" field="userId" />
               <vxe-column key="userName" title="用户名称" align="center" field="userName" />
               <vxe-column key="nickName" title="用户昵称" align="center" field="nickName" />
-              <vxe-column key="deptName" title="部门" align="center" field="deptName" />
               <vxe-column key="phonenumber" title="手机号码" align="center" field="phonenumber" width="120" />
               <vxe-column key="status" title="状态" align="center">
                 <template #default="scope">
@@ -100,7 +81,6 @@
 <script setup lang="ts">
 import api from '@/api/system/user';
 import { UserQuery, UserVO } from '@/api/system/user/types';
-import { DeptTreeVO, DeptVO } from '@/api/system/dept/types';
 import { VxeTableInstance } from 'vxe-table';
 import useDialog from '@/hooks/useDialog';
 
@@ -126,11 +106,7 @@ const loading = ref(true);
 const showSearch = ref(true);
 const total = ref(0);
 const dateRange = ref<[DateModelType, DateModelType]>(['', '']);
-const deptName = ref('');
-const deptOptions = ref<DeptTreeVO[]>([]);
 const selectUserList = ref<UserVO[]>([]);
-
-const deptTreeRef = ref<ElTreeInstance>();
 const queryFormRef = ref<ElFormInstance>();
 const tableRef = ref<VxeTableInstance<UserVO>>();
 
@@ -144,22 +120,11 @@ const queryParams = ref<UserQuery>({
   userName: '',
   phonenumber: '',
   status: '',
-  deptId: '',
   roleId: '',
   userIds: ''
 });
 
 const defaultSelectUserIds = computed(() => computedIds(prop.data));
-
-/** 根据名称筛选部门树 */
-watchEffect(
-  () => {
-    deptTreeRef.value?.filter(deptName.value);
-  },
-  {
-    flush: 'post' // watchEffect会在DOM挂载或者更新之前就会触发，此属性控制在DOM元素更新后运行
-  }
-);
 
 const confirm = () => {
   emit('update:modelValue', selectUserList.value);
@@ -189,12 +154,6 @@ const filterNode = (value: string, data: any) => {
   return data.label.indexOf(value) !== -1;
 };
 
-/** 查询部门下拉树结构 */
-const getTreeSelect = async () => {
-  const res = await api.deptTreeSelect();
-  deptOptions.value = res.data;
-};
-
 /** 查询用户列表 */
 const getList = async () => {
   loading.value = true;
@@ -213,12 +172,6 @@ const pageList = async () => {
   await tableRef.value.setCheckboxRow(users, true);
 };
 
-/** 节点单击事件 */
-const handleNodeClick = (data: DeptVO) => {
-  queryParams.value.deptId = data.id;
-  handleQuery();
-};
-
 /** 搜索按钮操作 */
 const handleQuery = () => {
   queryParams.value.pageNum = 1;
@@ -229,8 +182,6 @@ const resetQuery = (refresh = true) => {
   dateRange.value = ['', ''];
   queryFormRef.value?.resetFields();
   queryParams.value.pageNum = 1;
-  queryParams.value.deptId = undefined;
-  deptTreeRef.value?.setCurrentKey(undefined);
   refresh && handleQuery();
 };
 
@@ -292,12 +243,11 @@ watch(
   () => userDialog.visible.value,
   async (newValue: boolean) => {
     if (newValue) {
-      await getTreeSelect(); // 初始化部门数据
       await getList(); // 初始化列表数据
       await initSelectUser();
     } else {
-      tableRef.value.clearCheckboxReserve();
-      tableRef.value.clearCheckboxRow();
+      await tableRef.value.clearCheckboxReserve();
+      await tableRef.value.clearCheckboxRow();
       resetQuery(false);
       selectUserList.value = [];
     }

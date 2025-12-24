@@ -1,5 +1,4 @@
 import { RoleVO } from '@/api/system/role/types';
-import { PostVO } from '@/api/system/post/types';
 
 /**
  * 用户信息
@@ -18,9 +17,8 @@ export interface UserQuery extends PageQuery {
   nickName?: string;
   phonenumber?: string;
   status?: string;
-  deptId?: string | number;
   roleId?: string | number;
-  userIds?:  string | number | (string | number)[] | undefined;
+  userIds?: string | number | (string | number)[] | undefined;
 }
 
 /**
@@ -28,8 +26,6 @@ export interface UserQuery extends PageQuery {
  */
 export interface UserVO extends BaseEntity {
   userId: string | number;
-  tenantId: string;
-  deptId: number;
   userName: string;
   nickName: string;
   userType: string;
@@ -42,10 +38,8 @@ export interface UserVO extends BaseEntity {
   loginIp: string;
   loginDate: string;
   remark: string;
-  deptName: string;
   roles: RoleVO[];
   roleIds: any;
-  postIds: any;
   roleId: any;
   admin: boolean;
 }
@@ -56,7 +50,6 @@ export interface UserVO extends BaseEntity {
 export interface UserForm {
   id?: string;
   userId?: string;
-  deptId?: number;
   userName: string;
   nickName?: string;
   password: string;
@@ -65,7 +58,6 @@ export interface UserForm {
   sex?: string;
   status: string;
   remark?: string;
-  postIds: string[];
   roleIds: string[];
 }
 
@@ -73,10 +65,7 @@ export interface UserInfoVO {
   user: UserVO;
   roles: RoleVO[];
   roleIds: string[];
-  posts: PostVO[];
-  postIds: string[];
   roleGroup: string;
-  postGroup: string;
 }
 
 export interface ResetPwdForm {

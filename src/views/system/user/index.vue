@@ -305,7 +305,6 @@ const dialog = reactive<DialogOption>({
 
 const initFormData: UserForm = {
   userId: undefined,
-  deptId: undefined,
   userName: '',
   nickName: undefined,
   password: '',
@@ -314,7 +313,6 @@ const initFormData: UserForm = {
   sex: undefined,
   status: '0',
   remark: '',
-  postIds: [],
   roleIds: []
 };
 
@@ -326,7 +324,6 @@ const initData: PageData<UserForm, UserQuery> = {
     userName: '',
     phonenumber: '',
     status: '',
-    deptId: '',
     roleId: ''
   },
   rules: {
@@ -385,12 +382,12 @@ const handleQuery = () => {
   queryParams.value.pageNum = 1;
   getList();
 };
+
 /** 重置按钮操作 */
 const resetQuery = () => {
   dateRange.value = ['', ''];
   queryFormRef.value?.resetFields();
   queryParams.value.pageNum = 1;
-  queryParams.value.deptId = undefined;
   handleQuery();
 };
 
@@ -521,7 +518,6 @@ const handleUpdate = async (row?: UserForm) => {
   dialog.title = '修改用户';
   Object.assign(form.value, data.user);
   roleOptions.value = Array.from(new Map([...data.roles, ...data.user.roles].map((role) => [role.roleId, role])).values());
-  form.value.postIds = data.postIds;
   form.value.roleIds = data.roleIds;
   form.value.password = '';
 };
@@ -534,8 +530,6 @@ const submitForm = () => {
         // 自己编辑自己的情况下 不允许编辑角色部门岗位
         if (form.value.userId == useUserStore().userId) {
           form.value.roleIds = null;
-          form.value.deptId = null;
-          form.value.postIds = null;
         }
         await api.updateUser(form.value);
       } else {

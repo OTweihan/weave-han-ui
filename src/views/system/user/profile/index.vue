@@ -79,14 +79,13 @@ const activeTab = ref('userinfo');
 interface State {
   user: Partial<UserVO>;
   roleGroup: string;
-  postGroup: string;
   auths: any;
   devices: any;
 }
+
 const state = ref<State>({
   user: {},
   roleGroup: '',
-  postGroup: '',
   auths: [],
   devices: []
 });
@@ -98,7 +97,6 @@ const getUser = async () => {
   state.value.user = res.data.user;
   userForm.value = { ...res.data.user };
   state.value.roleGroup = res.data.roleGroup;
-  state.value.postGroup = res.data.postGroup;
 };
 
 const getAuths = async () => {
