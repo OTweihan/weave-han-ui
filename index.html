@@ -1,214 +1,292 @@
 <!doctype html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-    <meta name="renderer" content="webkit" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-    <link rel="icon" href="/favicon.ico" />
-    <title>%VITE_APP_TITLE%</title>
-    <!--[if lt IE 11
-      ]><script>
-        window.location.href = '/html/ie.html';
-      </script><!
-    [endif]-->
-    <style>
-      html,
-      body,
-      #app {
-        height: 100%;
-        margin: 0px;
-        padding: 0px;
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta name="renderer" content="webkit" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <link rel="icon" href="/favicon.ico" />
+  <title>%VITE_APP_TITLE%</title>
+
+  <style>
+    html,
+    body,
+    #app {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* 加载容器 */
+    #loader-wrapper {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 999999;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 背景光球 */
+    .bg-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.3;
+      animation: float 8s ease-in-out infinite;
+    }
+
+    .bg-orb-1 {
+      width: 400px;
+      height: 400px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      top: -100px;
+      left: -100px;
+      animation-delay: 0s;
+    }
+
+    .bg-orb-2 {
+      width: 300px;
+      height: 300px;
+      background: linear-gradient(135deg, #06b6d4, #3b82f6);
+      bottom: -50px;
+      right: -50px;
+      animation-delay: 2s;
+    }
+
+    .bg-orb-3 {
+      width: 250px;
+      height: 250px;
+      background: linear-gradient(135deg, #8b5cf6, #ec4899);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation-delay: 4s;
+    }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translate(0, 0) scale(1);
       }
-
-      .chromeframe {
-        margin: 0.2em 0;
-        background: #ccc;
-        color: #000;
-        padding: 0.2em 0;
+      33% {
+        transform: translate(30px, -30px) scale(1.1);
       }
-
-      #loader-wrapper {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 999999;
+      66% {
+        transform: translate(-20px, 20px) scale(0.9);
       }
+    }
 
-      #loader {
-        display: block;
-        position: relative;
-        left: 50%;
-        top: 50%;
-        width: 150px;
-        height: 150px;
-        margin: -75px 0 0 -75px;
-        border-radius: 50%;
-        border: 3px solid transparent;
-        border-top-color: #fff;
-        -webkit-animation: spin 2s linear infinite;
-        -ms-animation: spin 2s linear infinite;
-        -moz-animation: spin 2s linear infinite;
-        -o-animation: spin 2s linear infinite;
-        animation: spin 2s linear infinite;
-        z-index: 1001;
+    /* 加载器 */
+    .loader-container {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    /* 旋转圆环 */
+    .spinner {
+      position: relative;
+      width: 120px;
+      height: 120px;
+    }
+
+    .spinner-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border: 3px solid transparent;
+      border-radius: 50%;
+    }
+
+    .spinner-ring-outer {
+      width: 100%;
+      height: 100%;
+      border-top-color: rgba(59, 130, 246, 0.8);
+      border-right-color: rgba(139, 92, 246, 0.8);
+      animation: spin 2s linear infinite;
+    }
+
+    .spinner-ring-middle {
+      width: 75%;
+      height: 75%;
+      border-top-color: rgba(6, 182, 212, 0.9);
+      border-left-color: rgba(59, 130, 246, 0.9);
+      animation: spin 1.5s linear infinite reverse;
+    }
+
+    .spinner-ring-inner {
+      width: 50%;
+      height: 50%;
+      border-bottom-color: rgba(139, 92, 246, 1);
+      border-right-color: rgba(236, 72, 153, 1);
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: translate(-50%, -50%) rotate(0deg);
       }
-
-      #loader:before {
-        content: '';
-        position: absolute;
-        top: 5px;
-        left: 5px;
-        right: 5px;
-        bottom: 5px;
-        border-radius: 50%;
-        border: 3px solid transparent;
-        border-top-color: #fff;
-        -webkit-animation: spin 3s linear infinite;
-        -moz-animation: spin 3s linear infinite;
-        -o-animation: spin 3s linear infinite;
-        -ms-animation: spin 3s linear infinite;
-        animation: spin 3s linear infinite;
+      100% {
+        transform: translate(-50%, -50%) rotate(360deg);
       }
+    }
 
-      #loader:after {
-        content: '';
-        position: absolute;
-        top: 15px;
-        left: 15px;
-        right: 15px;
-        bottom: 15px;
-        border-radius: 50%;
-        border: 3px solid transparent;
-        border-top-color: #fff;
-        -moz-animation: spin 1.5s linear infinite;
-        -o-animation: spin 1.5s linear infinite;
-        -ms-animation: spin 1.5s linear infinite;
-        -webkit-animation: spin 1.5s linear infinite;
-        animation: spin 1.5s linear infinite;
+    /* 中心图标 */
+    .spinner-icon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2rem;
+      color: #fff;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
       }
-
-      @-webkit-keyframes spin {
-        0% {
-          -webkit-transform: rotate(0deg);
-          -ms-transform: rotate(0deg);
-          transform: rotate(0deg);
-        }
-
-        100% {
-          -webkit-transform: rotate(360deg);
-          -ms-transform: rotate(360deg);
-          transform: rotate(360deg);
-        }
+      50% {
+        opacity: 0.7;
+        transform: translate(-50%, -50%) scale(1.1);
       }
+    }
 
-      @keyframes spin {
-        0% {
-          -webkit-transform: rotate(0deg);
-          -ms-transform: rotate(0deg);
-          transform: rotate(0deg);
-        }
+    /* 加载文字 */
+    .loader-text {
+      text-align: center;
+      z-index: 10;
+    }
 
-        100% {
-          -webkit-transform: rotate(360deg);
-          -ms-transform: rotate(360deg);
-          transform: rotate(360deg);
-        }
-      }
+    .loader-title {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
 
-      #loader-wrapper .loader-section {
-        position: fixed;
-        top: 0;
-        width: 51%;
-        height: 100%;
-        background: #7171c6;
-        z-index: 1000;
-        -webkit-transform: translateX(0);
-        -ms-transform: translateX(0);
+    .loader-subtitle {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-size: 0.875rem;
+      color: #94a3b8;
+      font-weight: 400;
+      letter-spacing: 0.025em;
+    }
+
+    /* 进度条 */
+    .loader-progress {
+      width: 200px;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 1rem;
+    }
+
+    .loader-progress-bar {
+      height: 100%;
+      width: 30%;
+      background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+      background-size: 200% 100%;
+      border-radius: 2px;
+      animation: progress-flow 1.5s ease-in-out infinite;
+    }
+
+    @keyframes progress-flow {
+      0% {
+        background-position: 0 50%;
         transform: translateX(0);
       }
+      50% {
+        transform: translateX(150%);
+      }
+      100% {
+        background-position: 200% 50%;
+        transform: translateX(0);
+      }
+    }
 
-      #loader-wrapper .loader-section.section-left {
-        left: 0;
+    /* 加载完成动画 */
+    .loaded #loader-wrapper {
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+
+    .no-js #loader-wrapper {
+      display: none;
+    }
+
+    /* 响应式 */
+    @media (max-width: 640px) {
+      .loader-title {
+        font-size: 1.25rem;
       }
 
-      #loader-wrapper .loader-section.section-right {
-        right: 0;
+      .spinner {
+        width: 100px;
+        height: 100px;
       }
 
-      .loaded #loader-wrapper .loader-section.section-left {
-        -webkit-transform: translateX(-100%);
-        -ms-transform: translateX(-100%);
-        transform: translateX(-100%);
-        -webkit-transition: all 0.7s 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
-        transition: all 0.7s 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+      .spinner-icon {
+        font-size: 1.5rem;
       }
+    }
+  </style>
+</head>
 
-      .loaded #loader-wrapper .loader-section.section-right {
-        -webkit-transform: translateX(100%);
-        -ms-transform: translateX(100%);
-        transform: translateX(100%);
-        -webkit-transition: all 0.7s 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
-        transition: all 0.7s 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
-      }
+<body>
+<div id="app">
+  <div id="loader-wrapper">
+    <!-- 背景光球 -->
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
 
-      .loaded #loader {
-        opacity: 0;
-        -webkit-transition: all 0.3s ease-out;
-        transition: all 0.3s ease-out;
-      }
+    <!-- 加载器 -->
+    <div class="loader-container">
+      <!-- 旋转圆环 -->
+      <div class="spinner">
+        <div class="spinner-ring spinner-ring-outer"></div>
+        <div class="spinner-ring spinner-ring-middle"></div>
+        <div class="spinner-ring spinner-ring-inner"></div>
+        <div class="spinner-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" />
+            <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" />
+            <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" />
+          </svg>
+        </div>
+      </div>
 
-      .loaded #loader-wrapper {
-        visibility: hidden;
-        -webkit-transform: translateY(-100%);
-        -ms-transform: translateY(-100%);
-        transform: translateY(-100%);
-        -webkit-transition: all 0.3s 1s ease-out;
-        transition: all 0.3s 1s ease-out;
-      }
-
-      .no-js #loader-wrapper {
-        display: none;
-      }
-
-      .no-js h1 {
-        color: #222222;
-      }
-
-      #loader-wrapper .load_title {
-        font-family: 'Open Sans';
-        color: #fff;
-        font-size: 19px;
-        width: 100%;
-        text-align: center;
-        z-index: 9999999999999;
-        position: absolute;
-        top: 60%;
-        opacity: 1;
-        line-height: 30px;
-      }
-
-      #loader-wrapper .load_title span {
-        font-weight: normal;
-        font-style: italic;
-        font-size: 13px;
-        color: #fff;
-        opacity: 0.5;
-      }
-    </style>
-  </head>
-
-  <body>
-    <div id="app">
-      <div id="loader-wrapper">
-        <div id="loader"></div>
-        <div class="loader-section section-left"></div>
-        <div class="loader-section section-right"></div>
-        <div class="load_title">正在加载系统资源，请耐心等待</div>
+      <!-- 加载文字 -->
+      <div class="loader-text">
+        <div class="loader-title">%VITE_APP_TITLE%</div>
+        <div class="loader-subtitle">正在加载系统资源</div>
+        <div class="loader-progress">
+          <div class="loader-progress-bar"></div>
+        </div>
       </div>
     </div>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+  </div>
+</div>
+<script type="module" src="/src/main.ts"></script>
+</body>
 </html>
