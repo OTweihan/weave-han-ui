@@ -8,7 +8,7 @@
         </template>
       </el-descriptions-item>
       <el-descriptions-item label="登录信息">
-        <template #default> {{ info.operName }} / {{ info.deptName }} / {{ info.operIp }} / {{ info.operLocation }} </template>
+        <template #default> {{ info.operName }} / {{ info.operIp }} / {{ info.operLocation }} </template>
       </el-descriptions-item>
       <el-descriptions-item label="请求信息">
         <template #default> {{ info.requestMethod }} {{ info.operUrl }} </template>

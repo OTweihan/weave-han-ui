@@ -87,7 +87,6 @@
           sortable="custom"
           :sort-orders="['descending', 'ascending']"
         />
-        <el-table-column label="部门" align="center" prop="deptName" width="130" :show-overflow-tooltip="true" />
         <el-table-column label="操作地址" align="center" prop="operIp" width="130" :show-overflow-tooltip="true" />
         <el-table-column label="操作状态" align="center" prop="status">
           <template #default="scope">

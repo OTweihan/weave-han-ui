@@ -196,25 +196,19 @@ const dateRange = ref<[DateModelType, DateModelType]>(['', '']);
 const menuOptions = ref<MenuTreeOption[]>([]);
 const menuExpand = ref(false);
 const menuNodeAll = ref(false);
-const deptExpand = ref(true);
-const deptNodeAll = ref(false);
 const openDataScope = ref(false);
 
 /** 数据范围选项*/
 const dataScopeOptions = ref([
   { value: '1', label: '全部数据权限' },
   { value: '2', label: '自定数据权限' },
-  { value: '3', label: '本部门数据权限' },
-  { value: '4', label: '本部门及以下数据权限' },
-  { value: '5', label: '仅本人数据权限' },
-  { value: '6', label: '部门及以下或本人数据权限' }
+  { value: '5', label: '仅本人数据权限' }
 ]);
 
 const queryFormRef = ref<ElFormInstance>();
 const roleFormRef = ref<ElFormInstance>();
 const dataScopeRef = ref<ElFormInstance>();
 const menuRef = ref<ElTreeInstance>();
-const deptRef = ref<ElTreeInstance>();
 
 const initForm: RoleForm = {
   roleId: undefined,
@@ -331,8 +325,6 @@ const reset = () => {
   menuRef.value?.setCheckedKeys([]);
   menuExpand.value = false;
   menuNodeAll.value = false;
-  deptExpand.value = true;
-  deptNodeAll.value = false;
   form.value = { ...initForm };
   roleFormRef.value?.resetFields();
 };
@@ -429,9 +421,7 @@ const cancel = () => {
 
 /** 选择角色权限范围触发 */
 const dataScopeSelectChange = (value: string) => {
-  if (value !== '2') {
-    deptRef.value?.setCheckedKeys([]);
-  }
+  // 数据权限范围变更时的处理
 };
 
 /** 分配数据权限操作 */
