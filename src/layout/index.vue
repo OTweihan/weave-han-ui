@@ -61,10 +61,9 @@ watchEffect(() => {
 const navbarRef = ref<InstanceType<typeof Navbar>>();
 const settingRef = ref<InstanceType<typeof Settings>>();
 
+// 初始化租户列表功能已移除，保留空钩子用于后续扩展
 onMounted(() => {
-  nextTick(() => {
-    navbarRef.value?.initTenantList();
-  });
+  // 租户相关功能已移除
 });
 
 onMounted(() => {
