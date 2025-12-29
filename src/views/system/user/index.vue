@@ -1,7 +1,7 @@
 <template>
   <div class="p-2">
-    <el-row :gutter="20">
-      <el-col :lg="20" :xs="24">
+    <el-row>
+      <el-col>
         <transition :enter-active-class="proxy?.animate.searchAnimate.enter" :leave-active-class="proxy?.animate.searchAnimate.leave">
           <div v-show="showSearch" class="mb-[10px]">
             <el-card shadow="hover">
