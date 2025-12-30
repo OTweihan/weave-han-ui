@@ -27,3 +27,9 @@ pnpm-lock.yaml
 # 编译生成的文件
 auto-imports.d.ts
 components.d.ts
+
+# Claude 相关文件
+.claude/
+
+# 规范工作流相关文件
+.spec-workflow/
