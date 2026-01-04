@@ -6,13 +6,13 @@
         :key="tag.path"
         :data-path="tag.path"
         :class="{ 'active': isActive(tag), 'has-icon': tagsIcon }"
-        :to="{ path: tag.path ? tag.path : '', query: tag.query, fullPath: tag.fullPath ? tag.fullPath : '' }"
+        :to="{ path: tag.path ? tag.path : '', query: tag.query }"
         class="tags-view-item"
         :style="activeStyle(tag)"
         @click.middle="!isAffix(tag) ? closeSelectedTag(tag) : ''"
         @contextmenu.prevent="openMenu(tag, $event)"
       >
-        <svg-icon v-if="tagsIcon && tag.meta && tag.meta.icon && tag.meta.icon !== '#'" :icon-class="tag.meta.icon"/>
+        <svg-icon v-if="tagsIcon && tag.meta && tag.meta.icon && tag.meta.icon !== '#'" :icon-class="tag.meta.icon" />
         <span class="tags-view-item-title">{{ tag.title }}</span>
         <span v-if="!isAffix(tag)" @click.prevent.stop="closeSelectedTag(tag)">
           <close class="el-icon-close" style="width: 1em; height: 1em; vertical-align: middle" />
@@ -52,7 +52,7 @@ const router = useRouter();
 const visitedViews = computed(() => useTagsViewStore().getVisitedViews());
 const routes = computed(() => usePermissionStore().getRoutes());
 const theme = computed(() => useSettingsStore().theme);
-const tagsIcon = computed(() => useSettingsStore().tagsIcon)
+const tagsIcon = computed(() => useSettingsStore().tagsIcon);
 
 watch(route, () => {
   addTags();
@@ -72,8 +72,9 @@ const isActive = (r: RouteLocationNormalized): boolean => {
 const activeStyle = (tag: RouteLocationNormalized) => {
   if (!isActive(tag)) return {};
   return {
-    'background-color': 'var(--tags-view-active-bg)',
-    'border-color': 'var(--tags-view-active-border-color)'
+    'background-color': 'var(--el-color-primary)',
+    'border-color': 'var(--el-color-primary)',
+    'color': '#ffffff'
   };
 };
 const isAffix = (tag: RouteLocationNormalized) => {
@@ -180,7 +181,9 @@ const closeLeftTags = () => {
   });
 };
 const closeOthersTags = () => {
-  router.push(selectedTag.value).catch(() => {});
+  if (selectedTag.value?.fullPath) {
+    router.push(selectedTag.value.fullPath).catch(() => {});
+  }
   proxy?.$tab.closeOtherPage(selectedTag.value).then(() => {
     moveToCurrentTag();
   });
@@ -242,11 +245,12 @@ onMounted(() => {
 .tags-view-container {
   height: 34px;
   width: 100%;
-  background-color: var(--el-bg-color);
-  border: 1px solid var(--el-border-color-light);
+  background-color: #f5f7fa;
+  border: 1px solid #e4e7ed;
+  border-top: none;
   box-shadow:
-    0 1px 3px 0 rgba(0, 0, 0, 0.12),
-    0 0 3px 0 rgba(0, 0, 0, 0.04);
+    0 1px 3px 0 rgba(0, 0, 0, 0.08),
+    0 0 3px 0 rgba(0, 0, 0, 0.02);
   .tags-view-wrapper {
     .tags-view-item {
       display: inline-block;
@@ -254,16 +258,19 @@ onMounted(() => {
       cursor: pointer;
       height: 26px;
       line-height: 25px;
-      background-color: var(--el-bg-color);
-      border: 1px solid var(--el-border-color-light);
-      color: #495060;
-      padding: 0 8px;
+      background-color: #ffffff;
+      border: 1px solid #dcdfe6;
+      color: #606266;
+      padding: 0 10px;
       font-size: 12px;
       margin-left: 5px;
       margin-top: 4px;
-      border-radius: 4px;
+      border-radius: 3px;
+      transition: all 0.2s;
       &:hover {
         color: var(--el-color-primary);
+        border-color: var(--el-color-primary-light-7);
+        background-color: #f0f9ff;
       }
       &:first-of-type {
         margin-left: 15px;
@@ -272,18 +279,25 @@ onMounted(() => {
         margin-right: 15px;
       }
       &.active {
-        background-color: #42b983;
-        color: #fff;
-        border-color: #42b983;
+        background-color: var(--el-color-primary);
+        color: #ffffff;
+        border-color: var(--el-color-primary);
+        font-weight: 500;
+        box-shadow: 0 2px 4px rgba(64, 158, 255, 0.2);
         &::before {
           content: '';
-          background: #fff;
+          background: #ffffff;
           display: inline-block;
-          width: 8px;
-          height: 8px;
+          width: 6px;
+          height: 6px;
           border-radius: 50%;
           position: relative;
-          margin-right: 5px;
+          margin-right: 6px;
+        }
+        &:hover {
+          background-color: var(--el-color-primary);
+          border-color: var(--el-color-primary);
+          color: #ffffff;
         }
       }
     }
@@ -297,7 +311,7 @@ onMounted(() => {
   }
   .contextmenu {
     margin: 0;
-    background: var(--el-bg-color);
+    background: #ffffff;
     z-index: 3000;
     position: absolute;
     list-style-type: none;
@@ -305,13 +319,16 @@ onMounted(() => {
     border-radius: 4px;
     font-size: 12px;
     font-weight: 400;
-    box-shadow: 2px 2px 3px 0 rgba(0, 0, 0, 0.3);
+    border: 1px solid #e4e7ed;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
     li {
       margin: 0;
       padding: 7px 16px;
       cursor: pointer;
+      color: #606266;
       &:hover {
-        background: #eee;
+        background: #f5f7fa;
+        color: var(--el-color-primary);
       }
     }
   }
@@ -323,23 +340,31 @@ onMounted(() => {
 .tags-view-wrapper {
   .tags-view-item {
     .el-icon-close {
-      width: 16px;
-      height: 16px;
+      width: 14px;
+      height: 14px;
       vertical-align: 2px;
       border-radius: 50%;
       text-align: center;
-      transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+      transition: all 0.2s;
       transform-origin: 100% 50%;
+      color: #909399;
       &:before {
-        transform: scale(0.6);
+        transform: scale(0.7);
         display: inline-block;
         vertical-align: -3px;
       }
       &:hover {
-        background-color: #b4bccc;
-        color: #fff;
-        width: 12px !important;
-        height: 12px !important;
+        background-color: #f56c6c;
+        color: #ffffff;
+        width: 14px !important;
+        height: 14px !important;
+      }
+    }
+    &.active .el-icon-close {
+      color: rgba(255, 255, 255, 0.8);
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
       }
     }
   }

@@ -51,6 +51,7 @@ const activeMenu = computed(() => {
   return path;
 });
 
-const bgColor = computed(() => (sideTheme.value === 'theme-dark' ? variables.menuBackground : variables.menuLightBackground));
+// 强制使用白色背景
+const bgColor = computed(() => '#ffffff');
 const textColor = computed(() => (sideTheme.value === 'theme-dark' ? variables.menuColor : variables.menuLightColor));
 </script>
