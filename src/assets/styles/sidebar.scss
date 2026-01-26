@@ -75,14 +75,14 @@
       width: 100% !important;
       background-color: #ffffff !important;
     }
-    
+
     // 确保所有菜单项和子菜单使用白色背景
     .el-menu-item,
     .el-sub-menu__title {
       background-color: #ffffff !important;
       color: rgba(0, 0, 0, 0.7) !important;
     }
-    
+
     // 子菜单容器背景
     .el-sub-menu .el-menu {
       background-color: #ffffff !important;
@@ -105,7 +105,9 @@
       background-color: #ffffff !important;
       color: rgba(0, 0, 0, 0.7) !important;
       border-radius: 8px;
-      margin: 1px 5px 1px 5px;
+      margin: 4px 8px;
+      height: 50px;
+      line-height: 50px;
       &:hover {
         background-color: rgba(64, 158, 255, 0.1) !important;
         color: var(--el-color-primary) !important;
@@ -116,7 +118,9 @@
       background-color: #ffffff !important;
       color: rgba(0, 0, 0, 0.7) !important;
       border-radius: 8px;
-      margin: 1px 5px 1px 5px;
+      margin: 4px 8px;
+      height: 50px;
+      line-height: 50px;
       &:hover {
         background-color: rgba(64, 158, 255, 0.1) !important;
         color: var(--el-color-primary) !important;
@@ -128,7 +132,7 @@
       color: var(--el-color-primary) !important;
       background-color: #ffffff !important;
     }
-    
+
     // 非深色主题下，子菜单被选中时父菜单标题也使用主题色
     & .is-active > .el-sub-menu__title {
       color: var(--el-color-primary) !important;
@@ -141,8 +145,9 @@
       background-color: #ffffff !important;
       color: rgba(0, 0, 0, 0.7) !important;
       border-radius: 8px;
-      height: 45px;
-      margin: 1px 5px 1px 5px;
+      height: 50px;
+      line-height: 50px;
+      margin: 4px 8px;
       &:not(.is-active):hover {
         background-color: rgba(64, 158, 255, 0.1) !important;
         color: var(--el-color-primary) !important;
@@ -154,12 +159,14 @@
       background-color: #ffffff !important;
       color: rgba(0, 0, 0, 0.7) !important;
       border-radius: 8px;
-      height: 45px;
-      margin: 1px 5px 1px 5px;
+      height: 50px;
+      line-height: 50px;
+      margin: 4px 8px;
 
       &.is-active {
-        background-color: var(--el-menu-active-color) !important;
-        color: #fff !important;
+        background-color: rgba(64, 158, 255, 0.1) !important;
+        color: var(--el-color-primary) !important;
+        font-weight: 600;
       }
       &:not(.is-active):hover {
         background-color: rgba(64, 158, 255, 0.1) !important;
@@ -172,12 +179,14 @@
       background-color: #ffffff !important;
       color: rgba(0, 0, 0, 0.7) !important;
       border-radius: 8px;
-      height: 45px;
-      margin: 1px 5px 1px 5px;
+      height: 50px;
+      line-height: 50px;
+      margin: 4px 8px;
 
       &.is-active {
-        background-color: var(--el-menu-active-color) !important;
-        color: #fff !important;
+        background-color: rgba(64, 158, 255, 0.1) !important;
+        color: var(--el-color-primary) !important;
+        font-weight: 600;
       }
       &:not(.is-active):hover {
         background-color: rgba(64, 158, 255, 0.1) !important;
@@ -190,12 +199,14 @@
       background-color: #ffffff !important;
       color: rgba(0, 0, 0, 0.7) !important;
       border-radius: 8px;
-      height: 45px;
-      margin: 1px 5px 1px 5px;
+      height: 50px;
+      line-height: 50px;
+      margin: 4px 8px;
 
       &.is-active {
-        background-color: var(--el-menu-active-color) !important;
-        color: #fff !important;
+        background-color: rgba(64, 158, 255, 0.1) !important;
+        color: var(--el-color-primary) !important;
+        font-weight: 600;
       }
       &:not(.is-active):hover {
         background-color: rgba(64, 158, 255, 0.1) !important;
@@ -220,8 +231,9 @@
       height: 45px;
       // 选中状态的菜单
       &.is-active {
-        background-color: var(--el-menu-active-color) !important;
-        color: #fff !important;
+        background-color: rgba(64, 158, 255, 0.1) !important;
+        color: var(--el-color-primary) !important;
+        font-weight: 600;
       }
 
       .el-tooltip {
@@ -240,7 +252,8 @@
 
       // 选中状态的菜单
       &.is-active .el-sub-menu__title.el-tooltip__trigger {
-        background-color: var(--el-menu-active-color) !important;
+        background-color: rgba(64, 158, 255, 0.1) !important;
+        color: var(--el-color-primary) !important;
       }
 
 
@@ -287,7 +300,7 @@
   // mobile responsive
   .mobile {
     .main-container {
-      margin-left: 0px;
+      margin-left: 0;
     }
 
     .sidebar-container {
@@ -337,8 +350,9 @@
       color: var(--el-color-primary) !important;
     }
     &.is-active {
-      background-color: var(--el-menu-active-color) !important;
-      color: #fff !important;
+      background-color: rgba(64, 158, 255, 0.1) !important;
+      color: var(--el-color-primary) !important;
+      font-weight: 600;
     }
   }
   .el-sub-menu__title {

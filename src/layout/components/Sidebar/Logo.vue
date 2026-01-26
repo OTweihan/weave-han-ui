@@ -1,27 +1,18 @@
 <template>
-  <div class="sidebar-logo-container" :class="{ collapse: collapse }" :style="{ backgroundColor: '#ffffff' }">
-    <transition :enter-active-class="proxy?.animate.logoAnimate.enter" mode="out-in">
-      <router-link v-if="collapse" key="collapse" class="sidebar-logo-link" to="/">
-        <img v-if="logo" :src="logo" class="sidebar-logo" />
-        <h1 v-else class="sidebar-title" :style="{ color: variables.logoLightTitleColor }">
-          {{ title }}
-        </h1>
+  <div class="sidebar-logo-container" :class="{ collapse: collapse }">
+    <transition name="sidebarLogoFade">
+      <router-link v-if="collapse" key="collapse" class="sidebar-logo-link" to="/index/home">
+        <div class="logo-mark">{{ title.charAt(0) }}</div>
       </router-link>
-      <router-link v-else key="expand" class="sidebar-logo-link" to="/">
-        <img v-if="logo" :src="logo" class="sidebar-logo" />
-        <h1 class="sidebar-title" :style="{ color: variables.logoLightTitleColor }">
-          {{ title }}
-        </h1>
+      <router-link v-else key="expand" class="sidebar-logo-link" to="/index/home">
+        <h1 class="sidebar-title">{{ title }}</h1>
       </router-link>
     </transition>
   </div>
 </template>
 
 <script setup lang="ts">
-import variables from '@/assets/styles/variables.module.scss';
-import logo from '@/assets/logo/logo.png';
 import { useSettingsStore } from '@/store/modules/settings';
-const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 defineProps({
   collapse: {
@@ -32,15 +23,19 @@ defineProps({
 
 const title = import.meta.env.VITE_APP_LOGO_TITLE;
 const settingsStore = useSettingsStore();
-const sideTheme = computed(() => settingsStore.sideTheme);
+computed(() => settingsStore.sideTheme);
 </script>
 
 <style lang="scss" scoped>
 .sidebarLogoFade-enter-active {
-  transition: opacity 1.5s;
+  transition: opacity 0.3s;
 }
 
-.sidebarLogoFade-enter,
+.sidebarLogoFade-leave-active {
+  transition: opacity 0.3s;
+}
+
+.sidebarLogoFade-enter-from,
 .sidebarLogoFade-leave-to {
   opacity: 0;
 }
@@ -53,39 +48,45 @@ const sideTheme = computed(() => settingsStore.sideTheme);
   background: #ffffff;
   text-align: center;
   overflow: hidden;
-  border-bottom: 1px solid #e8e8e8;
 
   & .sidebar-logo-link {
     height: 100%;
     width: 100%;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    position: absolute;
+    left: 0;
+    top: 0;
 
-    & .sidebar-logo {
+    & .logo-mark {
       width: 32px;
       height: 32px;
-      vertical-align: middle;
-      margin-right: 12px;
+      line-height: 32px;
+      background: linear-gradient(220.55deg, #7cf7ff 0%, #4b73ff 100%);
+      color: #fff;
+      font-weight: 700;
+      font-size: 18px;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(75, 115, 255, 0.3);
+      user-select: none;
     }
 
     & .sidebar-title {
       display: inline-block;
       margin: 0;
-      color: #001529;
-      font-weight: 600;
+      font-weight: 700;
       line-height: 50px;
-      font-size: 14px;
-      font-family:
-        Avenir,
-        Helvetica Neue,
-        Arial,
-        Helvetica,
-        sans-serif;
+      font-size: 20px;
+      font-family: Avenir, 'Helvetica Neue', Arial, Helvetica, sans-serif;
       vertical-align: middle;
-    }
-  }
-
-  &.collapse {
-    .sidebar-logo {
-      margin-right: 0px;
+      background: linear-gradient(220.55deg, #7cf7ff 0%, #4b73ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 0.5px;
+      user-select: none;
+      white-space: nowrap;
     }
   }
 }

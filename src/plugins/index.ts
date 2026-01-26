@@ -9,7 +9,7 @@ import animate from '@/animate';
 import { download as dl } from '@/utils/request';
 import { useDict } from '@/utils/dict';
 import { getConfigKey, updateConfigByKey } from '@/api/system/config';
-import { parseTime, addDateRange, handleTree, selectDictLabel, selectDictLabels } from '@/utils/ruoyi';
+import { parseTime, addDateRange, handleTree, selectDictLabel, selectDictLabels, resetForm } from '@/utils/ruoyi';
 
 import { App } from 'vue';
 
@@ -36,6 +36,7 @@ export default function installPlugin(app: App) {
   app.config.globalProperties.download = dl;
   app.config.globalProperties.parseTime = parseTime;
   app.config.globalProperties.handleTree = handleTree;
+  app.config.globalProperties.resetForm = resetForm;
   app.config.globalProperties.addDateRange = addDateRange;
   app.config.globalProperties.selectDictLabel = selectDictLabel;
   app.config.globalProperties.selectDictLabels = selectDictLabels;

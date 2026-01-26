@@ -3,7 +3,7 @@
     <template v-if="hasOneShowingChild(item, item.children) && (!onlyOneChild.children || onlyOneChild.noShowingChildren) && !item.alwaysShow">
       <app-link v-if="onlyOneChild.meta" :to="resolvePath(onlyOneChild.path, onlyOneChild.query)">
         <el-menu-item :index="resolvePath(onlyOneChild.path)" :class="{ 'submenu-title-noDropdown': !isNest }">
-          <svg-icon :icon-class="onlyOneChild.meta.icon || (item.meta && item.meta.icon)" />
+          <div class="menu-dot"></div>
           <template #title>
             <span class="menu-title" :title="hasTitle(onlyOneChild.meta.title)">{{ onlyOneChild.meta.title }}</span>
           </template>
@@ -13,7 +13,7 @@
 
     <el-sub-menu v-else ref="subMenu" :index="resolvePath(item.path)" teleported>
       <template v-if="item.meta" #title>
-        <svg-icon :icon-class="item.meta ? item.meta.icon : ''" />
+        <div class="menu-dot"></div>
         <span class="menu-title" :title="hasTitle(item.meta?.title)">{{ item.meta?.title }}</span>
       </template>
 
@@ -64,12 +64,10 @@ const hasOneShowingChild = (parent: RouteRecordRaw, children?: RouteRecordRaw[])
     return true;
   });
 
-  // When there is only one child router, the child router is displayed by default
   if (showingChildren.length === 1) {
     return true;
   }
 
-  // Show parent if there are no child router to display
   if (showingChildren.length === 0) {
     onlyOneChild.value = { ...parent, path: '', noShowingChildren: true };
     return true;
@@ -99,3 +97,70 @@ const hasTitle = (title: string | undefined): string => {
   return title;
 };
 </script>
+
+<style lang="scss" scoped>
+.menu-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #d1d5db; /* 默认灰色 */
+  margin-right: 12px;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+:deep(.el-menu-item) {
+  transition: all 0.3s ease;
+
+  &:hover {
+    .menu-dot {
+      background-color: #409eff;
+      transform: scale(1.2);
+    }
+  }
+
+  &.is-active {
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 4px;
+      height: 24px;
+      background-color: #409eff;
+      border-radius: 0 4px 4px 0;
+      box-shadow: 0 0 4px rgba(64, 158, 255, 0.4);
+    }
+
+    .menu-dot {
+      background-color: #409eff !important;
+      box-shadow: 0 0 10px rgba(64, 158, 255, 0.6);
+      transform: scale(1.2);
+    }
+
+    .menu-title {
+      color: #409eff !important;
+    }
+  }
+}
+
+:deep(.el-sub-menu__title) {
+  transition: all 0.3s ease;
+
+  &:hover {
+    .menu-dot {
+      background-color: #409eff;
+      transform: scale(1.2);
+    }
+  }
+}
+
+.menu-title {
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  transition: color 0.3s;
+}
+</style>

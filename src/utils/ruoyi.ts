@@ -231,6 +231,19 @@ export const blobValidate = (data: any) => {
   return data.type !== 'application/json';
 };
 
+/**
+ * 重置表单
+ * @param refName 表单ref名称
+ */
+export const resetForm = (refName: string) => {
+  const ctx = getCurrentInstance();
+  const proxy = ctx?.proxy;
+  if (proxy?.$refs[refName]) {
+    (proxy.$refs[refName] as any).resetFields();
+  }
+};
+
 export default {
-  handleTree
+  handleTree,
+  resetForm
 };
