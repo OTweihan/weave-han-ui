@@ -17,7 +17,7 @@ export const hasPermi: Directive = {
         return false;
       }
     } else {
-      throw new Error("check perms! Like v-has-permi=\"['system:user:add','system:user:edit']\"");
+      throw new Error("check perms! Like v-hasPermi=\"['system:user:add','system:user:edit']\"");
     }
   }
 };
@@ -38,7 +38,7 @@ export const hasRoles: Directive = {
         return false;
       }
     } else {
-      throw new Error("check roles! Like v-has-roles=\"['admin','test']\"");
+      throw new Error("check roles! Like v-hasRoles=\"['admin','test']\"");
     }
   }
 };
