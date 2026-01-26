@@ -37,6 +37,7 @@ import { useSettingsStore } from '@/store/modules/settings';
 import { usePermissionStore } from '@/store/modules/permission';
 import { useTagsViewStore } from '@/store/modules/tagsView';
 import { RouteRecordRaw, RouteLocationNormalized } from 'vue-router';
+import { Back, CircleClose, Close, RefreshRight, Right } from '@element-plus/icons-vue';
 
 const visible = ref(false);
 const top = ref(0);
@@ -51,13 +52,13 @@ const router = useRouter();
 
 const visitedViews = computed(() => useTagsViewStore().getVisitedViews());
 const routes = computed(() => usePermissionStore().getRoutes());
-const theme = computed(() => useSettingsStore().theme);
 const tagsIcon = computed(() => useSettingsStore().tagsIcon);
 
 watch(route, () => {
   addTags();
   moveToCurrentTag();
 });
+
 watch(visible, (value) => {
   if (value) {
     document.body.addEventListener('click', closeMenu);
@@ -69,6 +70,7 @@ watch(visible, (value) => {
 const isActive = (r: RouteLocationNormalized): boolean => {
   return r.path === route.path;
 };
+
 const activeStyle = (tag: RouteLocationNormalized) => {
   if (!isActive(tag)) return {};
   return {
@@ -77,9 +79,11 @@ const activeStyle = (tag: RouteLocationNormalized) => {
     'color': '#ffffff'
   };
 };
+
 const isAffix = (tag: RouteLocationNormalized) => {
   return tag?.meta && tag?.meta?.affix;
 };
+
 const isFirstView = () => {
   try {
     return selectedTag.value.fullPath === '/index' || selectedTag.value.fullPath === visitedViews.value[1].fullPath;
@@ -87,6 +91,7 @@ const isFirstView = () => {
     return false;
   }
 };
+
 const isLastView = () => {
   try {
     return selectedTag.value.fullPath === visitedViews.value[visitedViews.value.length - 1].fullPath;
@@ -94,6 +99,7 @@ const isLastView = () => {
     return false;
   }
 };
+
 const filterAffixTags = (routes: RouteRecordRaw[], basePath = '') => {
   let tags: RouteLocationNormalized[] = [];
 
@@ -121,6 +127,7 @@ const filterAffixTags = (routes: RouteRecordRaw[], basePath = '') => {
   });
   return tags;
 };
+
 const initTags = () => {
   const res = filterAffixTags(routes.value);
   affixTags.value = res;
@@ -131,6 +138,7 @@ const initTags = () => {
     }
   }
 };
+
 const addTags = () => {
   const { name } = route;
   if (route.query.title) {
@@ -140,6 +148,7 @@ const addTags = () => {
     useTagsViewStore().addView(route as any);
   }
 };
+
 const moveToCurrentTag = () => {
   nextTick(() => {
     for (const r of visitedViews.value) {
@@ -153,12 +162,14 @@ const moveToCurrentTag = () => {
     }
   });
 };
+
 const refreshSelectedTag = (view: RouteLocationNormalized) => {
   proxy?.$tab.refreshPage(view);
   if (route.meta.link) {
     useTagsViewStore().delIframeView(route);
   }
 };
+
 const closeSelectedTag = (view: RouteLocationNormalized) => {
   proxy?.$tab.closePage(view).then(({ visitedViews }: any) => {
     if (isActive(view)) {
@@ -166,6 +177,7 @@ const closeSelectedTag = (view: RouteLocationNormalized) => {
     }
   });
 };
+
 const closeRightTags = () => {
   proxy?.$tab.closeRightPage(selectedTag.value).then((visitedViews: RouteLocationNormalized[]) => {
     if (!visitedViews.find((i: RouteLocationNormalized) => i.fullPath === route.fullPath)) {
@@ -173,6 +185,7 @@ const closeRightTags = () => {
     }
   });
 };
+
 const closeLeftTags = () => {
   proxy?.$tab.closeLeftPage(selectedTag.value).then((visitedViews: RouteLocationNormalized[]) => {
     if (!visitedViews.find((i: RouteLocationNormalized) => i.fullPath === route.fullPath)) {
@@ -180,6 +193,7 @@ const closeLeftTags = () => {
     }
   });
 };
+
 const closeOthersTags = () => {
   if (selectedTag.value?.fullPath) {
     router.push(selectedTag.value.fullPath).catch(() => {});
@@ -188,6 +202,7 @@ const closeOthersTags = () => {
     moveToCurrentTag();
   });
 };
+
 const closeAllTags = (view: RouteLocationNormalized) => {
   proxy?.$tab.closeAllPage().then(({ visitedViews }) => {
     if (affixTags.value.some((tag) => tag.path === route.path)) {
@@ -196,27 +211,26 @@ const closeAllTags = (view: RouteLocationNormalized) => {
     toLastView(visitedViews, view);
   });
 };
+
 const toLastView = (visitedViews: RouteLocationNormalized[], view?: RouteLocationNormalized) => {
   const latestView = visitedViews.slice(-1)[0];
   if (latestView) {
     router.push(latestView.fullPath as string);
   } else {
-    // now the default is to redirect to the home page if there is no tags-view,
-    // you can adjust it according to your needs.
     if (view?.name === 'Dashboard') {
-      // to reload home page
       router.replace({ path: '/redirect' + view?.fullPath });
     } else {
       router.push('/');
     }
   }
 };
+
 const openMenu = (tag: RouteLocationNormalized, e: MouseEvent) => {
   const menuMinWidth = 105;
-  const offsetLeft = proxy?.$el.getBoundingClientRect().left; // container margin left
-  const offsetWidth = proxy?.$el.offsetWidth; // container width
-  const maxLeft = offsetWidth - menuMinWidth; // left boundary
-  const l = e.clientX - offsetLeft + 15; // 15: margin right
+  const offsetLeft = proxy?.$el.getBoundingClientRect().left;
+  const offsetWidth = proxy?.$el.offsetWidth;
+  const maxLeft = offsetWidth - menuMinWidth;
+  const l = e.clientX - offsetLeft + 15;
 
   if (l > maxLeft) {
     left.value = maxLeft;
@@ -228,9 +242,11 @@ const openMenu = (tag: RouteLocationNormalized, e: MouseEvent) => {
   visible.value = true;
   selectedTag.value = tag;
 };
+
 const closeMenu = () => {
   visible.value = false;
 };
+
 const handleScroll = () => {
   closeMenu();
 };
@@ -243,34 +259,33 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .tags-view-container {
-  height: 34px;
+  height: 38px;
   width: 100%;
-  background-color: #f5f7fa;
-  border: 1px solid #e4e7ed;
-  border-top: none;
+  background: #fff;
+  border-bottom: 1px solid #d8dce5;
   box-shadow:
-    0 1px 3px 0 rgba(0, 0, 0, 0.08),
-    0 0 3px 0 rgba(0, 0, 0, 0.02);
+    0 1px 3px 0 rgba(0, 0, 0, 0.12),
+    0 0 3px 0 rgba(0, 0, 0, 0.04);
   .tags-view-wrapper {
     .tags-view-item {
       display: inline-block;
       position: relative;
       cursor: pointer;
-      height: 26px;
-      line-height: 25px;
-      background-color: #ffffff;
-      border: 1px solid #dcdfe6;
-      color: #606266;
-      padding: 0 10px;
+      height: 30px;
+      line-height: 28px;
+      border: 1px solid #d8dce5;
+      color: #495060;
+      background: #fff;
+      padding: 0 12px;
       font-size: 12px;
-      margin-left: 5px;
+      margin-left: 6px;
       margin-top: 4px;
-      border-radius: 3px;
-      transition: all 0.2s;
+      border-radius: 4px;
+      transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
       &:hover {
+        border-color: var(--el-color-primary-light-5);
         color: var(--el-color-primary);
-        border-color: var(--el-color-primary-light-7);
-        background-color: #f0f9ff;
+        background-color: var(--el-color-primary-light-9);
       }
       &:first-of-type {
         margin-left: 15px;
@@ -280,24 +295,17 @@ onMounted(() => {
       }
       &.active {
         background-color: var(--el-color-primary);
-        color: #ffffff;
+        color: #fff;
         border-color: var(--el-color-primary);
-        font-weight: 500;
-        box-shadow: 0 2px 4px rgba(64, 158, 255, 0.2);
         &::before {
           content: '';
-          background: #ffffff;
+          background: #fff;
           display: inline-block;
-          width: 6px;
-          height: 6px;
+          width: 8px;
+          height: 8px;
           border-radius: 50%;
           position: relative;
           margin-right: 6px;
-        }
-        &:hover {
-          background-color: var(--el-color-primary);
-          border-color: var(--el-color-primary);
-          color: #ffffff;
         }
       }
     }
@@ -336,7 +344,6 @@ onMounted(() => {
 </style>
 
 <style lang="scss">
-//reset element css of el-icon-close
 .tags-view-wrapper {
   .tags-view-item {
     .el-icon-close {

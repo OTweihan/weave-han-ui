@@ -1,10 +1,7 @@
 <template>
-  <div class="sidebar-logo-container" :class="{ collapse: collapse }">
+  <div class="sidebar-logo-container">
     <transition name="sidebarLogoFade">
-      <router-link v-if="collapse" key="collapse" class="sidebar-logo-link" to="/index/home">
-        <div class="logo-mark">{{ title.charAt(0) }}</div>
-      </router-link>
-      <router-link v-else key="expand" class="sidebar-logo-link" to="/index/home">
+      <router-link key="expand" class="sidebar-logo-link" to="/index/home">
         <h1 class="sidebar-title">{{ title }}</h1>
       </router-link>
     </transition>
@@ -13,13 +10,6 @@
 
 <script setup lang="ts">
 import { useSettingsStore } from '@/store/modules/settings';
-
-defineProps({
-  collapse: {
-    type: Boolean,
-    required: true
-  }
-});
 
 const title = import.meta.env.VITE_APP_LOGO_TITLE;
 const settingsStore = useSettingsStore();

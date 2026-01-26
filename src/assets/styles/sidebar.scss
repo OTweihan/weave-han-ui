@@ -8,10 +8,6 @@
     position: relative;
   }
 
-  .sidebarHide {
-    margin-left: 0 !important;
-  }
-
   .sidebar-container {
     -webkit-transition: width 0.28s;
     transition: width 0.28s;
@@ -215,89 +211,6 @@
     }
   }
 
-  // 收起菜单后的样式
-  .hideSidebar {
-    .sidebar-container {
-      width: 54px !important;
-    }
-
-    .main-container {
-      margin-left: 54px;
-    }
-
-    .sub-menu-title-noDropdown {
-      padding: 0 !important;
-      position: relative;
-      height: 45px;
-      // 选中状态的菜单
-      &.is-active {
-        background-color: rgba(64, 158, 255, 0.1) !important;
-        color: var(--el-color-primary) !important;
-        font-weight: 600;
-      }
-
-      .el-tooltip {
-        padding: 0 !important;
-      }
-    }
-
-
-    & .el-sub-menu {
-      overflow: hidden;
-      border-radius: 8px;
-      .el-sub-menu__title.el-tooltip__trigger {
-        border-radius: 8px;
-        height: 45px;
-      }
-
-      // 选中状态的菜单
-      &.is-active .el-sub-menu__title.el-tooltip__trigger {
-        background-color: rgba(64, 158, 255, 0.1) !important;
-        color: var(--el-color-primary) !important;
-      }
-
-
-      & > .el-sub-menu__title {
-        padding: 0 !important;
-      }
-    }
-
-    .el-menu--collapse {
-      .is-active .svg-icon {
-        fill: #fff;
-      }
-      .svg-icon {
-        display: flex;
-        margin: auto;
-        height: 100%;
-        // 这里设置width会跟随sidebar-container的transition 不符合预期
-      }
-      .el-sub-menu {
-        & > .el-sub-menu__title {
-          & > span {
-            height: 0;
-            width: 0;
-            overflow: hidden;
-            visibility: hidden;
-            display: inline-block;
-          }
-          & > i {
-            height: 0;
-            width: 0;
-            overflow: hidden;
-            visibility: hidden;
-            display: inline-block;
-          }
-        }
-      }
-    }
-  }
-
-  .el-menu--collapse .el-menu .el-sub-menu {
-    min-width: $base-sidebar-width !important;
-  }
-
-  // mobile responsive
   .mobile {
     .main-container {
       margin-left: 0;
@@ -325,7 +238,6 @@
   }
 }
 
-// when menu collapsed
 .el-menu--vertical {
   & > .el-menu {
     .svg-icon {
@@ -333,34 +245,4 @@
     }
   }
 }
-// 收起菜单后悬浮的菜单样式
-.el-popper.is-pure{
-  border-radius: 8px;
-  background-color: #ffffff !important;
-  .el-menu--popup{
-    border-radius: 8px;
-    background-color: #ffffff !important;
-  }
-  .el-menu-item{
-    background-color: #ffffff !important;
-    color: rgba(0, 0, 0, 0.7) !important;
-    border-radius: 4px;
-    &:hover {
-      background-color: rgba(64, 158, 255, 0.1) !important;
-      color: var(--el-color-primary) !important;
-    }
-    &.is-active {
-      background-color: rgba(64, 158, 255, 0.1) !important;
-      color: var(--el-color-primary) !important;
-      font-weight: 600;
-    }
-  }
-  .el-sub-menu__title {
-    background-color: #ffffff !important;
-    color: rgba(0, 0, 0, 0.7) !important;
-    &:hover {
-      background-color: rgba(64, 158, 255, 0.1) !important;
-      color: var(--el-color-primary) !important;
-    }
-  }
-}
+

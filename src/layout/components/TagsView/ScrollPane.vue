@@ -7,32 +7,37 @@
 <script setup lang="ts">
 import { RouteLocationNormalized } from 'vue-router';
 import { useTagsViewStore } from '@/store/modules/tagsView';
+import { ElScrollbar } from 'element-plus';
 
+const emits = defineEmits(['scroll']);
+const tagsViewStore = useTagsViewStore();
 const tagAndTagSpacing = ref(4);
+const scrollContainerRef = ref<InstanceType<typeof ElScrollbar>>();
+const visitedViews = computed(() => tagsViewStore.visitedViews);
 
-const scrollContainerRef = ref<ElScrollbarInstance>();
-const scrollWrapper = computed(() => scrollContainerRef.value?.$refs.wrapRef);
+// 获取滚动容器的包装元素
+const scrollWrapper = computed(() => scrollContainerRef.value?.$refs.wrapRef as HTMLElement);
 
-onMounted(() => {
-  scrollWrapper.value?.addEventListener('scroll', emitScroll, true);
-});
-onBeforeUnmount(() => {
-  scrollWrapper.value?.removeEventListener('scroll', emitScroll);
-});
-
+/**
+ * 处理鼠标滚轮事件
+ */
 const handleScroll = (e: WheelEvent) => {
   const eventDelta = (e as any).wheelDelta || -e.deltaY * 40;
   const $scrollWrapper = scrollWrapper.value;
   $scrollWrapper.scrollLeft = $scrollWrapper.scrollLeft + eventDelta / 4;
 };
-const emits = defineEmits(['scroll']);
+
+/**
+ * 触发滚动事件
+ */
 const emitScroll = () => {
   emits('scroll');
 };
 
-const tagsViewStore = useTagsViewStore();
-const visitedViews = computed(() => tagsViewStore.visitedViews);
-
+/**
+ * 移动到目标标签
+ * @param currentTag 当前选中的标签路由对象
+ */
 const moveToTarget = (currentTag: RouteLocationNormalized) => {
   const $container = scrollContainerRef.value?.$el;
   const $containerWidth = $container.offsetWidth;
@@ -41,7 +46,7 @@ const moveToTarget = (currentTag: RouteLocationNormalized) => {
   let firstTag = null;
   let lastTag = null;
 
-  // find first tag and last tag
+  // 查找第一个和最后一个标签
   if (visitedViews.value.length > 0) {
     firstTag = visitedViews.value[0];
     lastTag = visitedViews.value[visitedViews.value.length - 1];
@@ -52,27 +57,28 @@ const moveToTarget = (currentTag: RouteLocationNormalized) => {
   } else if (lastTag === currentTag) {
     $scrollWrapper.scrollLeft = $scrollWrapper.scrollWidth - $containerWidth;
   } else {
-    const tagListDom: any = document.getElementsByClassName('tags-view-item');
+    // 查找当前标签的前一个和后一个标签的 DOM 元素
+    const tagListDom = document.getElementsByClassName('tags-view-item') as HTMLCollectionOf<HTMLElement>;
     const currentIndex = visitedViews.value.findIndex((item) => item === currentTag);
     let prevTag = null;
     let nextTag = null;
 
-    for (const k in tagListDom) {
-      if (k !== 'length' && Object.hasOwnProperty.call(tagListDom, k)) {
-        if (tagListDom[k].dataset.path === visitedViews.value[currentIndex - 1].path) {
-          prevTag = tagListDom[k];
-        }
-        if (tagListDom[k].dataset.path === visitedViews.value[currentIndex + 1].path) {
-          nextTag = tagListDom[k];
-        }
+    for (let i = 0; i < tagListDom.length; i++) {
+      const tag = tagListDom[i];
+      if (tag.dataset.path === visitedViews.value[currentIndex - 1]?.path) {
+        prevTag = tag;
+      }
+      if (tag.dataset.path === visitedViews.value[currentIndex + 1]?.path) {
+        nextTag = tag;
       }
     }
 
-    // the tag's offsetLeft after of nextTag
+    // 移动到下一个标签之后
     const afterNextTagOffsetLeft = nextTag.offsetLeft + nextTag.offsetWidth + tagAndTagSpacing.value;
 
-    // the tag's offsetLeft before of prevTag
+    // 移动到前一个标签之前
     const beforePrevTagOffsetLeft = prevTag.offsetLeft - tagAndTagSpacing.value;
+
     if (afterNextTagOffsetLeft > $scrollWrapper.scrollLeft + $containerWidth) {
       $scrollWrapper.scrollLeft = afterNextTagOffsetLeft - $containerWidth;
     } else if (beforePrevTagOffsetLeft < $scrollWrapper.scrollLeft) {
@@ -80,6 +86,14 @@ const moveToTarget = (currentTag: RouteLocationNormalized) => {
     }
   }
 };
+
+onMounted(() => {
+  scrollWrapper.value?.addEventListener('scroll', emitScroll, true);
+});
+
+onBeforeUnmount(() => {
+  scrollWrapper.value?.removeEventListener('scroll', emitScroll);
+});
 
 defineExpose({
   moveToTarget
@@ -92,11 +106,15 @@ defineExpose({
   position: relative;
   overflow: hidden;
   width: 100%;
+
+  // 隐藏默认滚动条
   :deep(.el-scrollbar__bar) {
-    bottom: 0px;
+    bottom: 0;
   }
+
+  // 调整滚动区域高度以适应标签
   :deep(.el-scrollbar__wrap) {
-    height: 49px;
+    height: 55px;
   }
 }
 </style>

@@ -37,8 +37,8 @@ const needTagsView = computed(() => settingsStore.tagsView);
 const fixedHeader = computed(() => settingsStore.fixedHeader);
 
 const classObj = computed(() => ({
-  hideSidebar: !sidebar.value.opened,
-  openSidebar: sidebar.value.opened,
+  hideSidebar: device.value === 'mobile' ? !sidebar.value.opened : false,
+  openSidebar: device.value === 'mobile' ? sidebar.value.opened : true,
   withoutAnimation: sidebar.value.withoutAnimation,
   mobile: device.value === 'mobile'
 }));
@@ -118,10 +118,6 @@ const setLayout = () => {
   width: calc(100% - #{$base-sidebar-width});
   transition: width 0.28s;
   background: $fixed-header-bg;
-}
-
-.hideSidebar .fixed-header {
-  width: calc(100% - 54px);
 }
 
 .sidebarHide .fixed-header {

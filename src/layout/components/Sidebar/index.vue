@@ -1,6 +1,6 @@
 <template>
   <div :class="{ 'has-logo': showLogo }" :style="{ backgroundColor: bgColor }">
-    <logo v-if="showLogo" :collapse="isCollapse" />
+    <logo v-if="showLogo" />
     <el-scrollbar :class="sideTheme" wrap-class="scrollbar-wrapper">
       <transition :enter-active-class="proxy?.animate.menuSearchAnimate.enter" mode="out-in">
         <el-menu
@@ -40,7 +40,7 @@ const sidebarRouters = computed<RouteRecordRaw[]>(() => permissionStore.getSideb
 const showLogo = computed(() => settingsStore.sidebarLogo);
 const sideTheme = computed(() => settingsStore.sideTheme);
 const theme = computed(() => settingsStore.theme);
-const isCollapse = computed(() => !appStore.sidebar.opened);
+const isCollapse = false;
 
 const activeMenu = computed(() => {
   const { meta, path } = route;

@@ -1,9 +1,16 @@
 <template>
-  <el-breadcrumb class="app-breadcrumb" separator="/">
+  <el-breadcrumb class="app-breadcrumb" separator="">
     <transition-group name="breadcrumb">
       <el-breadcrumb-item v-for="(item, index) in levelList" :key="item.path">
-        <span v-if="item.redirect === 'noRedirect' || index == levelList.length - 1" class="no-redirect">{{ item.meta?.title }}</span>
-        <a v-else @click.prevent="handleLink(item)">{{ item.meta?.title }}</a>
+        <div class="breadcrumb-item-inner" :class="{ 'is-last': index == levelList.length - 1 }">
+          <span v-if="item.redirect === 'noRedirect' || index == levelList.length - 1" class="no-redirect">
+            {{ item.meta?.title }}
+          </span>
+          <a v-else class="redirect-link" @click.prevent="handleLink(item)">
+            {{ item.meta?.title }}
+          </a>
+          <span v-if="index < levelList.length - 1" class="custom-separator"> / </span>
+        </div>
       </el-breadcrumb-item>
     </transition-group>
   </el-breadcrumb>
@@ -19,10 +26,8 @@ const permissionStore = usePermissionStore();
 const levelList = ref<RouteLocationMatched[]>([]);
 
 const getBreadcrumb = () => {
-  // only show routes with meta.title
   let matched = [];
   const pathNum = findPathNum(route.path);
-  // multi-level menu
   if (pathNum > 2) {
     const reg = /\/\w+/gi;
     const pathList = route.path.match(reg).map((item, index) => {
@@ -35,15 +40,17 @@ const getBreadcrumb = () => {
   }
   // 判断是否为首页
   if (!isDashboard(matched[0])) {
-    matched = [{ path: '/index', meta: { title: '首页' } }].concat(matched);
+    matched = [{ path: '/index', meta: { title: '首页' }, redirect: 'noRedirect' }].concat(matched);
   }
   levelList.value = matched.filter((item) => item.meta && item.meta.title && item.meta.breadcrumb !== false);
 };
-const findPathNum = (str, char = '/') => {
+
+const findPathNum = (str: string, char = '/') => {
   if (typeof str !== 'string' || str.length === 0) return 0;
   return str.split(char).length - 1;
 };
-const getMatched = (pathList, routeList, matched) => {
+
+const getMatched = (pathList: string[] | void[], routeList: any[], matched: any[]) => {
   const data = routeList.find((item) => item.path == pathList[0] || (item.name += '').toLowerCase() == pathList[0]);
   if (data) {
     matched.push(data);
@@ -53,6 +60,7 @@ const getMatched = (pathList, routeList, matched) => {
     }
   }
 };
+
 const isDashboard = (route: RouteLocationMatched) => {
   const name = route && (route.name as string);
   if (!name) {
@@ -60,31 +68,84 @@ const isDashboard = (route: RouteLocationMatched) => {
   }
   return name.trim() === 'Index';
 };
-const handleLink = (item) => {
+
+const handleLink = (item: { redirect: any; path: any }) => {
   const { redirect, path } = item;
   redirect ? router.push(redirect) : router.push(path);
 };
 
 watchEffect(() => {
-  // if you go to the redirect page, do not update the breadcrumbs
   if (route.path.startsWith('/redirect/')) return;
   getBreadcrumb();
 });
+
 onMounted(() => {
   getBreadcrumb();
 });
 </script>
 
 <style lang="scss" scoped>
-.app-breadcrumb.el-breadcrumb {
+.el-breadcrumb {
   display: inline-block;
   font-size: 14px;
   line-height: 50px;
-  margin-left: 8px;
+  margin-left: 18px;
+
+  .breadcrumb-item-inner {
+    display: flex;
+    align-items: center;
+  }
 
   .no-redirect {
-    color: #97a8be;
-    cursor: text;
+    color: #606266;
+    cursor: default;
+    font-weight: 600;
   }
+
+  .redirect-link {
+    color: #909399;
+    font-weight: 400;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    text-decoration: none;
+
+    &:hover {
+      color: var(--el-color-primary);
+      transform: translateY(-1px);
+    }
+
+    // 下划线动画
+    &::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 1px;
+      bottom: -2px;
+      left: 0;
+      background-color: var(--el-color-primary);
+      transform: scaleX(0);
+      transform-origin: bottom right;
+      transition: transform 0.3s ease-out;
+    }
+
+    &:hover::after {
+      transform: scaleX(1);
+      transform-origin: bottom left;
+    }
+  }
+
+  .custom-separator {
+    margin: 0 8px;
+    color: #c0c4cc;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 400;
+  }
+}
+
+:deep(.el-breadcrumb__separator) {
+  display: none;
 }
 </style>
