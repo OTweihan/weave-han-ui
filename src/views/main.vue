@@ -12,15 +12,48 @@
 
 <script setup name="Main" lang="ts">
 import { useRouter } from 'vue-router';
+import { getToken, removeToken } from '@/utils/auth';
 
 const router = useRouter();
 
 const goToLogin = () => {
-  router.push('/login');
+  console.log('点击登录按钮');
+  console.log('当前路由:', router.currentRoute.value.path);
+
+  // 如果已经登录（有token），先清除token
+  if (getToken()) {
+    console.log('检测到已登录，清除token');
+    removeToken();
+  }
+
+  router
+    .push('/login')
+    .then(() => {
+      console.log('路由跳转成功');
+      console.log('跳转后路由:', router.currentRoute.value.path);
+    })
+    .catch((err) => {
+      console.error('路由跳转失败:', err);
+    });
 };
 
 const goToRegister = () => {
-  router.push('/register');
+  console.log('点击注册按钮, router:', router);
+
+  // 如果已经登录（有token），先清除token
+  if (getToken()) {
+    console.log('检测到已登录，清除token');
+    removeToken();
+  }
+
+  router
+    .push('/register')
+    .then(() => {
+      console.log('路由跳转成功');
+    })
+    .catch((err) => {
+      console.error('路由跳转失败:', err);
+    });
 };
 </script>
 
