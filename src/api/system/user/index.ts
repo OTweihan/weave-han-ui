@@ -164,29 +164,6 @@ export const uploadAvatar = (data: FormData) => {
   });
 };
 
-/**
- * 查询授权角色
- * @param userId 用户ID
- */
-export const getAuthRole = (userId: string | number): AxiosPromise<{ user: UserVO; roles: RoleVO[] }> => {
-  return request({
-    url: '/system/user/authRole/' + userId,
-    method: 'get'
-  });
-};
-
-/**
- * 保存授权角色
- * @param data 用户ID
- */
-export const updateAuthRole = (data: { userId: string; roleIds: string }) => {
-  return request({
-    url: '/system/user/authRole',
-    method: 'put',
-    params: data
-  });
-};
-
 export default {
   listUser,
   getUser,
@@ -199,7 +176,5 @@ export default {
   getUserProfile,
   updateUserProfile,
   updateUserPwd,
-  uploadAvatar,
-  getAuthRole,
-  updateAuthRole,
+  uploadAvatar
 };

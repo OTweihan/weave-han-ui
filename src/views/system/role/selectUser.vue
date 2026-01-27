@@ -84,7 +84,6 @@ const show = () => {
  * 选择行
  */
 const clickRow = (row: any) => {
-  // ele的bug
   tableRef.value?.toggleRowSelection(row, false);
 };
 

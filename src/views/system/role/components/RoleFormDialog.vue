@@ -44,23 +44,23 @@
 
       <div class="section-divider"></div>
       <div class="section-title">菜单权限</div>
-        <el-form-item class="menu-permission-item">
-          <div class="menu-toolbar">
-            <el-checkbox v-model="menuExpand" @change="handleCheckedTreeExpand($event, 'menu')">展开/折叠</el-checkbox>
-            <el-checkbox v-model="menuNodeAll" @change="handleCheckedTreeNodeAll($event, 'menu')">全选/全不选</el-checkbox>
-            <el-checkbox v-model="form.menuCheckStrictly" @change="handleCheckedTreeConnect($event, 'menu')">父子联动</el-checkbox>
-          </div>
-          <el-tree
-            ref="menuRef"
-            class="tree-border"
-            :data="menuOptions"
-            show-checkbox
-            node-key="id"
-            :check-strictly="!form.menuCheckStrictly"
-            empty-text="加载中，请稍候"
-            :props="{ label: 'label', children: 'children' } as any"
-          />
-        </el-form-item>
+      <el-form-item class="menu-permission-item">
+        <div class="menu-toolbar">
+          <el-checkbox v-model="menuExpand" @change="handleCheckedTreeExpand($event, 'menu')">展开/折叠</el-checkbox>
+          <el-checkbox v-model="menuNodeAll" @change="handleCheckedTreeNodeAll($event, 'menu')">全选/全不选</el-checkbox>
+          <el-checkbox v-model="form.menuCheckStrictly" @change="handleCheckedTreeConnect($event, 'menu')">父子联动</el-checkbox>
+        </div>
+        <el-tree
+          ref="menuRef"
+          class="tree-border"
+          :data="menuOptions"
+          show-checkbox
+          node-key="id"
+          :check-strictly="!form.menuCheckStrictly"
+          empty-text="加载中，请稍候"
+          :props="{ label: 'label', children: 'children' } as any"
+        />
+      </el-form-item>
 
       <el-form-item label="备注">
         <el-input v-model="form.remark" type="textarea" placeholder="请输入备注信息" />

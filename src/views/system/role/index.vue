@@ -185,7 +185,7 @@ const data = reactive<PageData<RoleForm, RoleQuery>>({
     roleSort: [{ required: true, message: '角色顺序不能为空', trigger: 'blur' }]
   }
 });
-const { form, queryParams, rules } = toRefs(data);
+const { form, queryParams } = toRefs(data);
 
 const dialog = reactive<DialogOption>({
   visible: false,

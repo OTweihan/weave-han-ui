@@ -1,29 +1,31 @@
 <template>
   <div class="p-2 h-full flex flex-col">
-    <!-- 搜索区域（可折叠） -->
+    <!-- 搜索表单区域（可折叠） -->
     <transition :enter-active-class="proxy?.animate.searchAnimate.enter" :leave-active-class="proxy?.animate.searchAnimate.leave">
-      <div v-show="showSearch" class="mb-[10px]">
+      <div v-show="showSearch" class="mb-3">
         <el-card shadow="hover" class="search-card">
           <el-form ref="queryFormRef" :model="queryParams" :inline="true">
-            <el-form-item label="用户账号" prop="userAccount">
+            <el-form-item label="用户账号">
               <el-input
                 v-model="queryParams.userAccount"
                 placeholder="请输入用户账号"
                 clearable
                 maxlength="20"
-                @input="(val: string) => (queryParams.userAccount = val.replace(/[^a-zA-Z0-9]/g, ''))"
+                @input="queryParams.userAccount = $event.replace(/[^a-zA-Z0-9]/g, '')"
                 @keyup.enter="handleQuery"
               />
             </el-form-item>
-            <el-form-item label="用户昵称" prop="nickName">
+
+            <el-form-item label="用户名称">
               <el-input v-model="queryParams.nickName" placeholder="请输入用户昵称" clearable @keyup.enter="handleQuery" />
             </el-form-item>
-            <el-form-item label="手机号码" prop="phonenumber">
+
+            <el-form-item label="手机号码">
               <el-input v-model="queryParams.phonenumber" placeholder="请输入手机号码" clearable @keyup.enter="handleQuery" />
             </el-form-item>
 
-            <el-form-item label="状态" prop="status">
-              <el-select v-model="queryParams.status" placeholder="用户状态" clearable>
+            <el-form-item label="状态">
+              <el-select v-model="queryParams.status" placeholder="全部" clearable>
                 <el-option v-for="dict in sys_normal_disable" :key="dict.value" :label="dict.label" :value="dict.value" />
               </el-select>
             </el-form-item>
@@ -31,11 +33,11 @@
             <el-form-item label="创建时间" style="width: 308px">
               <el-date-picker
                 v-model="dateRange"
-                value-format="YYYY-MM-DD HH:mm:ss"
                 type="daterange"
                 range-separator="-"
                 start-placeholder="开始日期"
                 end-placeholder="结束日期"
+                value-format="YYYY-MM-DD HH:mm:ss"
                 :default-time="[new Date(2000, 1, 1, 0, 0, 0), new Date(2000, 1, 1, 23, 59, 59)]"
               />
             </el-form-item>
@@ -49,7 +51,7 @@
       </div>
     </transition>
 
-    <!-- 主表格区域 + 工具栏 -->
+    <!-- 表格 + 工具栏 + 分页 -->
     <el-card shadow="hover" class="flex-1 flex flex-col overflow-hidden table-card">
       <template #header>
         <el-row :gutter="10">
@@ -64,8 +66,9 @@
               删除
             </el-button>
           </el-col>
+
           <el-col :span="1.5">
-            <el-dropdown class="mt-[1px]">
+            <el-dropdown>
               <el-button plain type="info">
                 更多
                 <el-icon class="el-icon--right"><arrow-down /></el-icon>
@@ -79,6 +82,7 @@
               </template>
             </el-dropdown>
           </el-col>
+
           <right-toolbar v-model:show-search="showSearch" :columns="columns" :search="true" @query-table="getList" />
         </el-row>
       </template>
@@ -87,56 +91,49 @@
       <div class="flex-1 overflow-hidden">
         <el-table v-loading="loading" border :data="userList" @selection-change="handleSelectionChange" height="100%">
           <el-table-column type="selection" width="50" align="center" />
-          <el-table-column v-if="columns[0].visible" key="userId" label="用户编号" align="center" prop="userId" />
-          <el-table-column
-            v-if="columns[1].visible"
-            key="userAccount"
-            label="用户账号"
-            align="center"
-            prop="userAccount"
-            :show-overflow-tooltip="true"
-          />
-          <el-table-column v-if="columns[2].visible" key="nickName" label="用户昵称" align="center" prop="nickName" :show-overflow-tooltip="true" />
-          <el-table-column v-if="columns[3].visible" key="phonenumber" label="手机号码" align="center" prop="phonenumber" width="120" />
-          <el-table-column v-if="columns[4].visible" key="status" label="状态" align="center">
-            <template #default="scope">
-              <el-switch v-model="scope.row.status" active-value="0" inactive-value="1" @change="handleStatusChange(scope.row)" />
+          <el-table-column v-if="columns[0].visible" label="用户编号" prop="userId" align="center" />
+          <el-table-column v-if="columns[1].visible" label="用户账号" prop="userAccount" align="center" :show-overflow-tooltip="true" />
+          <el-table-column v-if="columns[2].visible" label="用户名称" prop="nickName" align="center" :show-overflow-tooltip="true" />
+          <el-table-column v-if="columns[3].visible" label="手机号码" prop="phonenumber" align="center" width="140" />
+          <el-table-column v-if="columns[5].visible" label="创建时间" prop="createTime" align="center" width="240" />
+          <el-table-column v-if="columns[4].visible" label="状态" align="center" width="120">
+            <template #default="{ row }">
+              <el-switch v-model="row.status" active-value="0" inactive-value="1" @change="handleStatusChange(row)" />
             </template>
           </el-table-column>
-          <el-table-column v-if="columns[5].visible" label="创建时间" align="center" prop="createTime" width="160" />
 
-          <!-- 操作列（固定右侧） -->
-          <el-table-column label="操作" fixed="right" width="180" class-name="small-padding fixed-width">
-            <template #default="scope">
-              <el-tooltip v-if="scope.row.userId !== 1" content="修改" placement="top">
-                <el-button v-hasPermi="['system:user:edit']" link type="primary" icon="Edit" @click="handleUpdate(scope.row)" />
-              </el-tooltip>
-              <el-tooltip v-if="scope.row.userId !== 1" content="删除" placement="top">
-                <el-button v-hasPermi="['system:user:remove']" link type="primary" icon="Delete" @click="handleDelete(scope.row)" />
-              </el-tooltip>
-              <el-tooltip v-if="scope.row.userId !== 1" content="重置密码" placement="top">
-                <el-button v-hasPermi="['system:user:resetPwd']" link type="primary" icon="Key" @click="handleResetPwd(scope.row)" />
-              </el-tooltip>
-              <el-tooltip v-if="scope.row.userId !== 1" content="分配角色" placement="top">
-                <el-button v-hasPermi="['system:user:edit']" link type="primary" icon="CircleCheck" @click="handleAuthRole(scope.row)" />
-              </el-tooltip>
+          <!-- 操作列 - 固定右侧 -->
+          <el-table-column label="操作" align="center" fixed="right" width="180" class-name="small-padding fixed-width">
+            <template #default="{ row }">
+              <template v-if="row.userId !== 1">
+                <el-tooltip content="修改" placement="top">
+                  <el-button v-hasPermi="['system:user:edit']" link type="primary" icon="Edit" @click="handleUpdate(row)" />
+                </el-tooltip>
+                <el-tooltip content="删除" placement="top">
+                  <el-button v-hasPermi="['system:user:remove']" link type="primary" icon="Delete" @click="handleDelete(row)" />
+                </el-tooltip>
+                <el-tooltip content="重置密码" placement="top">
+                  <el-button v-hasPermi="['system:user:resetPwd']" link type="primary" icon="Key" @click="handleResetPwd(row)" />
+                </el-tooltip>
+              </template>
             </template>
           </el-table-column>
         </el-table>
       </div>
 
-      <!-- 分页组件 -->
+      <!-- 分页 -->
       <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
     </el-card>
 
+    <!-- 新增/编辑对话框 -->
     <UserFormDialog ref="userFormDialogRef" :sys_normal_disable="sys_normal_disable" :sys_user_sex="sys_user_sex" @success="getList" />
 
-    <!-- 用户数据导入对话框 -->
+    <!-- 导入对话框 -->
     <el-dialog v-model="upload.open" :title="upload.title" width="400px" append-to-body>
       <el-upload
         ref="uploadRef"
         :limit="1"
-        accept=".xlsx, .xls"
+        accept=".xlsx,.xls"
         :headers="upload.headers"
         :action="upload.url + '?updateSupport=' + upload.updateSupport"
         :disabled="upload.isUploading"
@@ -149,115 +146,118 @@
         <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
         <template #tip>
           <div class="text-center el-upload__tip">
-            <div><el-checkbox v-model="upload.updateSupport" />是否更新已经存在的用户数据</div>
-            <span>仅允许导入xls、xlsx格式文件。</span>
-            <el-link type="primary" :underline="false" style="font-size: 12px; vertical-align: baseline" @click="importTemplate"> 下载模板 </el-link>
+            <div><el-checkbox v-model="upload.updateSupport" /> 是否更新已经存在的用户数据</div>
+            <div>仅支持 xls / xlsx 格式</div>
+            <el-link type="primary" style="font-size: 12px" @click="importTemplate">下载模板</el-link>
           </div>
         </template>
       </el-upload>
 
       <template #footer>
         <div class="dialog-footer">
-          <el-button type="primary" @click="submitFileForm">确 定</el-button>
-          <el-button @click="upload.open = false">取 消</el-button>
+          <el-button @click="upload.open = false">取消</el-button>
+          <el-button type="primary" @click="submitFileForm">确定</el-button>
         </div>
       </template>
     </el-dialog>
   </div>
 </template>
 
-<script setup name="User" lang="ts">
+<script setup lang="ts" name="User">
+import { ref, reactive, toRefs, onMounted, getCurrentInstance } from 'vue';
+import type { ComponentInternalInstance } from 'vue';
+import { ElMessageBox } from 'element-plus';
 import api from '@/api/system/user';
-import { UserQuery, UserVO } from '@/api/system/user/types';
+import type { UserQuery, UserVO } from '@/api/system/user/types';
 import { globalHeaders } from '@/utils/request';
-import { to } from 'await-to-js';
 import { checkPermi } from '@/utils/permission';
+import { to } from 'await-to-js';
 import { ArrowDown } from '@element-plus/icons-vue';
+
 import UserFormDialog from './components/UserFormDialog.vue';
 
-// 组件引用与响应式状态
-const router = useRouter();
+// 全局引用与字典
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-const { sys_normal_disable, sys_user_sex } = toRefs<any>(proxy?.useDict('sys_normal_disable', 'sys_user_sex'));
+const { sys_normal_disable, sys_user_sex } = toRefs(proxy?.useDict('sys_normal_disable', 'sys_user_sex'));
 
+// 表格数据与状态
 const userList = ref<UserVO[]>([]);
-const loading = ref(true);
-const showSearch = ref(true);
-const ids = ref<Array<number | string>>([]);
-const single = ref(true);
-const multiple = ref(true);
+const loading = ref(false);
 const total = ref(0);
-const dateRange = ref<[string, string]>(['', '']);
+const ids = ref<(number | string)[]>([]);
+const selectNickNames = ref<string[]>([]);
+const single = ref(true); // 是否只选中一行
+const multiple = ref(true); // 是否未选中任何行
+const showSearch = ref(true);
+
+// 查询参数
+const dateRange = ref<string[]>(['', '']);
+
+const queryParams = reactive<UserQuery>({
+  pageNum: 1,
+  pageSize: 10,
+  userAccount: '',
+  nickName: '',
+  phonenumber: '',
+  status: '',
+  roleId: ''
+});
+
+// 表格列显隐控制
+const columns = ref([
+  { key: 0, label: '用户编号', visible: false },
+  { key: 1, label: '用户账号', visible: true },
+  { key: 2, label: '用户名称', visible: true },
+  { key: 3, label: '手机号码', visible: true },
+  { key: 4, label: '状态', visible: true },
+  { key: 5, label: '创建时间', visible: true }
+]);
+
+// 引用
+const queryFormRef = ref();
+const uploadRef = ref();
+const userFormDialogRef = ref<InstanceType<typeof UserFormDialog>>();
 
 // 导入相关状态
-const upload = reactive<ImportOption>({
+const upload = reactive({
   open: false,
-  title: '',
+  title: '用户数据导入',
   isUploading: false,
-  updateSupport: 0,
+  updateSupport: 0, // 是否覆盖更新
   headers: globalHeaders(),
   url: import.meta.env.VITE_APP_BASE_API + '/system/user/importData'
 });
 
-// 表格列显隐控制
-const columns = ref<FieldOption[]>([
-  { key: 0, label: '用户编号', visible: false, children: [] },
-  { key: 1, label: '用户账号', visible: true, children: [] },
-  { key: 2, label: '用户昵称', visible: true, children: [] },
-  { key: 3, label: '手机号码', visible: true, children: [] },
-  { key: 4, label: '状态', visible: true, children: [] },
-  { key: 5, label: '创建时间', visible: true, children: [] }
-]);
+// 核心业务逻辑
 
-// 引用
-const queryFormRef = ref<ElFormInstance>();
-const uploadRef = ref<ElUploadInstance>();
-const userFormDialogRef = ref<InstanceType<typeof UserFormDialog>>();
-
-const initData: PageData<any, UserQuery> = {
-  form: {},
-  queryParams: {
-    pageNum: 1,
-    pageSize: 10,
-    userAccount: '',
-    phonenumber: '',
-    status: '',
-    roleId: ''
-  },
-  rules: {}
-};
-
-const data = reactive<PageData<any, UserQuery>>(initData);
-const { queryParams } = toRefs(data);
-
-// 核心业务方法
-
-/** 获取用户列表（主查询接口） */
+/** 获取用户列表 */
 const getList = async () => {
   loading.value = true;
-  const res = await api.listUser(proxy?.addDateRange(queryParams.value, dateRange.value));
+  const params = proxy?.addDateRange({ ...queryParams }, dateRange.value);
+  const res = await api.listUser(params);
+  userList.value = res.rows || [];
+  total.value = res.total || 0;
   loading.value = false;
-  userList.value = res.rows;
-  total.value = res.total;
 };
 
 /** 搜索 & 重置 */
 const handleQuery = () => {
-  queryParams.value.pageNum = 1;
+  queryParams.pageNum = 1;
   getList();
 };
 
 const resetQuery = () => {
   dateRange.value = ['', ''];
   queryFormRef.value?.resetFields();
-  queryParams.value.pageNum = 1;
+  queryParams.pageNum = 1;
   handleQuery();
 };
 
-/** 批量/单条删除 */
+/** 删除（支持批量） */
 const handleDelete = async (row?: UserVO) => {
   const userIds = row?.userId || ids.value;
-  const [err] = await to(proxy?.$modal.confirm(`是否确认删除用户编号为"${userIds}"的数据项？`) as any);
+  const nickName = row?.nickName || selectNickNames.value.join(', ');
+  const [err] = await to(proxy?.$modal.confirm(`确认删除用户 "${nickName}" 吗？`) as any);
   if (!err) {
     await api.delUser(userIds);
     await getList();
@@ -265,95 +265,89 @@ const handleDelete = async (row?: UserVO) => {
   }
 };
 
-/** 启用/停用切换 */
+/** 状态切换（启用/停用） */
 const handleStatusChange = async (row: UserVO) => {
   const text = row.status === '0' ? '启用' : '停用';
   try {
-    await proxy?.$modal.confirm(`确认要"${text}""${row.userAccount}"用户吗?`);
+    await proxy?.$modal.confirm(`确认要${text}用户 "${row.userAccount}" 吗？`);
     await api.changeUserStatus(row.userId, row.status);
-    proxy?.$modal.msgSuccess(text + '成功');
+    proxy?.$modal.msgSuccess(`${text}成功`);
   } catch {
-    row.status = row.status === '0' ? '1' : '0'; // 失败回滚
+    // 操作失败回滚
+    row.status = row.status === '0' ? '1' : '0';
   }
 };
 
-/** 跳转到角色分配页面 */
-const handleAuthRole = (row: UserVO) => {
-  router.push(`/system/user-auth/role/${row.userId}`);
-};
-
-/** 重置密码弹窗 */
+/** 重置密码 */
 const handleResetPwd = async (row: UserVO) => {
   const [err, res] = await to(
-    ElMessageBox.prompt(`请输入"${row.userAccount}"的新密码`, '提示', {
+    ElMessageBox.prompt(`请输入用户 "${row.userAccount}" 的新密码`, '重置密码', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
-      closeOnClickModal: false,
       inputPattern: /^.{5,20}$/,
-      inputErrorMessage: '用户密码长度必须介于 5 和 20 之间',
-      inputValidator: (value) => {
-        if (/[<>"'|\\]/.test(value)) return '不能包含非法字符：< > " \' \\ |';
-      }
+      inputErrorMessage: '密码长度必须为 5~20 位'
     })
   );
-  if (!err && res) {
-    await api.resetUserPwd(row.userId, res.value);
-    proxy?.$modal.msgSuccess(`修改成功，新密码是：${res.value}`);
-  }
+
+  if (err || !res?.value) return;
+
+  await api.resetUserPwd(row.userId, res.value);
+  proxy?.$modal.msgSuccess(`重置成功，新密码：${res.value}`);
 };
 
-/** 表格多选变化 */
+/** 多选变化 */
 const handleSelectionChange = (selection: UserVO[]) => {
   ids.value = selection.map((item) => item.userId);
+  selectNickNames.value = selection.map((item) => item.nickName);
   single.value = selection.length !== 1;
   multiple.value = selection.length === 0;
 };
 
-// 导入 & 导出相关
+// 导入导出
 
 const handleImport = () => {
-  upload.title = '用户导入';
   upload.open = true;
-};
-
-const handleExport = () => {
-  proxy?.download('system/user/export', { ...queryParams.value }, `user_${Date.now()}.xlsx`);
-};
-
-const importTemplate = () => {
-  proxy?.download('system/user/importTemplate', {}, `user_template_${Date.now()}.xlsx`);
-};
-
-const handleFileUploadProgress = () => {
-  upload.isUploading = true;
-};
-
-const handleFileSuccess = (response: any, file: UploadFile) => {
-  upload.open = false;
-  upload.isUploading = false;
-  uploadRef.value?.handleRemove(file);
-  ElMessageBox.alert(`<div style="overflow:auto;overflow-x:hidden;max-height:70vh;padding:10px 20px 0;">${response.msg}</div>`, '导入结果', {
-    dangerouslyUseHTMLString: true
-  });
-  getList();
 };
 
 const submitFileForm = () => {
   uploadRef.value?.submit();
 };
 
-// 新增/编辑 对话框组件调用
+const handleFileUploadProgress = () => {
+  upload.isUploading = true;
+};
+
+const handleFileSuccess = (response: any) => {
+  upload.open = false;
+  upload.isUploading = false;
+  uploadRef.value?.clearFiles();
+  ElMessageBox.alert(response.msg, '导入结果', {
+    dangerouslyUseHTMLString: true
+  });
+  getList();
+};
+
+const handleExport = () => {
+  proxy?.download('system/user/export', { ...queryParams }, `用户列表_${Date.now()}.xlsx`);
+};
+
+const importTemplate = () => {
+  proxy?.download('system/user/importTemplate', {}, `用户导入模板_${Date.now()}.xlsx`);
+};
+
+// 新增/编辑
+
 const handleAdd = () => {
   userFormDialogRef.value?.openAdd();
 };
+
 const handleUpdate = (row?: UserVO) => {
-  const raw = row?.userId ?? ids.value[0];
-  const userId = typeof raw === 'string' ? Number(raw) : (raw as number | undefined);
-  if (!userId || Number.isNaN(userId)) {
-    proxy?.$modal.msgError('请选择一条要修改的用户');
+  const userId = row?.userId ?? ids.value[0];
+  if (!userId) {
+    proxy?.$modal.msgError('请至少选择一条记录');
     return;
   }
-  userFormDialogRef.value?.openEdit(userId);
+  userFormDialogRef.value?.openEdit(Number(userId));
 };
 
 // 生命周期
@@ -365,19 +359,17 @@ onMounted(() => {
 <style lang="scss" scoped>
 .search-card {
   :deep(.el-card__body) {
-    padding-bottom: 7px !important;
-  }
-  :deep(.search-btn-item) {
-    margin-bottom: 0 !important;
+    padding-bottom: 6px !important;
   }
 }
 
 .table-card {
   :deep(.el-card__body) {
-    flex: 1;
     display: flex;
     flex-direction: column;
+    flex: 1;
     overflow: hidden;
+    padding: 0;
   }
 }
 </style>
