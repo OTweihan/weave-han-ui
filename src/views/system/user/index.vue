@@ -47,13 +47,13 @@
       <template #header>
         <el-row :gutter="10">
           <el-col :span="1.5">
-            <el-button v-hasPermi="['system:user:add']" type="primary" plain icon="Plus" @click="handleAdd">新增</el-button>
+            <el-button v-hasPermi="['system:user:add']" type="primary" plain icon="Plus" @click="handleAdd()">新增</el-button>
           </el-col>
           <el-col :span="1.5">
-            <el-button v-hasPermi="['system:user:edit']" type="success" plain :disabled="single" icon="Edit" @click="handleUpdate"> 修改 </el-button>
+            <el-button v-hasPermi="['system:user:edit']" type="success" plain :disabled="single" icon="Edit" @click="handleUpdate()">修改</el-button>
           </el-col>
           <el-col :span="1.5">
-            <el-button v-hasPermi="['system:user:remove']" type="danger" plain :disabled="multiple" icon="Delete" @click="handleDelete">
+            <el-button v-hasPermi="['system:user:remove']" type="danger" plain :disabled="multiple" icon="Delete" @click="handleDelete()">
               删除
             </el-button>
           </el-col>
@@ -115,95 +115,7 @@
       <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
     </el-card>
 
-    <!-- 新增 / 编辑 用户对话框 -->
-    <el-dialog ref="formDialogRef" v-model="dialog.visible" :title="dialog.title" width="600px" append-to-body @close="closeDialog">
-      <el-form ref="userFormRef" :model="form" :rules="rules" label-width="80px">
-        <el-row>
-          <el-col :span="12">
-            <el-form-item label="用户昵称" prop="nickName">
-              <el-input v-model="form.nickName" placeholder="请输入用户昵称" maxlength="30" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12" v-if="form.userId == null || form.userId != useUserStore().userId">
-            <!-- 留空，用于布局对齐 -->
-          </el-col>
-        </el-row>
-
-        <el-row>
-          <el-col :span="12">
-            <el-form-item label="手机号码" prop="phonenumber">
-              <el-input v-model="form.phonenumber" placeholder="请输入手机号码" maxlength="11" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="邮箱" prop="email">
-              <el-input v-model="form.email" placeholder="请输入邮箱" maxlength="50" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row>
-          <el-col :span="12">
-            <el-form-item v-if="form.userId == undefined" label="用户名称" prop="userName">
-              <el-input v-model="form.userName" placeholder="请输入用户名称" maxlength="30" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item v-if="form.userId == undefined" label="用户密码" prop="password">
-              <el-input v-model="form.password" placeholder="请输入用户密码" type="password" maxlength="20" show-password />
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row>
-          <el-col :span="12">
-            <el-form-item label="用户性别">
-              <el-select v-model="form.sex" placeholder="请选择">
-                <el-option v-for="dict in sys_user_sex" :key="dict.value" :label="dict.label" :value="dict.value" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="状态">
-              <el-radio-group v-model="form.status">
-                <el-radio v-for="dict in sys_normal_disable" :key="dict.value" :value="dict.value">{{ dict.label }}</el-radio>
-              </el-radio-group>
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row>
-          <el-col :span="12" v-if="form.userId == null || form.userId != useUserStore().userId">
-            <el-form-item label="角色" prop="roleIds">
-              <el-select v-model="form.roleIds" filterable multiple placeholder="请选择">
-                <el-option
-                  v-for="item in roleOptions"
-                  :key="item.roleId"
-                  :label="item.roleName"
-                  :value="item.roleId"
-                  :disabled="item.status == '1'"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row>
-          <el-col :span="24">
-            <el-form-item label="备注">
-              <el-input v-model="form.remark" type="textarea" placeholder="请输入内容" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </el-form>
-
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button type="primary" @click="submitForm">确 定</el-button>
-          <el-button @click="cancel">取 消</el-button>
-        </div>
-      </template>
-    </el-dialog>
+    <UserFormDialog ref="userFormDialogRef" :sys_normal_disable="sys_normal_disable" :sys_user_sex="sys_user_sex" @success="getList" />
 
     <!-- 用户数据导入对话框 -->
     <el-dialog v-model="upload.open" :title="upload.title" width="400px" append-to-body>
@@ -242,13 +154,12 @@
 
 <script setup name="User" lang="ts">
 import api from '@/api/system/user';
-import { UserForm, UserQuery, UserVO } from '@/api/system/user/types';
-import { RoleVO } from '@/api/system/role/types';
+import { UserQuery, UserVO } from '@/api/system/user/types';
 import { globalHeaders } from '@/utils/request';
 import { to } from 'await-to-js';
 import { checkPermi } from '@/utils/permission';
-import { useUserStore } from '@/store/modules/user';
 import { ArrowDown } from '@element-plus/icons-vue';
+import UserFormDialog from './components/UserFormDialog.vue';
 
 // 组件引用与响应式状态
 const router = useRouter();
@@ -263,9 +174,6 @@ const single = ref(true);
 const multiple = ref(true);
 const total = ref(0);
 const dateRange = ref<[string, string]>(['', '']);
-const initPassword = ref<string>('');
-
-const roleOptions = ref<RoleVO[]>([]);
 
 // 导入相关状态
 const upload = reactive<ImportOption>({
@@ -287,34 +195,13 @@ const columns = ref<FieldOption[]>([
   { key: 5, label: '创建时间', visible: true, children: [] }
 ]);
 
-// 表单引用
+// 引用
 const queryFormRef = ref<ElFormInstance>();
-const userFormRef = ref<ElFormInstance>();
 const uploadRef = ref<ElUploadInstance>();
-const formDialogRef = ref<ElDialogInstance>();
+const userFormDialogRef = ref<InstanceType<typeof UserFormDialog>>();
 
-const dialog = reactive<DialogOption>({
-  visible: false,
-  title: ''
-});
-
-// 表单默认值与校验规则
-
-const initFormData: UserForm = {
-  userId: undefined,
-  userName: '',
-  nickName: undefined,
-  password: '',
-  phonenumber: undefined,
-  email: undefined,
-  sex: undefined,
-  status: '0',
-  remark: '',
-  roleIds: []
-};
-
-const initData: PageData<UserForm, UserQuery> = {
-  form: { ...initFormData },
+const initData: PageData<any, UserQuery> = {
+  form: {},
   queryParams: {
     pageNum: 1,
     pageSize: 10,
@@ -323,25 +210,11 @@ const initData: PageData<UserForm, UserQuery> = {
     status: '',
     roleId: ''
   },
-  rules: {
-    userName: [
-      { required: true, message: '用户名称不能为空', trigger: 'blur' },
-      { min: 2, max: 20, message: '用户名称长度必须介于 2 和 20 之间', trigger: 'blur' }
-    ],
-    nickName: [{ required: true, message: '用户昵称不能为空', trigger: 'blur' }],
-    password: [
-      { required: true, message: '用户密码不能为空', trigger: 'blur' },
-      { min: 5, max: 20, message: '用户密码长度必须介于 5 和 20 之间', trigger: 'blur' },
-      { pattern: /^[^<>"'|\\]+$/, message: '不能包含非法字符：< > " \' \\ |', trigger: 'blur' }
-    ],
-    email: [{ type: 'email', message: '请输入正确的邮箱地址', trigger: ['blur', 'change'] }],
-    phonenumber: [{ pattern: /^1[3456789][0-9]\d{8}$/, message: '请输入正确的手机号码', trigger: 'blur' }],
-    roleIds: [{ required: true, message: '用户角色不能为空', trigger: 'blur' }]
-  }
+  rules: {}
 };
 
-const data = reactive<PageData<UserForm, UserQuery>>(initData);
-const { queryParams, form, rules } = toRefs(data);
+const data = reactive<PageData<any, UserQuery>>(initData);
+const { queryParams } = toRefs(data);
 
 // 核心业务方法
 
@@ -455,75 +328,23 @@ const submitFileForm = () => {
   uploadRef.value?.submit();
 };
 
-// 新增/编辑 对话框逻辑
-
-const reset = () => {
-  form.value = { ...initFormData };
-  userFormRef.value?.resetFields();
+// 新增/编辑 对话框组件调用
+const handleAdd = () => {
+  userFormDialogRef.value?.openAdd();
 };
-
-const cancel = () => {
-  dialog.visible = false;
-  reset();
-};
-
-const handleAdd = async () => {
-  reset();
-  const { data } = await api.getUser();
-  dialog.visible = true;
-  dialog.title = '新增用户';
-  roleOptions.value = data.roles;
-  form.value.password = initPassword.value;
-};
-
-const handleUpdate = async (row?: UserForm) => {
-  reset();
-  const userId = row?.userId || ids.value[0];
-  const { data } = await api.getUser(userId);
-  dialog.visible = true;
-  dialog.title = '修改用户';
-  Object.assign(form.value, data.user);
-  roleOptions.value = Array.from(new Map([...data.roles, ...data.user.roles].map((r) => [r.roleId, r])).values());
-  form.value.roleIds = data.roleIds;
-  form.value.password = ''; // 修改时密码置空
-};
-
-const submitForm = () => {
-  userFormRef.value?.validate(async (valid: boolean) => {
-    if (!valid) return;
-    if (form.value.userId) {
-      // 禁止给自己修改角色
-      if (form.value.userId === useUserStore().userId) {
-        form.value.roleIds = null;
-      }
-      await api.updateUser(form.value);
-    } else {
-      await api.addUser(form.value);
-    }
-    proxy?.$modal.msgSuccess('操作成功');
-    dialog.visible = false;
-    await getList();
-  });
-};
-
-const closeDialog = () => {
-  dialog.visible = false;
-  resetForm();
-};
-
-const resetForm = () => {
-  userFormRef.value?.resetFields();
-  userFormRef.value?.clearValidate();
-  form.value.userId = undefined;
-  form.value.status = '0'; // 注意：这里原代码写 '1'，但新增默认应为 '0'（正常），建议确认业务
+const handleUpdate = (row?: UserVO) => {
+  const raw = row?.userId ?? ids.value[0];
+  const userId = typeof raw === 'string' ? Number(raw) : (raw as number | undefined);
+  if (!userId || Number.isNaN(userId)) {
+    proxy?.$modal.msgError('请选择一条要修改的用户');
+    return;
+  }
+  userFormDialogRef.value?.openEdit(userId);
 };
 
 // 生命周期
 onMounted(() => {
   getList();
-  proxy?.getConfigKey('sys.user.initPassword').then((res) => {
-    initPassword.value = res.data;
-  });
 });
 </script>
 
