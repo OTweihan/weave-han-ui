@@ -87,6 +87,7 @@ const clickRow = (row: any) => {
   // ele的bug
   tableRef.value?.toggleRowSelection(row, false);
 };
+
 /** 多选框选中数据 */
 const handleSelectionChange = (selection: UserVO[]) => {
   userIds.value = selection.map((item: UserVO) => item.userId);
@@ -98,11 +99,13 @@ const getList = async () => {
   userList.value = res.rows;
   total.value = res.total;
 };
+
 /** 搜索按钮操作 */
 const handleQuery = () => {
   queryParams.pageNum = 1;
   getList();
 };
+
 /** 重置按钮操作 */
 const resetQuery = () => {
   queryFormRef.value?.resetFields();
@@ -110,6 +113,7 @@ const resetQuery = () => {
 };
 
 const emit = defineEmits(['ok']);
+
 /**选择授权用户操作 */
 const handleSelectUser = async () => {
   const roleId = queryParams.roleId;
@@ -123,6 +127,7 @@ const handleSelectUser = async () => {
   emit('ok');
   visible.value = false;
 };
+
 // 暴露
 defineExpose({
   show
