@@ -13,7 +13,7 @@ export interface UserInfo {
  * 用户查询对象类型
  */
 export interface UserQuery extends PageQuery {
-  userName?: string;
+  userAccount?: string;
   nickName?: string;
   phonenumber?: string;
   status?: string;
@@ -26,7 +26,7 @@ export interface UserQuery extends PageQuery {
  */
 export interface UserVO extends BaseEntity {
   userId: string | number;
-  userName: string;
+  userAccount: string;
   nickName: string;
   userType: string;
   email: string;
@@ -50,7 +50,7 @@ export interface UserVO extends BaseEntity {
 export interface UserForm {
   id?: string;
   userId?: string;
-  userName: string;
+  userAccount: string;
   nickName?: string;
   password: string;
   phonenumber?: string;

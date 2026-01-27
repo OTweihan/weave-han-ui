@@ -46,7 +46,7 @@ export const useUserStore = defineStore('user', () => {
       } else {
         roles.value = ['ROLE_DEFAULT'];
       }
-      name.value = user.userName;
+      name.value = user.userAccount;
       nickname.value = user.nickName;
       avatar.value = profile;
       userId.value = user.userId;

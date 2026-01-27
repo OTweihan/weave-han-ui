@@ -9,10 +9,10 @@
 
       <div class="w-full bg-white rounded-2xl shadow-xl ring-1 ring-gray-900/5 p-8 sm:p-10">
         <el-form ref="loginRef" :model="loginForm" :rules="loginRules" class="space-y-6">
-          <el-form-item prop="username" class="!mb-5">
+          <el-form-item prop="userAccount" class="!mb-5">
             <div class="font-medium text-gray-700 mb-1.5 text-sm ml-1">{{ proxy.$t('login.username') }}</div>
             <el-input
-              v-model="loginForm.username"
+              v-model="loginForm.userAccount"
               type="text"
               size="large"
               auto-complete="off"
@@ -118,7 +118,7 @@ const router = useRouter();
 const { t } = useI18n();
 
 const loginForm = ref<LoginData>({
-  username: 'admin',
+  userAccount: 'admin',
   password: 'admin123',
   rememberMe: false,
   code: '',
@@ -126,7 +126,7 @@ const loginForm = ref<LoginData>({
 } as LoginData);
 
 const loginRules: ElFormRules = {
-  username: [{ required: true, trigger: 'blur', message: t('login.rule.username.required') }],
+  userAccount: [{ required: true, trigger: 'blur', message: t('login.rule.username.required') }],
   password: [{ required: true, trigger: 'blur', message: t('login.rule.password.required') }],
   code: [{ required: true, trigger: 'change', message: t('login.rule.code.required') }]
 };
@@ -151,11 +151,11 @@ const handleLogin = () => {
     if (valid) {
       loading.value = true;
       if (loginForm.value.rememberMe) {
-        localStorage.setItem('username', String(loginForm.value.username));
+        localStorage.setItem('userAccount', String(loginForm.value.userAccount));
         localStorage.setItem('password', String(loginForm.value.password));
         localStorage.setItem('rememberMe', String(loginForm.value.rememberMe));
       } else {
-        localStorage.removeItem('username');
+        localStorage.removeItem('userAccount');
         localStorage.removeItem('password');
         localStorage.removeItem('rememberMe');
       }
@@ -187,11 +187,11 @@ const getCode = async () => {
 };
 
 const getLoginData = () => {
-  const username = localStorage.getItem('username');
+  const userAccount = localStorage.getItem('userAccount');
   const password = localStorage.getItem('password');
   const rememberMe = localStorage.getItem('rememberMe');
   loginForm.value = {
-    username: username === null ? String(loginForm.value.username) : username,
+    userAccount: userAccount === null ? String(loginForm.value.userAccount) : userAccount,
     password: password === null ? String(loginForm.value.password) : String(password),
     rememberMe: rememberMe === null ? false : Boolean(rememberMe)
   } as LoginData;

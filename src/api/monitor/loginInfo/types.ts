@@ -1,6 +1,6 @@
 export interface LoginInfoVO {
   infoId: string | number;
-  userName: string;
+  userAccount: string;
   status: string;
   ipaddr: string;
   loginLocation: string;
@@ -12,7 +12,7 @@ export interface LoginInfoVO {
 
 export interface LoginInfoQuery extends PageQuery {
   ipaddr: string;
-  userName: string;
+  userAccount: string;
   status: string;
   orderByColumn: string;
   isAsc: string;

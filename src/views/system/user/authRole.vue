@@ -10,8 +10,8 @@
             </el-form-item>
           </el-col>
           <el-col :span="2.5">
-            <el-form-item label="登录账号" prop="userName">
-              <el-input v-model="form.userName" disabled />
+            <el-form-item label="登录账号" prop="userAccount">
+              <el-input v-model="form.userAccount" disabled />
             </el-form-item>
           </el-col>
         </el-row>
@@ -73,7 +73,7 @@ const roleIds = ref<Array<string | number>>([]);
 const roles = ref<RoleVO[]>([]);
 const form = ref<Partial<UserForm>>({
   nickName: undefined,
-  userName: '',
+  userAccount: '',
   userId: undefined
 });
 

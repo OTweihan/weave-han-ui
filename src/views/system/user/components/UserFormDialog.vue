@@ -1,12 +1,5 @@
 <template>
-  <el-dialog
-    v-model="dialog.visible"
-    :title="dialog.title"
-    width="640px"
-    append-to-body
-    class="user-form-dialog"
-    @close="closeDialog"
-  >
+  <el-dialog v-model="dialog.visible" :title="dialog.title" width="640px" append-to-body class="user-form-dialog" @close="closeDialog">
     <el-form ref="userFormRef" :model="form" :rules="rules" label-width="80px" class="user-form">
       <el-row>
         <el-col :span="12">
@@ -32,8 +25,13 @@
 
       <el-row>
         <el-col :span="12">
-          <el-form-item v-if="form.userId == undefined" label="用户名称" prop="userName">
-            <el-input v-model="form.userName" placeholder="请输入用户名称" maxlength="30" />
+          <el-form-item v-if="form.userId == undefined" label="用户账号" prop="userAccount">
+            <el-input
+              v-model="form.userAccount"
+              placeholder="请输入用户账号（仅字母数字，最多20位）"
+              maxlength="20"
+              @input="(val: string) => (form.userAccount = val.replace(/[^a-zA-Z0-9]/g, ''))"
+            />
           </el-form-item>
         </el-col>
         <el-col :span="12">
@@ -94,7 +92,7 @@ import type { UserForm } from '@/api/system/user/types';
 import type { RoleVO } from '@/api/system/role/types';
 import { useUserStore } from '@/store/modules/user';
 
-const props = defineProps<{
+defineProps<{
   sys_normal_disable: any[];
   sys_user_sex: any[];
 }>();
@@ -112,7 +110,7 @@ const dialog = reactive({
 
 const initFormData: UserForm = {
   userId: undefined,
-  userName: '',
+  userAccount: '',
   nickName: undefined,
   password: '',
   phonenumber: undefined,
@@ -126,9 +124,10 @@ const initFormData: UserForm = {
 const form = ref<UserForm>({ ...initFormData });
 
 const rules = ref<ElFormRules>({
-  userName: [
-    { required: true, message: '用户名称不能为空', trigger: 'blur' },
-    { min: 2, max: 20, message: '用户名称长度必须介于 2 和 20 之间', trigger: 'blur' }
+  userAccount: [
+    { required: true, message: '用户账号不能为空', trigger: 'blur' },
+    { min: 2, max: 20, message: '用户账号长度必须介于 2 和 20 之间', trigger: 'blur' },
+    { pattern: /^[a-zA-Z0-9]+$/, message: '用户账号仅能包含字母和数字', trigger: 'blur' }
   ],
   nickName: [{ required: true, message: '用户昵称不能为空', trigger: 'blur' }],
   password: [

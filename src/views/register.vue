@@ -5,8 +5,8 @@
         <h3 class="title">{{ title }}</h3>
         <lang-select />
       </div>
-      <el-form-item prop="username">
-        <el-input v-model="registerForm.username" type="text" size="large" auto-complete="off" :placeholder="proxy.$t('register.username')">
+      <el-form-item prop="userAccount">
+        <el-input v-model="registerForm.userAccount" type="text" size="large" auto-complete="off" :placeholder="proxy.$t('register.username')">
           <template #prefix><svg-icon icon-class="user" class="el-input__icon input-icon" /></template>
         </el-input>
       </el-form-item>
@@ -80,7 +80,7 @@ const router = useRouter();
 const { t } = useI18n();
 
 const registerForm = ref<RegisterForm>({
-  username: '',
+  userAccount: '',
   password: '',
   confirmPassword: '',
   code: '',
@@ -97,9 +97,10 @@ const equalToPassword = (rule: any, value: string, callback: any) => {
 };
 
 const registerRules: ElFormRules = {
-  username: [
+  userAccount: [
     { required: true, trigger: 'blur', message: t('register.rule.username.required') },
-    { min: 2, max: 20, message: t('register.rule.username.length', { min: 2, max: 20 }), trigger: 'blur' }
+    { min: 2, max: 20, message: t('register.rule.username.length', { min: 2, max: 20 }), trigger: 'blur' },
+    { pattern: /^[a-zA-Z0-9]+$/, message: '用户账号只能包含英文字母和数字', trigger: 'blur' }
   ],
   password: [
     { required: true, trigger: 'blur', message: t('register.rule.password.required') },
@@ -123,7 +124,7 @@ const handleRegister = () => {
       loading.value = true;
       const [err] = await to(register(registerForm.value));
       if (!err) {
-        const username = registerForm.value.username;
+        const username = registerForm.value.userAccount;
         await ElMessageBox.alert('<span style="color: red; ">' + t('register.registerSuccess', { username }) + '</font>', '系统提示', {
           app: undefined,
           dangerouslyUseHTMLString: true,

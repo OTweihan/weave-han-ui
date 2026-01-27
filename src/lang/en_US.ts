@@ -36,7 +36,7 @@ export default {
   // 注册页面国际化
   register: {
     selectPlaceholder: 'Please select/enter a company name',
-    username: 'Username',
+    username: 'User Account',
     password: 'Password',
     confirmPassword: 'Confirm Password',
     register: 'Register',

@@ -7,7 +7,7 @@ export default {
   // 登录页面国际化
   login: {
     selectPlaceholder: '请选择/输入公司名称',
-    username: '用户名',
+    username: '用户账号',
     password: '密码',
     login: '登 录',
     logging: '登 录 中...',
@@ -36,7 +36,7 @@ export default {
   // 注册页面国际化
   register: {
     selectPlaceholder: '请选择/输入公司名称',
-    username: '用户名',
+    username: '用户账号',
     password: '密码',
     confirmPassword: '确认密码',
     register: '注 册',

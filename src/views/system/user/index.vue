@@ -5,8 +5,15 @@
       <div v-show="showSearch" class="mb-[10px]">
         <el-card shadow="hover" class="search-card">
           <el-form ref="queryFormRef" :model="queryParams" :inline="true">
-            <el-form-item label="用户名称" prop="userName">
-              <el-input v-model="queryParams.userName" placeholder="请输入用户名称" clearable @keyup.enter="handleQuery" />
+            <el-form-item label="用户账号" prop="userAccount">
+              <el-input
+                v-model="queryParams.userAccount"
+                placeholder="请输入用户账号"
+                clearable
+                maxlength="20"
+                @input="(val: string) => (queryParams.userAccount = val.replace(/[^a-zA-Z0-9]/g, ''))"
+                @keyup.enter="handleQuery"
+              />
             </el-form-item>
             <el-form-item label="用户昵称" prop="nickName">
               <el-input v-model="queryParams.nickName" placeholder="请输入用户昵称" clearable @keyup.enter="handleQuery" />
@@ -81,7 +88,14 @@
         <el-table v-loading="loading" border :data="userList" @selection-change="handleSelectionChange" height="100%">
           <el-table-column type="selection" width="50" align="center" />
           <el-table-column v-if="columns[0].visible" key="userId" label="用户编号" align="center" prop="userId" />
-          <el-table-column v-if="columns[1].visible" key="userName" label="用户名称" align="center" prop="userName" :show-overflow-tooltip="true" />
+          <el-table-column
+            v-if="columns[1].visible"
+            key="userAccount"
+            label="用户账号"
+            align="center"
+            prop="userAccount"
+            :show-overflow-tooltip="true"
+          />
           <el-table-column v-if="columns[2].visible" key="nickName" label="用户昵称" align="center" prop="nickName" :show-overflow-tooltip="true" />
           <el-table-column v-if="columns[3].visible" key="phonenumber" label="手机号码" align="center" prop="phonenumber" width="120" />
           <el-table-column v-if="columns[4].visible" key="status" label="状态" align="center">
@@ -188,7 +202,7 @@ const upload = reactive<ImportOption>({
 // 表格列显隐控制
 const columns = ref<FieldOption[]>([
   { key: 0, label: '用户编号', visible: false, children: [] },
-  { key: 1, label: '用户名称', visible: true, children: [] },
+  { key: 1, label: '用户账号', visible: true, children: [] },
   { key: 2, label: '用户昵称', visible: true, children: [] },
   { key: 3, label: '手机号码', visible: true, children: [] },
   { key: 4, label: '状态', visible: true, children: [] },
@@ -205,7 +219,7 @@ const initData: PageData<any, UserQuery> = {
   queryParams: {
     pageNum: 1,
     pageSize: 10,
-    userName: '',
+    userAccount: '',
     phonenumber: '',
     status: '',
     roleId: ''
@@ -255,7 +269,7 @@ const handleDelete = async (row?: UserVO) => {
 const handleStatusChange = async (row: UserVO) => {
   const text = row.status === '0' ? '启用' : '停用';
   try {
-    await proxy?.$modal.confirm(`确认要"${text}""${row.userName}"用户吗?`);
+    await proxy?.$modal.confirm(`确认要"${text}""${row.userAccount}"用户吗?`);
     await api.changeUserStatus(row.userId, row.status);
     proxy?.$modal.msgSuccess(text + '成功');
   } catch {
@@ -271,7 +285,7 @@ const handleAuthRole = (row: UserVO) => {
 /** 重置密码弹窗 */
 const handleResetPwd = async (row: UserVO) => {
   const [err, res] = await to(
-    ElMessageBox.prompt(`请输入"${row.userName}"的新密码`, '提示', {
+    ElMessageBox.prompt(`请输入"${row.userAccount}"的新密码`, '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       closeOnClickModal: false,

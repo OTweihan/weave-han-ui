@@ -2,7 +2,7 @@
  * 注册
  */
 export type RegisterForm = {
-  username: string;
+  userAccount: string;
   password: string;
   confirmPassword?: string;
   code?: string;
@@ -14,7 +14,7 @@ export type RegisterForm = {
  * 登录请求
  */
 export interface LoginData {
-  username?: string;
+  userAccount?: string;
   password?: string;
   rememberMe?: boolean;
   socialCode?: string;
