@@ -1,22 +1,25 @@
 <template>
-  <div class="p-2">
+  <div class="p-2 h-full flex flex-col">
     <transition :enter-active-class="proxy?.animate.searchAnimate.enter" :leave-active-class="proxy?.animate.searchAnimate.leave">
-      <div v-show="showSearch" class="search">
-        <el-form ref="queryFormRef" :model="queryParams" :inline="true">
-          <el-form-item label="用户名称" prop="userAccount">
-            <el-input v-model="queryParams.userAccount" placeholder="请输入用户名称" clearable @keyup.enter="handleQuery" />
-          </el-form-item>
-          <el-form-item label="手机号码" prop="phonenumber">
-            <el-input v-model="queryParams.phonenumber" placeholder="请输入手机号码" clearable @keyup.enter="handleQuery" />
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
-            <el-button icon="Refresh" @click="resetQuery">重置</el-button>
-          </el-form-item>
-        </el-form>
+      <div v-show="showSearch" class="mb-[10px]">
+        <el-card shadow="hover" class="search-card">
+          <el-form ref="queryFormRef" :model="queryParams" :inline="true">
+            <el-form-item label="用户账号" prop="userAccount">
+              <el-input v-model="queryParams.userAccount" placeholder="请输入用户账号" clearable @keyup.enter="handleQuery" />
+            </el-form-item>
+            <el-form-item label="手机号码" prop="phonenumber">
+              <el-input v-model="queryParams.phonenumber" placeholder="请输入手机号码" clearable @keyup.enter="handleQuery" />
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
+              <el-button icon="Refresh" @click="resetQuery">重置</el-button>
+            </el-form-item>
+          </el-form>
+        </el-card>
       </div>
     </transition>
-    <el-card shadow="never">
+
+    <el-card shadow="hover" class="flex-1 flex flex-col overflow-hidden table-card">
       <template #header>
         <el-row :gutter="10">
           <el-col :span="1.5">
@@ -33,30 +36,33 @@
           <right-toolbar v-model:show-search="showSearch" :search="true" @query-table="getList"></right-toolbar>
         </el-row>
       </template>
-      <el-table v-loading="loading" border :data="userList" @selection-change="handleSelectionChange">
-        <el-table-column type="selection" width="55" align="center" />
-        <el-table-column label="用户名称" prop="userAccount" :show-overflow-tooltip="true" />
-        <el-table-column label="用户昵称" prop="nickName" :show-overflow-tooltip="true" />
-        <el-table-column label="邮箱" prop="email" :show-overflow-tooltip="true" />
-        <el-table-column label="手机" prop="phonenumber" :show-overflow-tooltip="true" />
-        <el-table-column label="状态" align="center" prop="status">
-          <template #default="scope">
-            <dict-tag :options="sys_normal_disable" :value="scope.row.status" />
-          </template>
-        </el-table-column>
-        <el-table-column label="创建时间" align="center" prop="createTime" width="180">
-          <template #default="scope">
-            <span>{{ scope.row.createTime }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-          <template #default="scope">
-            <el-tooltip content="取消授权" placement="top">
-              <el-button v-hasPermi="['system:role:remove']" link type="primary" icon="CircleClose" @click="cancelAuthUser(scope.row)"> </el-button>
-            </el-tooltip>
-          </template>
-        </el-table-column>
-      </el-table>
+
+      <div class="flex-1 overflow-hidden">
+        <el-table v-loading="loading" border :data="userList" height="100%" @selection-change="handleSelectionChange">
+          <el-table-column type="selection" width="55" align="center" />
+          <el-table-column label="用户账号" prop="userAccount" align="center" :show-overflow-tooltip="true" />
+          <el-table-column label="用户名称" prop="nickName" align="center" min-width="160" :show-overflow-tooltip="true" />
+          <el-table-column label="邮箱" prop="email" align="center" :show-overflow-tooltip="true" />
+          <el-table-column label="手机" prop="phonenumber" align="center" :show-overflow-tooltip="true" />
+          <el-table-column label="状态" align="center" width="120" prop="status">
+            <template #default="scope">
+              <dict-tag :options="sys_normal_disable" :value="scope.row.status" />
+            </template>
+          </el-table-column>
+          <el-table-column label="创建时间" align="center" prop="createTime" width="240">
+            <template #default="scope">
+              <span>{{ scope.row.createTime }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" align="center" width="100" class-name="small-padding fixed-width">
+            <template #default="scope">
+              <el-tooltip content="取消授权" placement="top">
+                <el-button v-hasPermi="['system:role:remove']" link type="primary" icon="CircleClose" @click="cancelAuthUser(scope.row)"> </el-button>
+              </el-tooltip>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
 
       <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
       <select-user ref="selectRef" :role-id="queryParams.roleId" @ok="handleQuery" />
@@ -151,3 +157,20 @@ onMounted(() => {
   getList();
 });
 </script>
+
+<style lang="scss" scoped>
+.search-card {
+  :deep(.el-card__body) {
+    padding-bottom: 7px !important;
+  }
+}
+
+.table-card {
+  :deep(.el-card__body) {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+}
+</style>

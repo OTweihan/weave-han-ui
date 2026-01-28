@@ -31,7 +31,9 @@
             </template>
           </el-table-column>
         </el-table>
-        <pagination v-if="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
+        <div class="flex justify-end mt-2 w-full">
+          <pagination v-if="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
+        </div>
       </el-row>
       <template #footer>
         <div class="dialog-footer">
