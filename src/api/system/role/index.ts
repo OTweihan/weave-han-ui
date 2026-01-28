@@ -83,6 +83,17 @@ export const changeRoleStatus = (roleId: string | number, status: string) => {
 };
 
 /**
+ * 角色排序
+ */
+export const changeRoleSort = (roleIds: (string | number)[]) => {
+  return request({
+    url: '/system/role/changeSort',
+    method: 'put',
+    data: roleIds
+  });
+};
+
+/**
  * 删除角色
  */
 export const delRole = (roleId: Array<string | number> | string | number) => {

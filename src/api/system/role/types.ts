@@ -20,6 +20,8 @@ export interface RoleQuery extends PageQuery {
   roleName: string;
   roleKey: string;
   status: string;
+  orderByColumn?: string;
+  isAsc?: string;
 }
 
 export interface RoleForm {

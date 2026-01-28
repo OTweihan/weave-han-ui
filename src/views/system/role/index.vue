@@ -56,23 +56,34 @@
       </template>
 
       <div class="flex-1 overflow-hidden">
-        <el-table ref="roleTableRef" border v-loading="loading" :data="roleList" height="100%" @selection-change="handleSelectionChange">
+        <el-table
+          ref="roleTableRef"
+          border
+          v-loading="loading"
+          :data="roleList"
+          height="100%"
+          @selection-change="handleSelectionChange"
+          row-key="roleId"
+        >
+          <el-table-column width="50" align="center" class-name="drag-column">
+            <template #default>
+              <el-icon class="cursor-move drag-handler" style="font-size: 16px; color: #909399"><Rank /></el-icon>
+            </template>
+          </el-table-column>
           <el-table-column type="selection" width="55" align="center" />
-          <el-table-column v-if="false" label="角色编号" prop="roleId" width="120" />
-          <el-table-column label="角色名称" prop="roleName" :show-overflow-tooltip="true" width="150" />
-          <el-table-column label="权限字符" prop="roleKey" :show-overflow-tooltip="true" width="200" />
-          <el-table-column label="显示顺序" prop="roleSort" width="100" />
+
+          <el-table-column label="角色名称" align="center" prop="roleName" :show-overflow-tooltip="true" min-width="150" />
+          <el-table-column label="权限字符" align="center" prop="roleKey" :show-overflow-tooltip="true" min-width="200" />
+          <el-table-column label="创建时间" align="center" prop="createTime" width="240">
+            <template #default="scope">
+              <span>{{ proxy.parseTime(scope.row.createTime) }}</span>
+            </template>
+          </el-table-column>
           <el-table-column label="状态" align="center" width="100">
             <template #default="scope">
               <el-switch v-model="scope.row.status" active-value="0" inactive-value="1" @change="handleStatusChange(scope.row)"></el-switch>
             </template>
           </el-table-column>
-          <el-table-column label="创建时间" align="center" prop="createTime">
-            <template #default="scope">
-              <span>{{ proxy.parseTime(scope.row.createTime) }}</span>
-            </template>
-          </el-table-column>
-
           <el-table-column fixed="right" label="操作" width="180">
             <template #default="scope">
               <el-tooltip v-if="scope.row.roleId !== 1" content="修改" placement="top">
@@ -129,9 +140,11 @@
 </template>
 
 <script setup name="Role" lang="ts">
-import { changeRoleStatus, dataScope, delRole, getRole, listRole } from '@/api/system/role';
+import { changeRoleStatus, dataScope, delRole, getRole, listRole, changeRoleSort } from '@/api/system/role';
 import { RoleVO, RoleForm, RoleQuery } from '@/api/system/role/types';
 import RoleFormDialog from './components/RoleFormDialog.vue';
+import Sortable from 'sortablejs';
+import { Rank } from '@element-plus/icons-vue';
 
 const router = useRouter();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
@@ -157,6 +170,8 @@ const dataScopeOptions = ref([
 const queryFormRef = ref<ElFormInstance>();
 const dataScopeRef = ref<ElFormInstance>();
 const roleFormDialogRef = ref<InstanceType<typeof RoleFormDialog>>();
+const roleTableRef = ref<ElTableInstance>();
+const sortableInstance = ref<Sortable | null>(null);
 
 const initForm: RoleForm = {
   roleId: undefined,
@@ -195,13 +210,23 @@ const dialog = reactive<DialogOption>({
 /**
  * 查询角色列表
  */
-const getList = () => {
+const getList = async () => {
   loading.value = true;
-  listRole(proxy?.addDateRange(queryParams.value, dateRange.value)).then((res) => {
-    roleList.value = res.rows;
-    total.value = res.total;
-    loading.value = false;
+  const res = await listRole(proxy?.addDateRange(queryParams.value, dateRange.value));
+  roleList.value = [];
+  await nextTick();
+  roleList.value = res.rows;
+  total.value = res.total;
+  await nextTick();
+  roleTableRef.value?.doLayout?.();
+  if (sortableInstance.value) {
+    sortableInstance.value.destroy();
+    sortableInstance.value = null;
+  }
+  await nextTick(() => {
+    initSortable();
   });
+  loading.value = false;
 };
 
 /**
@@ -224,7 +249,7 @@ const handleDelete = async (row?: RoleVO) => {
   const roleids = row?.roleId || ids.value;
   await proxy?.$modal.confirm('是否确认删除角色编号为' + roleids + '数据项目');
   await delRole(roleids);
-  getList();
+  await getList();
   proxy?.$modal.msgSuccess('删除成功');
 };
 
@@ -296,7 +321,7 @@ const submitDataScope = async () => {
     await dataScope(form.value);
     proxy?.$modal.msgSuccess('修改成功');
     openDataScope.value = false;
-    getList();
+    await getList();
   }
 };
 
@@ -307,8 +332,48 @@ const cancelDataScope = () => {
   openDataScope.value = false;
 };
 
+/**
+ * 初始化拖拽
+ */
+const initSortable = () => {
+  const tbody = roleTableRef.value?.$el.querySelector('.el-table__body-wrapper tbody');
+  if (!tbody) return;
+
+  if (sortableInstance.value) {
+    sortableInstance.value.destroy();
+    sortableInstance.value = null;
+  }
+
+  sortableInstance.value = Sortable.create(tbody, {
+    handle: '.drag-handler',
+    animation: 150,
+    onEnd: async ({ newIndex, oldIndex }: any) => {
+      if (newIndex === oldIndex) return;
+
+      const currRow = roleList.value?.splice(oldIndex, 1)[0];
+      if (currRow && roleList.value) {
+        roleList.value.splice(newIndex, 0, currRow);
+
+        // 获取新的 ID 顺序
+        const roleIds = roleList.value.map((item) => item.roleId);
+        try {
+          await changeRoleSort(roleIds);
+          proxy?.$modal.msgSuccess('排序成功');
+        } catch (error) {
+          // 失败时刷新回原样
+        } finally {
+          await getList();
+        }
+      }
+    }
+  });
+};
+
 onMounted(() => {
   getList();
+  nextTick(() => {
+    initSortable();
+  });
 });
 </script>
 

@@ -27,11 +27,6 @@
 
       <el-row :gutter="16">
         <el-col :span="12">
-          <el-form-item label="角色顺序" prop="roleSort">
-            <el-input-number v-model="form.roleSort" controls-position="right" :min="0" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
           <el-form-item label="状态">
             <el-radio-group v-model="form.status">
               <el-radio v-for="dict in sys_normal_disable" :key="dict.value" :value="dict.value">
@@ -77,7 +72,7 @@
 </template>
 
 <script setup lang="ts">
-import { addRole, getRole, updateRole } from '@/api/system/role';
+import { addRole, getRole, updateRole, listRole } from '@/api/system/role';
 import { roleMenuTreeselect, treeselect as menuTreeselect } from '@/api/system/menu';
 import type { RoleForm } from '@/api/system/role/types';
 import type { MenuTreeOption, RoleMenuTree } from '@/api/system/menu/types';
@@ -146,6 +141,21 @@ const getRoleMenuTreeselect = async (roleId: string | number) => {
 const openAdd = async () => {
   reset();
   await getMenuTreeselect();
+  // 自动计算最大顺序：查询最后一页的第一条（按roleSort倒序）
+  const res = await listRole({
+    pageNum: 1,
+    pageSize: 1,
+    roleName: '',
+    roleKey: '',
+    status: '',
+    orderByColumn: 'roleSort',
+    isAsc: 'desc'
+  });
+  if (res.rows && res.rows.length > 0) {
+    form.value.roleSort = res.rows[0].roleSort + 1;
+  } else {
+    form.value.roleSort = 1;
+  }
   dialog.visible = true;
   dialog.title = '添加角色';
 };
