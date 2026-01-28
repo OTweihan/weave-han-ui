@@ -1,25 +1,27 @@
 <template>
-  <el-form ref="userRef" :model="userForm" :rules="rules" label-width="80px">
-    <el-form-item label="用户昵称" prop="nickName">
-      <el-input v-model="userForm.nickName" maxlength="30" />
-    </el-form-item>
-    <el-form-item label="手机号码" prop="phonenumber">
-      <el-input v-model="userForm.phonenumber" maxlength="11" />
-    </el-form-item>
-    <el-form-item label="邮箱" prop="email">
-      <el-input v-model="userForm.email" maxlength="50" />
-    </el-form-item>
-    <el-form-item label="性别">
-      <el-radio-group v-model="userForm.sex">
-        <el-radio value="0">男</el-radio>
-        <el-radio value="1">女</el-radio>
-      </el-radio-group>
-    </el-form-item>
-    <el-form-item>
-      <el-button type="primary" @click="submit">保存</el-button>
-      <el-button type="danger" @click="close">关闭</el-button>
-    </el-form-item>
-  </el-form>
+  <div class="p-6">
+    <el-form ref="userRef" :model="userForm" :rules="rules" label-width="100px" class="max-w-2xl">
+      <el-form-item label="用户昵称" prop="nickName">
+        <el-input v-model="userForm.nickName" maxlength="30" placeholder="请输入用户昵称" />
+      </el-form-item>
+      <el-form-item label="手机号码" prop="phonenumber">
+        <el-input v-model="userForm.phonenumber" maxlength="11" placeholder="请输入手机号码" />
+      </el-form-item>
+      <el-form-item label="邮箱" prop="email">
+        <el-input v-model="userForm.email" maxlength="50" placeholder="请输入邮箱地址" />
+      </el-form-item>
+      <el-form-item label="性别">
+        <el-radio-group v-model="userForm.sex">
+          <el-radio value="0">男</el-radio>
+          <el-radio value="1">女</el-radio>
+        </el-radio-group>
+      </el-form-item>
+      <el-form-item class="pt-4">
+        <el-button type="primary" icon="Check" @click="submit">保存更改</el-button>
+        <el-button type="danger" plain icon="Close" @click="close">关闭</el-button>
+      </el-form-item>
+    </el-form>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -32,6 +34,7 @@ const props = defineProps({
 const userForm = computed(() => props.user);
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const userRef = ref<ElFormInstance>();
+
 const rule: ElFormRules = {
   nickName: [{ required: true, message: '用户昵称不能为空', trigger: 'blur' }],
   email: [
@@ -51,6 +54,7 @@ const rule: ElFormRules = {
     { pattern: /^1[3456789][0-9]\d{8}$/, message: '请输入正确的手机号码', trigger: 'blur' }
   ]
 };
+
 const rules = ref<ElFormRules>(rule);
 
 /** 提交按钮 */
@@ -62,6 +66,7 @@ const submit = () => {
     }
   });
 };
+
 /** 关闭按钮 */
 const close = () => {
   proxy?.$tab.closePage();

@@ -1,50 +1,67 @@
 <template>
-  <div class="p-2">
-    <el-row :gutter="20">
-      <el-col :span="6" :xs="24">
-        <el-card class="box-card">
+  <div class="p-2 h-full">
+    <el-row :gutter="20" class="h-full">
+      <el-col :span="6" :xs="24" class="h-full">
+        <el-card class="box-card h-full" shadow="hover">
           <template #header>
-            <div class="clearfix">
-              <span>个人信息</span>
+            <div class="flex items-center justify-between">
+              <span class="font-bold">个人信息</span>
             </div>
           </template>
           <div>
-            <div class="text-center">
+            <div class="text-center mb-6">
               <userAvatar />
+              <div class="mt-2 text-lg font-medium">{{ state.user.nickName }}</div>
+              <div class="text-sm text-gray-500">{{ state.roleGroup }}</div>
             </div>
-            <ul class="list-group list-group-striped">
-              <li class="list-group-item">
-                <svg-icon icon-class="user" />用户账号
-                <div class="pull-right">{{ state.user.userAccount }}</div>
-              </li>
-              <li class="list-group-item">
-                <svg-icon icon-class="phone" />手机号码
-                <div class="pull-right">{{ state.user.phonenumber }}</div>
-              </li>
-              <li class="list-group-item">
-                <svg-icon icon-class="email" />用户邮箱
-                <div class="pull-right">{{ state.user.email }}</div>
-              </li>
-              <li class="list-group-item">
-                <svg-icon icon-class="peoples" />所属角色
-                <div class="pull-right">{{ state.roleGroup }}</div>
-              </li>
-              <li class="list-group-item">
-                <svg-icon icon-class="date" />创建日期
-                <div class="pull-right">{{ state.user.createTime }}</div>
-              </li>
-            </ul>
+            <div class="space-y-4">
+              <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                <div class="flex items-center text-gray-600">
+                  <svg-icon icon-class="user" class="mr-2" />
+                  <span>用户账号</span>
+                </div>
+                <div class="font-medium text-gray-900">{{ state.user.userAccount }}</div>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                <div class="flex items-center text-gray-600">
+                  <svg-icon icon-class="phone" class="mr-2" />
+                  <span>手机号码</span>
+                </div>
+                <div class="font-medium text-gray-900">{{ state.user.phonenumber }}</div>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                <div class="flex items-center text-gray-600">
+                  <svg-icon icon-class="email" class="mr-2" />
+                  <span>用户邮箱</span>
+                </div>
+                <div class="font-medium text-gray-900">{{ state.user.email }}</div>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                <div class="flex items-center text-gray-600">
+                  <svg-icon icon-class="peoples" class="mr-2" />
+                  <span>所属角色</span>
+                </div>
+                <div class="font-medium text-gray-900">{{ state.roleGroup }}</div>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                <div class="flex items-center text-gray-600">
+                  <svg-icon icon-class="date" class="mr-2" />
+                  <span>创建日期</span>
+                </div>
+                <div class="font-medium text-gray-900">{{ state.user.createTime }}</div>
+              </div>
+            </div>
           </div>
         </el-card>
       </el-col>
-      <el-col :span="18" :xs="24">
-        <el-card>
+      <el-col :span="18" :xs="24" class="h-full">
+        <el-card class="h-full" shadow="hover">
           <template #header>
-            <div class="clearfix">
-              <span>基本资料</span>
+            <div class="flex items-center justify-between">
+              <span class="font-bold">基本资料</span>
             </div>
           </template>
-          <el-tabs v-model="activeTab">
+          <el-tabs v-model="activeTab" class="profile-tabs">
             <el-tab-pane label="基本资料" name="userinfo">
               <userInfo :user="userForm" />
             </el-tab-pane>
@@ -103,6 +120,7 @@ const getAuths = async () => {
   const res = await getAuthList();
   state.value.auths = res.data;
 };
+
 const getOnlines = async () => {
   const res = await getOnline();
   state.value.devices = res.rows;
