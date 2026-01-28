@@ -23,7 +23,7 @@
                 {
                   name: 'offset',
                   options: {
-                    offset: [0, 0]
+                    offset: [0, 20]
                   }
                 }
               ]
@@ -45,7 +45,7 @@
         <lang-select id="lang-select" class="right-menu-item hover-effect" />
       </template>
       <div class="avatar-container">
-        <el-dropdown class="right-menu-item hover-effect" trigger="click" @command="handleCommand">
+        <el-dropdown class="right-menu-item hover-effect" trigger="hover" @command="handleCommand">
           <div class="avatar-wrapper">
             <img :src="userStore.avatar" class="user-avatar" alt="" />
             <el-icon class="icon-caret"><caret-bottom /></el-icon>
@@ -151,16 +151,18 @@ watch(
 }
 
 .navbar {
-  height: 55px;
+  height: 50px;
   overflow: hidden;
   position: relative;
   background: #ffffff;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
   border-bottom: 1px solid rgba(0, 0, 0, 0.03);
   z-index: 1000;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
 
   .breadcrumb-container {
-    float: left;
     height: 100%;
     display: flex;
     align-items: center;
@@ -177,11 +179,11 @@ watch(
   }
 
   .right-menu {
-    float: right;
-    height: 100%;
-    line-height: 55px;
+    flex: 1;
     display: flex;
     align-items: center;
+    justify-content: flex-end;
+    height: 100%;
 
     &:focus {
       outline: none;
@@ -197,7 +199,6 @@ watch(
       margin: 0 4px;
       font-size: 18px;
       color: #606266;
-      vertical-align: text-bottom;
       transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 
       &.hover-effect {
@@ -209,60 +210,62 @@ watch(
           color: var(--el-color-primary, #409eff);
         }
       }
+    }
 
-      :deep(svg) {
-        vertical-align: middle;
+    :deep(svg) {
+      vertical-align: middle;
+    }
+  }
+
+  .avatar-container {
+    margin-right: 0;
+    padding-left: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+
+    .right-menu-item {
+      height: 100%;
+      margin: 0;
+      border-radius: 0;
+
+      &:hover {
+        background: rgba(0, 0, 0, 0.025);
+        color: inherit;
       }
     }
 
-    .avatar-container {
-      margin-right: 20px;
-      padding-left: 0;
-      height: 100%;
+    .avatar-wrapper {
+      margin-top: 0;
+      position: relative;
       display: flex;
       align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      padding: 0 10px;
+      height: 100%;
 
-      .right-menu-item {
-        height: 100%;
-        margin: 0;
-        border-radius: 0;
+      .user-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+        border: 2px solid #fff;
 
         &:hover {
-          background: rgba(0, 0, 0, 0.025);
-          color: inherit;
+          transform: scale(1.05);
         }
       }
 
-      .avatar-wrapper {
-        margin-top: 0;
-        position: relative;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        cursor: pointer;
+      .icon-caret {
+        font-size: 12px;
+        color: #909399;
+        transition: transform 0.3s;
+      }
 
-        .user-avatar {
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-          transition: transform 0.3s ease;
-          border: 2px solid #fff;
-
-          &:hover {
-            transform: scale(1.05);
-          }
-        }
-
-        .icon-caret {
-          font-size: 12px;
-          color: #909399;
-          transition: transform 0.3s;
-        }
-
-        &:hover .icon-caret {
-          transform: rotate(180deg);
-        }
+      &:hover .icon-caret {
+        transform: rotate(180deg);
       }
     }
   }
