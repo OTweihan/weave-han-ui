@@ -6,52 +6,55 @@
     <div class="right-menu flex align-center">
       <template v-if="appStore.device !== 'mobile'">
         <search-menu ref="searchMenuRef" />
-        <el-tooltip content="搜索" effect="dark" placement="bottom">
-          <div class="right-menu-item hover-effect" @click="openSearchMenu">
-            <svg-icon class-name="search-icon" icon-class="search" />
-          </div>
-        </el-tooltip>
+        <div class="right-menu-item hover-effect" @click="openSearchMenu">
+          <svg-icon class-name="search-icon" icon-class="search" />
+        </div>
+
         <!-- 消息 -->
-        <el-tooltip :content="proxy.$t('navbar.message')" effect="dark" placement="bottom">
-          <div>
-            <el-popover placement="bottom" trigger="click" transition="el-zoom-in-top" :width="300" :persistent="false">
-              <template #reference>
-                <el-badge :value="newNotice > 0 ? newNotice : ''" :max="99">
-                  <div class="right-menu-item hover-effect" style="display: block"><svg-icon icon-class="message" /></div>
-                </el-badge>
-              </template>
-              <template #default>
-                <notice></notice>
-              </template>
-            </el-popover>
-          </div>
-        </el-tooltip>
-        <el-tooltip :content="proxy.$t('navbar.full')" effect="dark" placement="bottom">
-          <screenfull id="screenfull" class="right-menu-item hover-effect" />
-        </el-tooltip>
+        <div class="right-menu-item hover-effect">
+          <el-popover
+            placement="bottom"
+            trigger="hover"
+            transition="el-zoom-in-top"
+            :width="300"
+            :persistent="false"
+            :popper-options="{
+              modifiers: [
+                {
+                  name: 'offset',
+                  options: {
+                    offset: [0, 0]
+                  }
+                }
+              ]
+            }"
+          >
+            <template #reference>
+              <el-badge :value="newNotice > 0 ? newNotice : ''" :max="99" class="message-badge">
+                <svg-icon icon-class="message" />
+              </el-badge>
+            </template>
+            <template #default>
+              <notice></notice>
+            </template>
+          </el-popover>
+        </div>
 
-        <el-tooltip :content="proxy.$t('navbar.language')" effect="dark" placement="bottom">
-          <lang-select id="lang-select" class="right-menu-item hover-effect" />
-        </el-tooltip>
+        <screenfull id="screenfull" class="right-menu-item hover-effect" />
 
-        <el-tooltip :content="proxy.$t('navbar.layoutSize')" effect="dark" placement="bottom">
-          <size-select id="size-select" class="right-menu-item hover-effect" />
-        </el-tooltip>
+        <lang-select id="lang-select" class="right-menu-item hover-effect" />
       </template>
       <div class="avatar-container">
         <el-dropdown class="right-menu-item hover-effect" trigger="click" @command="handleCommand">
           <div class="avatar-wrapper">
-            <img :src="userStore.avatar" class="user-avatar" />
-            <el-icon><caret-bottom /></el-icon>
+            <img :src="userStore.avatar" class="user-avatar" alt="" />
+            <el-icon class="icon-caret"><caret-bottom /></el-icon>
           </div>
           <template #dropdown>
-            <el-dropdown-menu>
+            <el-dropdown-menu class="user-dropdown">
               <router-link to="/user/profile">
                 <el-dropdown-item>{{ proxy.$t('navbar.personalCenter') }}</el-dropdown-item>
               </router-link>
-              <el-dropdown-item v-if="settingsStore.showSettings" command="setLayout">
-                <span>{{ proxy.$t('navbar.layoutSetting') }}</span>
-              </el-dropdown-item>
               <el-dropdown-item divided command="logout">
                 <span>{{ proxy.$t('navbar.logout') }}</span>
               </el-dropdown-item>
@@ -72,6 +75,7 @@ import { useNoticeStore } from '@/store/modules/notice';
 import notice from './notice/index.vue';
 import router from '@/router';
 import { ElMessageBoxOptions } from 'element-plus/es/components/message-box/src/message-box.type';
+import { CaretBottom } from '@element-plus/icons-vue';
 
 const appStore = useAppStore();
 const userStore = useUserStore();
@@ -105,14 +109,8 @@ const logout = async () => {
   });
 };
 
-const emits = defineEmits(['setLayout']);
-const setLayout = () => {
-  emits('setLayout');
-};
-
 // 定义Command方法对象 通过key直接调用方法
 const commandMap: { [key: string]: any } = {
-  setLayout,
   logout
 };
 
@@ -139,7 +137,9 @@ watch(
 }
 
 :deep(.el-badge__content.is-fixed) {
-  top: 12px;
+  top: 10px;
+  right: 5px;
+  transform: scale(0.8);
 }
 
 .flex {
@@ -151,13 +151,19 @@ watch(
 }
 
 .navbar {
-  height: 50px;
+  height: 55px;
   overflow: hidden;
   position: relative;
-  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+  background: #ffffff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+  z-index: 1000;
 
   .breadcrumb-container {
     float: left;
+    height: 100%;
+    display: flex;
+    align-items: center;
   }
 
   .topmenu-container {
@@ -173,52 +179,89 @@ watch(
   .right-menu {
     float: right;
     height: 100%;
-    line-height: 50px;
+    line-height: 55px;
     display: flex;
+    align-items: center;
 
     &:focus {
       outline: none;
     }
 
     .right-menu-item {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       padding: 0 8px;
-      height: 100%;
+      height: 34px;
+      border-radius: 8px;
+      margin: 0 4px;
       font-size: 18px;
-      color: #5a5e66;
+      color: #606266;
       vertical-align: text-bottom;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 
       &.hover-effect {
         cursor: pointer;
-        transition: background 0.3s;
+        position: relative;
 
         &:hover {
-          background: rgba(0, 0, 0, 0.025);
+          background: rgba(0, 0, 0, 0.05);
+          color: var(--el-color-primary, #409eff);
         }
+      }
+
+      :deep(svg) {
+        vertical-align: middle;
       }
     }
 
     .avatar-container {
-      margin-right: 40px;
+      margin-right: 20px;
+      padding-left: 0;
+      height: 100%;
+      display: flex;
+      align-items: center;
+
+      .right-menu-item {
+        height: 100%;
+        margin: 0;
+        border-radius: 0;
+
+        &:hover {
+          background: rgba(0, 0, 0, 0.025);
+          color: inherit;
+        }
+      }
 
       .avatar-wrapper {
-        margin-top: 5px;
+        margin-top: 0;
         position: relative;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
 
         .user-avatar {
-          cursor: pointer;
-          width: 40px;
-          height: 40px;
-          border-radius: 10px;
-          margin-top: 10px;
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          transition: transform 0.3s ease;
+          border: 2px solid #fff;
+
+          &:hover {
+            transform: scale(1.05);
+          }
         }
 
-        i {
-          cursor: pointer;
-          position: absolute;
-          right: -20px;
-          top: 25px;
+        .icon-caret {
           font-size: 12px;
+          color: #909399;
+          transition: transform 0.3s;
+        }
+
+        &:hover .icon-caret {
+          transform: rotate(180deg);
         }
       }
     }

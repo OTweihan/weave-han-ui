@@ -3,27 +3,18 @@
     <div v-if="device === 'mobile' && sidebar.opened" class="drawer-bg" @click="handleClickOutside" />
     <side-bar v-if="!sidebar.hide" class="sidebar-container" />
     <div :class="{ hasTagsView: needTagsView, sidebarHide: sidebar.hide }" class="main-container">
-      <!-- <el-scrollbar>
-        <div :class="{ 'fixed-header': fixedHeader }">
-          <navbar ref="navbarRef" @setLayout="setLayout" />
-          <tags-view v-if="needTagsView" />
-        </div>
-        <app-main />
-        <settings ref="settingRef" />
-      </el-scrollbar> -->
       <div :class="{ 'fixed-header': fixedHeader }">
-        <navbar ref="navbarRef" @set-layout="setLayout" />
+        <navbar ref="navbarRef" />
         <tags-view v-if="needTagsView" />
       </div>
       <app-main />
-      <settings ref="settingRef" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import SideBar from './components/Sidebar/index.vue';
-import { AppMain, Navbar, Settings, TagsView } from './components';
+import { AppMain, Navbar, TagsView } from './components';
 import { useAppStore } from '@/store/modules/app';
 import { useSettingsStore } from '@/store/modules/settings';
 import { initWebSocket } from '@/utils/websocket';
@@ -59,7 +50,6 @@ watchEffect(() => {
 });
 
 const navbarRef = ref<InstanceType<typeof Navbar>>();
-const settingRef = ref<InstanceType<typeof Settings>>();
 
 // 初始化租户列表功能已移除，保留空钩子用于后续扩展
 onMounted(() => {
@@ -77,10 +67,6 @@ onMounted(() => {
 
 const handleClickOutside = () => {
   useAppStore().closeSideBar({ withoutAnimation: false });
-};
-
-const setLayout = () => {
-  settingRef.value?.openSetting();
 };
 </script>
 

@@ -1,30 +1,35 @@
 <template>
-  <div v-loading="state.loading" class="layout-navbars-breadcrumb-user-news">
-    <div class="head-box">
-      <div class="head-box-title">通知公告</div>
-      <div class="head-box-btn" @click="readAll">全部已读</div>
+  <div v-loading="state.loading" class="notice-container">
+    <div class="header">
+      <div class="title">通知公告</div>
+      <div class="mark-read" @click="readAll" v-if="newsList.length > 0">
+        <el-icon><Check /></el-icon>
+        <span>全部已读</span>
+      </div>
     </div>
-    <div v-loading="state.loading" class="content-box">
+
+    <div class="notice-list">
       <template v-if="newsList.length > 0">
-        <div v-for="(v, k) in newsList" :key="k" class="content-box-item" @click="onNewsClick(k)">
-          <div class="item-conten">
-            <div>{{ v.message }}</div>
-            <div class="content-box-msg"></div>
-            <div class="content-box-time">{{ v.time }}</div>
+        <div v-for="(v, k) in newsList" :key="k" class="notice-item" :class="{ 'is-read': v.read }" @click="onNewsClick(k)">
+          <div class="notice-status">
+            <div class="dot"></div>
           </div>
-          <!-- 已读/未读 -->
-          <span v-if="v.read" class="el-tag el-tag--success el-tag--mini read">已读</span>
-          <span v-else class="el-tag el-tag--danger el-tag--mini read">未读</span>
+          <div class="notice-content">
+            <div class="message">{{ v.message }}</div>
+            <div class="time">{{ v.time }}</div>
+          </div>
         </div>
       </template>
-      <el-empty v-else :description="'消息为空'"></el-empty>
+      <div v-else class="empty-state">
+        <el-empty :image-size="80" description="暂无新消息" />
+      </div>
     </div>
-    <div v-if="newsList.length > 0" class="foot-box" @click="onGoToGiteeClick">前往gitee</div>
   </div>
 </template>
 
 <script setup lang="ts" name="layoutBreadcrumbUserNews">
 import { useNoticeStore } from '@/store/modules/notice';
+import { Check } from '@element-plus/icons-vue';
 
 const noticeStore = useNoticeStore();
 const { readAll } = useNoticeStore();
@@ -52,11 +57,6 @@ const onNewsClick = (item: any) => {
   noticeStore.state.notices = newsList.value;
 };
 
-// 前往通知中心点击
-const onGoToGiteeClick = () => {
-  window.open('https://gitee.com/dromara/RuoYi-Vue-Plus/tree/5.X/');
-};
-
 onMounted(() => {
   nextTick(() => {
     getTableData();
@@ -65,66 +65,143 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-.layout-navbars-breadcrumb-user-news {
-  .head-box {
+.notice-container {
+  display: flex;
+  flex-direction: column;
+
+  .header {
     display: flex;
-    border-bottom: 1px solid var(--el-border-color-lighter);
-    box-sizing: border-box;
-    color: var(--el-text-color-primary);
-    justify-content: space-between;
-    height: 35px;
     align-items: center;
-    .head-box-btn {
-      color: var(--el-color-primary);
-      font-size: 13px;
-      cursor: pointer;
-      opacity: 0.8;
-      &:hover {
-        opacity: 1;
-      }
+    justify-content: space-between;
+    padding: 5px 18px;
+    border-bottom: 1px solid var(--el-border-color-lighter);
+    background-color: #fff;
+
+    .title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--el-text-color-primary);
     }
-  }
-  .content-box {
-    height: 300px;
-    overflow: auto;
-    font-size: 13px;
-    .content-box-item {
-      padding-top: 12px;
+
+    .mark-read {
       display: flex;
-      &:last-of-type {
-        padding-bottom: 12px;
-      }
-      .content-box-msg {
-        color: var(--el-text-color-secondary);
-        margin-top: 5px;
-        margin-bottom: 5px;
-      }
-      .content-box-time {
-        color: var(--el-text-color-secondary);
-      }
-      .item-conten {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      color: var(--el-color-primary);
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+
+      &:hover {
+        background-color: var(--el-color-primary-light-9);
       }
     }
   }
-  .foot-box {
-    height: 35px;
-    color: var(--el-color-primary);
-    font-size: 13px;
-    cursor: pointer;
-    opacity: 0.8;
+
+  .notice-list {
+    max-height: 350px;
+    overflow-y: auto;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: #e0e0e0;
+      border-radius: 3px;
+    }
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .notice-item {
+      display: flex;
+      padding: 16px 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border-bottom: 1px solid var(--el-border-color-lighter);
+      position: relative;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &:hover {
+        background-color: var(--el-fill-color-light);
+      }
+
+      .notice-status {
+        margin-right: 12px;
+        padding-top: 6px;
+
+        .dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background-color: var(--el-color-danger);
+          box-shadow: 0 0 0 2px rgba(245, 108, 108, 0.2);
+        }
+      }
+
+      .notice-content {
+        flex: 1;
+
+        .message {
+          font-size: 14px;
+          color: var(--el-text-color-primary);
+          line-height: 1.5;
+          margin-bottom: 6px;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        .time {
+          font-size: 12px;
+          color: var(--el-text-color-secondary);
+        }
+      }
+
+      &.is-read {
+        opacity: 0.7;
+
+        .notice-status .dot {
+          background-color: var(--el-text-color-placeholder);
+          box-shadow: none;
+        }
+
+        .message {
+          color: var(--el-text-color-regular);
+        }
+      }
+    }
+
+    .empty-state {
+      padding: 40px 0;
+      display: flex;
+      justify-content: center;
+    }
+  }
+
+  .footer {
+    padding: 12px;
+    border-top: 1px solid var(--el-border-color-lighter);
     display: flex;
     align-items: center;
     justify-content: center;
-    border-top: 1px solid var(--el-border-color-lighter);
-    &:hover {
-      opacity: 1;
-    }
-  }
-  :deep(.el-empty__description p) {
+    gap: 4px;
+    cursor: pointer;
+    background-color: var(--el-fill-color-lighter);
+    color: var(--el-text-color-regular);
     font-size: 13px;
+    transition: all 0.2s;
+
+    &:hover {
+      background-color: var(--el-fill-color);
+      color: var(--el-color-primary);
+    }
   }
 }
 </style>
