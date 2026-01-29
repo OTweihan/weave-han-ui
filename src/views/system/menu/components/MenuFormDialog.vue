@@ -190,7 +190,7 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: 'success'): void;
+  (e: 'success', parentId: number | string): void;
 }>();
 
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
@@ -266,7 +266,7 @@ const submitForm = () => {
     }
     proxy?.$modal.msgSuccess('操作成功');
     dialog.visible = false;
-    emit('success');
+    emit('success', form.value.parentId);
   });
 };
 

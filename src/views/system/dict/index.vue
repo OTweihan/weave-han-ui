@@ -119,7 +119,7 @@
   </div>
 </template>
 
-<script setup name="Dict" lang="ts">
+<script setup data-name="Dict" lang="ts">
 import { useDictStore } from '@/store/modules/dict';
 import { listType, getType, delType, addType, updateType, refreshCache } from '@/api/system/dict/type';
 import { DictTypeForm, DictTypeQuery, DictTypeVO } from '@/api/system/dict/type/types';

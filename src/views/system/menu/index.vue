@@ -50,8 +50,14 @@
           :load="getChildrenList"
           :expand-change="expandMenuHandle"
         >
-          <el-table-column prop="menuName" label="菜单名称" :show-overflow-tooltip="true" width="160"></el-table-column>
-          <el-table-column prop="orderNum" label="排序" align="center" width="60"></el-table-column>
+          <el-table-column prop="menuName" label="菜单名称" :show-overflow-tooltip="true" width="160" header-align="center"></el-table-column>
+          <el-table-column prop="orderNum" label="排序" align="center" width="80">
+            <template #default="scope">
+              <span :style="{ paddingLeft: ((scope.row.__level || 1) - 1) * 12 + 'px', display: 'block', textAlign: 'left' }">{{
+                scope.row.orderNum
+              }}</span>
+            </template>
+          </el-table-column>
           <el-table-column prop="perms" label="权限标识" align="center" :show-overflow-tooltip="true"></el-table-column>
           <el-table-column prop="component" label="组件路径" align="center" :show-overflow-tooltip="true"></el-table-column>
           <el-table-column prop="status" label="状态" align="center" width="80">
@@ -139,6 +145,9 @@ const menuTableRef = ref<ElTableInstance>();
 const getChildrenList = async (row: any, treeNode: unknown, resolve: (data: any[]) => void) => {
   menuExpandMap.value[row.menuId] = { row, treeNode, resolve };
   const children = menuChildrenListMap.value[row.menuId] || [];
+  children.forEach((item: any) => {
+    item.__level = (row.__level || 1) + 1;
+  });
   // 菜单的子菜单清空后关闭展开
   if (children.length == 0) {
     // fix: 处理当菜单只有一个子菜单并被删除，需要将父菜单的展开状态关闭
@@ -160,10 +169,6 @@ const refreshLoadTree = (parentId: string | number) => {
     const { row, treeNode, resolve } = menuExpandMap.value[parentId];
     if (row) {
       getChildrenList(row, treeNode, resolve);
-      if (row.parentId) {
-        const grandpaMenu = menuExpandMap.value[row.parentId];
-        getChildrenList(grandpaMenu.row, grandpaMenu.treeNode, grandpaMenu.resolve);
-      }
     }
   }
 };
@@ -176,7 +181,7 @@ const refreshAllExpandMenuData = () => {
 };
 
 /** 查询菜单列表 */
-const getList = async () => {
+const getList = async (parentId?: number | string) => {
   loading.value = true;
   const res = await listMenu(queryParams.value);
 
@@ -198,9 +203,18 @@ const getList = async () => {
   }
   menuChildrenListMap.value = tempMap;
   // 找出所有父ID不在当前菜单ID集合中的菜单项，作为新的顶层菜单
-  menuList.value = res.data.filter((menu) => !menuIdSet.has(menu.parentId));
+  menuList.value = res.data
+    .filter((menu) => !menuIdSet.has(menu.parentId))
+    .map((item) => {
+      (item as any).__level = 1;
+      return item;
+    });
   // 根据新数据重新加载子菜单数据
-  refreshAllExpandMenuData();
+  if (parentId !== undefined && typeof parentId !== 'object') {
+    refreshLoadTree(parentId);
+  } else {
+    refreshAllExpandMenuData();
+  }
   loading.value = false;
 };
 /** 查询菜单下拉树结构 */
