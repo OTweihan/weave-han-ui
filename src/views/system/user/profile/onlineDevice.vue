@@ -26,7 +26,7 @@
   </div>
 </template>
 
-<script setup name="Online" lang="ts">
+<script setup data-name="Online" lang="ts">
 import { delOnline } from '@/api/monitor/online';
 import { propTypes } from '@/utils/propTypes';
 

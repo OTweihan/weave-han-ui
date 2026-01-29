@@ -81,7 +81,7 @@
   </div>
 </template>
 
-<script setup name="Profile" lang="ts">
+<script setup data-name="Profile" lang="ts">
 import UserAvatar from './userAvatar.vue';
 import UserInfo from './userInfo.vue';
 import ResetPwd from './resetPwd.vue';

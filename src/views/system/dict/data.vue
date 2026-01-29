@@ -124,7 +124,7 @@
   </div>
 </template>
 
-<script setup name="Data" lang="ts">
+<script setup data-name="Data" lang="ts">
 import { useDictStore } from '@/store/modules/dict';
 import { optionselect as getDictOptionselect } from '@/api/system/dict/type';
 import { listData, getData, delData, addData, updateData } from '@/api/system/dict/data';

@@ -163,7 +163,7 @@
   </div>
 </template>
 
-<script setup lang="ts" name="User">
+<script setup lang="ts" data-name="User">
 import { ref, reactive, toRefs, onMounted, getCurrentInstance } from 'vue';
 import type { ComponentInternalInstance } from 'vue';
 import { ElMessageBox } from 'element-plus';
