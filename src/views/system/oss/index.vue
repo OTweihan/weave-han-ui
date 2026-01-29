@@ -1,5 +1,5 @@
 <template>
-  <div class="p-2">
+  <div class="p-2 h-full flex flex-col">
     <transition :enter-active-class="proxy?.animate.searchAnimate.enter" :leave-active-class="proxy?.animate.searchAnimate.leave">
       <div v-show="showSearch" class="mb-[10px]">
         <el-card shadow="hover">
@@ -36,7 +36,7 @@
       </div>
     </transition>
 
-    <el-card shadow="hover">
+    <el-card shadow="hover" class="flex-1 flex flex-col overflow-hidden" :body-style="{ flex: '1', overflow: 'hidden', display: 'flex', flexDirection: 'column' }">
       <template #header>
         <el-row :gutter="10" class="mb8">
           <el-col :span="1.5">
@@ -59,9 +59,6 @@
               >预览开关 : {{ previewListResource ? '禁用' : '启用' }}</el-button
             >
           </el-col>
-          <el-col :span="1.5">
-            <el-button v-hasPermi="['system:ossConfig:list']" type="info" plain icon="Operation" @click="handleOssConfig">配置管理</el-button>
-          </el-col>
           <right-toolbar v-model:show-search="showSearch" @query-table="getList"></right-toolbar>
         </el-row>
       </template>
@@ -71,6 +68,7 @@
         v-loading="loading"
         :data="ossList"
         border
+        class="flex-1"
         :header-cell-class-name="handleHeaderClass"
         @selection-change="handleSelectionChange"
         @header-click="handleHeaderCLick"
@@ -166,6 +164,7 @@ const queryFormRef = ref<ElFormInstance>();
 const initFormData = {
   file: undefined
 };
+
 const data = reactive<PageData<OssForm, OssQuery>>({
   form: { ...initFormData },
   // 查询参数
@@ -198,26 +197,31 @@ const getList = async () => {
   loading.value = false;
   showTable.value = true;
 };
+
 function checkFileSuffix(fileSuffix: string | string[]) {
   const arr = ['.png', '.jpg', '.jpeg'];
   const suffixArray = Array.isArray(fileSuffix) ? fileSuffix : [fileSuffix];
   return suffixArray.some((suffix) => arr.includes(suffix.toLowerCase()));
 }
+
 /** 取消按钮 */
 function cancel() {
   dialog.visible = false;
   reset();
 }
+
 /** 表单重置 */
 function reset() {
   form.value = { ...initFormData };
   ossFormRef.value?.resetFields();
 }
+
 /** 搜索按钮操作 */
 function handleQuery() {
   queryParams.value.pageNum = 1;
   getList();
 }
+
 /** 重置按钮操作 */
 function resetQuery() {
   showTable.value = false;
@@ -227,16 +231,19 @@ function resetQuery() {
   queryParams.value.isAsc = defaultSort.value.order;
   handleQuery();
 }
+
 /** 选择条数  */
 function handleSelectionChange(selection: OssVO[]) {
   ids.value = selection.map((item) => item.ossId);
   single.value = selection.length != 1;
   multiple.value = !selection.length;
 }
+
 /** 设置列的排序为我们自定义的排序 */
 const handleHeaderClass = ({ column }: any): any => {
   column.order = column.multiOrder;
 };
+
 /** 点击表头进行排序 */
 const handleHeaderCLick = (column: any) => {
   if (column.sortable !== 'custom') {
@@ -255,6 +262,7 @@ const handleHeaderCLick = (column: any) => {
   }
   handleOrderChange(column.property, column.multiOrder);
 };
+
 const handleOrderChange = (prop: string, order: string) => {
   const orderByArr = queryParams.value.orderByColumn ? queryParams.value.orderByColumn.split(',') : [];
   const isAscArr = queryParams.value.isAsc ? queryParams.value.isAsc.split(',') : [];
@@ -278,10 +286,13 @@ const handleOrderChange = (prop: string, order: string) => {
   queryParams.value.isAsc = isAscArr.join(',');
   getList();
 };
+
 /** 任务日志列表查询 */
-const handleOssConfig = () => {
-  router.push('/system/oss-config/index');
-};
+// const handleOssConfig = () => {
+//   router.push('/system/oss-config/index');
+// };
+
+
 /** 文件按钮操作 */
 const handleFile = () => {
   reset();
@@ -289,6 +300,7 @@ const handleFile = () => {
   dialog.visible = true;
   dialog.title = '上传文件';
 };
+
 /** 图片按钮操作 */
 const handleImage = () => {
   reset();
@@ -296,15 +308,18 @@ const handleImage = () => {
   dialog.visible = true;
   dialog.title = '上传图片';
 };
+
 /** 提交按钮 */
 const submitForm = () => {
   dialog.visible = false;
   getList();
 };
+
 /** 下载按钮操作 */
 const handleDownload = (row: OssVO) => {
   proxy?.$download.oss(row.ossId);
 };
+
 /** 预览开关按钮  */
 const handlePreviewListResource = async (preview: boolean) => {
   const text = preview ? '启用' : '停用';
@@ -317,6 +332,7 @@ const handlePreviewListResource = async (preview: boolean) => {
     return;
   }
 };
+
 /** 删除按钮操作 */
 const handleDelete = async (row?: OssVO) => {
   const ossIds = row?.ossId || ids.value;
