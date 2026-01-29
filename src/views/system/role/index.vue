@@ -70,7 +70,7 @@
               <el-icon class="cursor-move drag-handler" style="font-size: 16px; color: #909399"><Rank /></el-icon>
             </template>
           </el-table-column>
-          <el-table-column type="selection" width="55" align="center" />
+          <el-table-column type="selection" width="50" align="center" />
 
           <el-table-column label="角色名称" align="center" prop="roleName" :show-overflow-tooltip="true" min-width="150" />
           <el-table-column label="权限字符" align="center" prop="roleKey" :show-overflow-tooltip="true" min-width="200" />

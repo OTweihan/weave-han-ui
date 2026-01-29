@@ -1,5 +1,5 @@
 <template>
-  <div class="p-2">
+  <div class="p-2 h-full flex flex-col">
     <transition :enter-active-class="proxy?.animate.searchAnimate.enter" :leave-active-class="proxy?.animate.searchAnimate.leave">
       <div v-show="showSearch" class="mb-[10px]">
         <el-card shadow="hover">
@@ -35,7 +35,11 @@
       </div>
     </transition>
 
-    <el-card shadow="hover">
+    <el-card
+      shadow="hover"
+      class="flex-1 flex flex-col overflow-hidden"
+      :body-style="{ flex: '1', overflow: 'hidden', display: 'flex', flexDirection: 'column' }"
+    >
       <template #header>
         <el-row :gutter="10" class="mb8">
           <el-col :span="1.5">
@@ -64,11 +68,13 @@
         :data="loginInfoList"
         :default-sort="defaultSort"
         border
+        height="100%"
+        class="flex-1"
         @selection-change="handleSelectionChange"
         @sort-change="handleSortChange"
       >
-        <el-table-column type="selection" width="55" align="center" />
-        <el-table-column label="访问编号" align="center" prop="infoId" />
+        <el-table-column type="selection" width="50" align="center" />
+        <el-table-column label="访问编号" align="center" prop="infoId" width="200" />
         <el-table-column
           label="用户名称"
           align="center"
@@ -77,8 +83,8 @@
           sortable="custom"
           :sort-orders="['descending', 'ascending']"
         />
-        <el-table-column label="客户端" align="center" prop="clientKey" :show-overflow-tooltip="true" />
-        <el-table-column label="设备类型" align="center">
+        <el-table-column label="客户端" align="center" prop="clientKey" width="100" :show-overflow-tooltip="true" />
+        <el-table-column label="设备类型" align="center" width="100">
           <template #default="scope">
             <dict-tag :options="sys_device_type" :value="scope.row.deviceType" />
           </template>
@@ -87,7 +93,7 @@
         <el-table-column label="登录地点" align="center" prop="loginLocation" :show-overflow-tooltip="true" />
         <el-table-column label="操作系统" align="center" prop="os" :show-overflow-tooltip="true" />
         <el-table-column label="浏览器" align="center" prop="browser" :show-overflow-tooltip="true" />
-        <el-table-column label="登录状态" align="center" prop="status">
+        <el-table-column label="登录状态" align="center" prop="status" width="100">
           <template #default="scope">
             <dict-tag :options="sys_common_status" :value="scope.row.status" />
           </template>
@@ -105,7 +111,7 @@
   </div>
 </template>
 
-<script setup name="Logininfor" lang="ts">
+<script setup data-name="Logininfor" lang="ts">
 import { list, delLoginInfo, cleanLoginInfo, unlockLoginInfo } from '@/api/monitor/loginInfo';
 import { LoginInfoQuery, LoginInfoVO } from '@/api/monitor/loginInfo/types';
 
@@ -126,6 +132,7 @@ const defaultSort = ref<any>({ prop: 'loginTime', order: 'descending' });
 
 const queryFormRef = ref<ElFormInstance>();
 const loginInfoTableRef = ref<ElTableInstance>();
+
 // 查询参数
 const queryParams = ref<LoginInfoQuery>({
   pageNum: 1,
@@ -145,11 +152,13 @@ const getList = async () => {
   total.value = res.total;
   loading.value = false;
 };
+
 /** 搜索按钮操作 */
 const handleQuery = () => {
   queryParams.value.pageNum = 1;
   getList();
 };
+
 /** 重置按钮操作 */
 const resetQuery = () => {
   dateRange.value = ['', ''];
@@ -157,6 +166,7 @@ const resetQuery = () => {
   queryParams.value.pageNum = 1;
   loginInfoTableRef.value?.sort(defaultSort.value.prop, defaultSort.value.order);
 };
+
 /** 多选框选中数据 */
 const handleSelectionChange = (selection: LoginInfoVO[]) => {
   ids.value = selection.map((item) => item.infoId);
@@ -164,20 +174,23 @@ const handleSelectionChange = (selection: LoginInfoVO[]) => {
   single.value = selection.length != 1;
   selectName.value = selection.map((item) => item.userAccount);
 };
+
 /** 排序触发事件 */
 const handleSortChange = (column: any) => {
   queryParams.value.orderByColumn = column.prop;
   queryParams.value.isAsc = column.order;
   getList();
 };
+
 /** 删除按钮操作 */
 const handleDelete = async (row?: LoginInfoVO) => {
   const infoIds = row?.infoId || ids.value;
-  await proxy?.$modal.confirm('是否确认删除访问编号为"' + infoIds + '"的数据项?');
+  await proxy?.$modal.confirm('是否确认删除访问编号为 "' + infoIds + '" 的数据项?');
   await delLoginInfo(infoIds);
   await getList();
   proxy?.$modal.msgSuccess('删除成功');
 };
+
 /** 清空按钮操作 */
 const handleClean = async () => {
   await proxy?.$modal.confirm('是否确认清空所有登录日志数据项?');
@@ -185,13 +198,15 @@ const handleClean = async () => {
   await getList();
   proxy?.$modal.msgSuccess('清空成功');
 };
+
 /** 解锁按钮操作 */
 const handleUnlock = async () => {
   const username = selectName.value;
-  await proxy?.$modal.confirm('是否确认解锁用户"' + username + '"数据项?');
+  await proxy?.$modal.confirm('是否确认解锁用户 "' + username + '" 数据项?');
   await unlockLoginInfo(username);
   proxy?.$modal.msgSuccess('用户' + username + '解锁成功');
 };
+
 /** 导出按钮操作 */
 const handleExport = () => {
   proxy?.download(

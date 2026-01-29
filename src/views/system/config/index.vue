@@ -65,7 +65,7 @@
       </template>
 
       <el-table v-loading="loading" border :data="configList" height="100%" class="flex-1" @selection-change="handleSelectionChange">
-        <el-table-column type="selection" width="55" align="center" />
+        <el-table-column type="selection" width="50" align="center" />
         <el-table-column v-if="false" label="参数主键" align="center" prop="configId" />
         <el-table-column label="参数名称" align="center" prop="configName" :show-overflow-tooltip="true" />
         <el-table-column label="参数键名" align="center" prop="configKey" :show-overflow-tooltip="true" />

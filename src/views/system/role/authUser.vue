@@ -39,7 +39,7 @@
 
       <div class="flex-1 overflow-hidden">
         <el-table v-loading="loading" border :data="userList" height="100%" @selection-change="handleSelectionChange">
-          <el-table-column type="selection" width="55" align="center" />
+          <el-table-column type="selection" width="50" align="center" />
           <el-table-column label="用户账号" prop="userAccount" align="center" :show-overflow-tooltip="true" />
           <el-table-column label="用户名称" prop="nickName" align="center" min-width="160" :show-overflow-tooltip="true" />
           <el-table-column label="邮箱" prop="email" align="center" :show-overflow-tooltip="true" />

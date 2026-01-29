@@ -49,7 +49,7 @@
       </template>
 
       <el-table v-loading="loading" border :data="noticeList" height="100%" class="flex-1" @selection-change="handleSelectionChange">
-        <el-table-column type="selection" width="55" align="center" />
+        <el-table-column type="selection" width="50" align="center" />
         <el-table-column label="公告标题" align="center" prop="noticeTitle" :show-overflow-tooltip="true" />
         <el-table-column label="公告类型" align="center" prop="noticeType" width="160">
           <template #default="scope">
