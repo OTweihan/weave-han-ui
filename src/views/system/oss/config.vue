@@ -25,7 +25,11 @@
       </div>
     </transition>
 
-    <el-card shadow="hover" class="flex-1 flex flex-col overflow-hidden" :body-style="{ flex: '1', overflow: 'hidden', display: 'flex', flexDirection: 'column' }">
+    <el-card
+      shadow="hover"
+      class="flex-1 flex flex-col overflow-hidden"
+      :body-style="{ flex: '1', overflow: 'hidden', display: 'flex', flexDirection: 'column' }"
+    >
       <template #header>
         <el-row :gutter="10" class="mb8">
           <el-col :span="1.5">

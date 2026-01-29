@@ -287,12 +287,6 @@ const handleOrderChange = (prop: string, order: string) => {
   getList();
 };
 
-/** 任务日志列表查询 */
-// const handleOssConfig = () => {
-//   router.push('/system/oss-config/index');
-// };
-
-
 /** 文件按钮操作 */
 const handleFile = () => {
   reset();
