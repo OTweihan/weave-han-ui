@@ -1,5 +1,5 @@
 <template>
-  <div class="p-2">
+  <div class="p-2 h-full flex flex-col">
     <transition :enter-active-class="proxy?.animate.searchAnimate.enter" :leave-active-class="proxy?.animate.searchAnimate.leave">
       <div v-show="showSearch" class="mb-[10px]">
         <el-card shadow="hover">
@@ -34,7 +34,11 @@
         </el-card>
       </div>
     </transition>
-    <el-card shadow="hover">
+    <el-card
+      shadow="hover"
+      class="flex-1 flex flex-col overflow-hidden"
+      :body-style="{ flex: '1', overflow: 'hidden', display: 'flex', flexDirection: 'column' }"
+    >
       <template #header>
         <el-row :gutter="10" class="mb8">
           <el-col :span="1.5">
@@ -60,19 +64,19 @@
         </el-row>
       </template>
 
-      <el-table v-loading="loading" border :data="configList" @selection-change="handleSelectionChange">
+      <el-table v-loading="loading" border :data="configList" height="100%" class="flex-1" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" align="center" />
         <el-table-column v-if="false" label="参数主键" align="center" prop="configId" />
         <el-table-column label="参数名称" align="center" prop="configName" :show-overflow-tooltip="true" />
         <el-table-column label="参数键名" align="center" prop="configKey" :show-overflow-tooltip="true" />
         <el-table-column label="参数键值" align="center" prop="configValue" :show-overflow-tooltip="true" />
-        <el-table-column label="系统内置" align="center" prop="configType">
+        <el-table-column label="系统内置" align="center" width="100" prop="configType">
           <template #default="scope">
             <dict-tag :options="sys_yes_no" :value="scope.row.configType" />
           </template>
         </el-table-column>
         <el-table-column label="备注" align="center" prop="remark" :show-overflow-tooltip="true" />
-        <el-table-column label="创建时间" align="center" prop="createTime" width="180">
+        <el-table-column label="创建时间" align="center" prop="createTime" width="240">
           <template #default="scope">
             <span>{{ proxy.parseTime(scope.row.createTime) }}</span>
           </template>
@@ -92,39 +96,14 @@
     </el-card>
 
     <!-- 添加或修改参数配置对话框 -->
-    <el-dialog v-model="dialog.visible" :title="dialog.title" width="500px" append-to-body>
-      <el-form ref="configFormRef" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="参数名称" prop="configName">
-          <el-input v-model="form.configName" placeholder="请输入参数名称" />
-        </el-form-item>
-        <el-form-item label="参数键名" prop="configKey">
-          <el-input v-model="form.configKey" placeholder="请输入参数键名" />
-        </el-form-item>
-        <el-form-item label="参数键值" prop="configValue">
-          <el-input v-model="form.configValue" type="textarea" placeholder="请输入参数键值" />
-        </el-form-item>
-        <el-form-item label="系统内置" prop="configType">
-          <el-radio-group v-model="form.configType">
-            <el-radio v-for="dict in sys_yes_no" :key="dict.value" :value="dict.value">{{ dict.label }}</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="备注" prop="remark">
-          <el-input v-model="form.remark" type="textarea" placeholder="请输入内容" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button type="primary" @click="submitForm">确 定</el-button>
-          <el-button @click="cancel">取 消</el-button>
-        </div>
-      </template>
-    </el-dialog>
+    <ConfigFormDialog ref="configFormDialogRef" :sys_yes_no="sys_yes_no" @success="getList" />
   </div>
 </template>
 
 <script setup name="Config" lang="ts">
-import { listConfig, getConfig, delConfig, addConfig, updateConfig, refreshCache } from '@/api/system/config';
+import { listConfig, delConfig, refreshCache } from '@/api/system/config';
 import { ConfigForm, ConfigQuery, ConfigVO } from '@/api/system/config/types';
+import ConfigFormDialog from './components/ConfigFormDialog.vue';
 
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const { sys_yes_no } = toRefs<any>(proxy?.useDict('sys_yes_no'));
@@ -139,21 +118,10 @@ const total = ref(0);
 const dateRange = ref<[DateModelType, DateModelType]>(['', '']);
 
 const queryFormRef = ref<ElFormInstance>();
-const configFormRef = ref<ElFormInstance>();
-const dialog = reactive<DialogOption>({
-  visible: false,
-  title: ''
-});
-const initFormData: ConfigForm = {
-  configId: undefined,
-  configName: '',
-  configKey: '',
-  configValue: '',
-  configType: 'Y',
-  remark: ''
-};
+const configFormDialogRef = ref<InstanceType<typeof ConfigFormDialog>>();
+
 const data = reactive<PageData<ConfigForm, ConfigQuery>>({
-  form: { ...initFormData },
+  form: {} as ConfigForm,
   queryParams: {
     pageNum: 1,
     pageSize: 10,
@@ -161,14 +129,10 @@ const data = reactive<PageData<ConfigForm, ConfigQuery>>({
     configKey: '',
     configType: ''
   },
-  rules: {
-    configName: [{ required: true, message: '参数名称不能为空', trigger: 'blur' }],
-    configKey: [{ required: true, message: '参数键名不能为空', trigger: 'blur' }],
-    configValue: [{ required: true, message: '参数键值不能为空', trigger: 'blur' }]
-  }
+  rules: {} as ElFormRules
 });
 
-const { queryParams, form, rules } = toRefs(data);
+const { queryParams } = toRefs(data);
 
 /** 查询参数列表 */
 const getList = async () => {
@@ -178,59 +142,38 @@ const getList = async () => {
   total.value = res.total;
   loading.value = false;
 };
-/** 取消按钮 */
-const cancel = () => {
-  reset();
-  dialog.visible = false;
-};
-/** 表单重置 */
-const reset = () => {
-  form.value = { ...initFormData };
-  configFormRef.value?.resetFields();
-};
+
 /** 搜索按钮操作 */
 const handleQuery = () => {
   queryParams.value.pageNum = 1;
   getList();
 };
+
 /** 重置按钮操作 */
 const resetQuery = () => {
   dateRange.value = ['', ''];
   queryFormRef.value?.resetFields();
   handleQuery();
 };
+
 /** 多选框选中数据 */
 const handleSelectionChange = (selection: ConfigVO[]) => {
   ids.value = selection.map((item) => item.configId);
   single.value = selection.length != 1;
   multiple.value = !selection.length;
 };
+
 /** 新增按钮操作 */
 const handleAdd = () => {
-  reset();
-  dialog.visible = true;
-  dialog.title = '添加参数';
+  configFormDialogRef.value?.openAdd();
 };
+
 /** 修改按钮操作 */
 const handleUpdate = async (row?: ConfigVO) => {
-  reset();
   const configId = row?.configId || ids.value[0];
-  const res = await getConfig(configId);
-  Object.assign(form.value, res.data);
-  dialog.visible = true;
-  dialog.title = '修改参数';
+  configFormDialogRef.value?.openEdit(configId);
 };
-/** 提交按钮 */
-const submitForm = () => {
-  configFormRef.value?.validate(async (valid: boolean) => {
-    if (valid) {
-      form.value.configId ? await updateConfig(form.value) : await addConfig(form.value);
-      proxy?.$modal.msgSuccess('操作成功');
-      dialog.visible = false;
-      await getList();
-    }
-  });
-};
+
 /** 删除按钮操作 */
 const handleDelete = async (row?: ConfigVO) => {
   const configIds = row?.configId || ids.value;
@@ -239,6 +182,7 @@ const handleDelete = async (row?: ConfigVO) => {
   await getList();
   proxy?.$modal.msgSuccess('删除成功');
 };
+
 /** 导出按钮操作 */
 const handleExport = () => {
   proxy?.download(
@@ -249,6 +193,7 @@ const handleExport = () => {
     `config_${new Date().getTime()}.xlsx`
   );
 };
+
 /** 刷新缓存按钮操作 */
 const handleRefreshCache = async () => {
   await refreshCache();
