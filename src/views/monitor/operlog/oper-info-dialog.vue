@@ -1,10 +1,9 @@
 <template>
-  <el-dialog v-model="open" title="操作日志详细" width="700px" append-to-body close-on-click-modal @closed="info = null">
+  <el-dialog v-model="open" title="操作日志详细" width="700px" append-to-body close-on-click-modal>
     <el-descriptions v-if="info" :column="1" border>
       <el-descriptions-item label="操作状态">
         <template #default>
-          <el-tag v-if="info.status === 0" type="success">正常</el-tag>
-          <el-tag v-else-if="info.status === 1" type="danger">失败</el-tag>
+          <dict-tag :options="sys_common_status" :value="info.status" />
         </template>
       </el-descriptions-item>
       <el-descriptions-item label="登录信息">
@@ -23,15 +22,39 @@
       </el-descriptions-item>
       <el-descriptions-item label="请求参数">
         <template #default>
-          <div class="max-h-300px overflow-y-auto">
-            <VueJsonPretty :data="formatToJsonObject(info.operParam)" />
+          <div class="relative group">
+            <el-tooltip content="复制" placement="top">
+              <el-button
+                v-if="info.operParam"
+                link
+                type="primary"
+                icon="CopyDocument"
+                class="absolute right-2 top-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+                @click="handleCopy(info.operParam)"
+              />
+            </el-tooltip>
+            <div class="max-h-300px overflow-y-auto">
+              <VueJsonPretty :data="formatToJsonObject(info.operParam)" />
+            </div>
           </div>
         </template>
       </el-descriptions-item>
       <el-descriptions-item label="返回参数">
         <template #default>
-          <div class="max-h-300px overflow-y-auto">
-            <VueJsonPretty :data="formatToJsonObject(info.jsonResult)" />
+          <div class="relative group">
+            <el-tooltip content="复制" placement="top">
+              <el-button
+                v-if="info.jsonResult"
+                link
+                type="primary"
+                icon="CopyDocument"
+                class="absolute right-2 top-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+                @click="handleCopy(info.jsonResult)"
+              />
+            </el-tooltip>
+            <div class="max-h-300px overflow-y-auto">
+              <VueJsonPretty :data="formatToJsonObject(info.jsonResult)" />
+            </div>
           </div>
         </template>
       </el-descriptions-item>
@@ -89,9 +112,22 @@ function formatToJsonObject(data: string) {
  * 字典信息
  */
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-const { sys_oper_type } = toRefs<any>(proxy?.useDict('sys_oper_type'));
+
+const { sys_oper_type, sys_common_status } = toRefs<any>(proxy?.useDict('sys_oper_type', 'sys_common_status'));
+
 const typeFormat = (row: OperLogForm) => {
   return proxy?.selectDictLabel(sys_oper_type.value, row.businessType);
+};
+
+const { copy } = useClipboard();
+const handleCopy = (text: string) => {
+  const data = formatToJsonObject(text);
+  if (typeof data === 'object' && data !== null) {
+    copy(JSON.stringify(data, null, 2));
+  } else {
+    copy(text);
+  }
+  proxy?.$modal.msgSuccess('复制成功');
 };
 </script>
 
@@ -100,12 +136,14 @@ const typeFormat = (row: OperLogForm) => {
 label宽度固定
 */
 :deep(.el-descriptions__label) {
-  min-width: 100px;
+  width: 120px;
+  font-weight: bold;
 }
 /**
 文字超过 换行显示
 */
 :deep(.el-descriptions__content) {
-  max-width: 300px;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 </style>

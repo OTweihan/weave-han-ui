@@ -1,5 +1,5 @@
 <template>
-  <div class="p-2">
+  <div class="p-2 h-full flex flex-col">
     <transition :enter-active-class="proxy?.animate.searchAnimate.enter" :leave-active-class="proxy?.animate.searchAnimate.leave">
       <div v-show="showSearch" class="mb-[10px]">
         <el-card shadow="hover">
@@ -43,7 +43,11 @@
       </div>
     </transition>
 
-    <el-card shadow="hover">
+    <el-card
+      shadow="hover"
+      class="flex-1 flex flex-col overflow-hidden"
+      :body-style="{ flex: '1', overflow: 'hidden', display: 'flex', flexDirection: 'column' }"
+    >
       <template #header>
         <el-row :gutter="10" class="mb8">
           <el-col :span="1.5">
@@ -67,13 +71,15 @@
         :data="operlogList"
         border
         :default-sort="defaultSort"
+        height="100%"
+        class="flex-1"
         @selection-change="handleSelectionChange"
         @sort-change="handleSortChange"
       >
         <el-table-column type="selection" width="50" align="center" />
         <el-table-column label="日志编号" align="center" prop="operId" />
         <el-table-column label="系统模块" align="center" prop="title" :show-overflow-tooltip="true" />
-        <el-table-column label="操作类型" align="center" prop="businessType">
+        <el-table-column label="操作类型" align="center" prop="businessType" width="120">
           <template #default="scope">
             <dict-tag :options="sys_oper_type" :value="scope.row.businessType" />
           </template>
@@ -81,19 +87,18 @@
         <el-table-column
           label="操作人员"
           align="center"
-          width="110"
           prop="operName"
           :show-overflow-tooltip="true"
           sortable="custom"
           :sort-orders="['descending', 'ascending']"
         />
-        <el-table-column label="操作地址" align="center" prop="operIp" width="130" :show-overflow-tooltip="true" />
-        <el-table-column label="操作状态" align="center" prop="status">
+        <el-table-column label="操作地址" align="center" prop="operIp" :show-overflow-tooltip="true" />
+        <el-table-column label="操作状态" align="center" prop="status" width="100">
           <template #default="scope">
             <dict-tag :options="sys_common_status" :value="scope.row.status" />
           </template>
         </el-table-column>
-        <el-table-column label="操作日期" align="center" prop="operTime" width="180" sortable="custom" :sort-orders="['descending', 'ascending']">
+        <el-table-column label="操作日期" align="center" prop="operTime" width="240" sortable="custom" :sort-orders="['descending', 'ascending']">
           <template #default="scope">
             <span>{{ proxy.parseTime(scope.row.operTime) }}</span>
           </template>
@@ -111,7 +116,7 @@
             <span>{{ scope.row.costTime }}毫秒</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" fixed="right" align="center" class-name="small-padding fixed-width">
+        <el-table-column label="操作" fixed="right" align="center" width="100" class-name="small-padding fixed-width">
           <template #default="scope">
             <el-tooltip content="详细" placement="top">
               <el-button v-hasPermi="['monitor:operlog:query']" link type="primary" icon="View" @click="handleView(scope.row)"> </el-button>
@@ -127,7 +132,7 @@
   </div>
 </template>
 
-<script setup name="Operlog" lang="ts">
+<script setup data-name="Operlog" lang="ts">
 import { list, delOperlog, cleanOperlog } from '@/api/monitor/operlog';
 import { OperLogForm, OperLogQuery, OperLogVO } from '@/api/monitor/operlog/types';
 import OperInfoDialog from './oper-info-dialog.vue';
@@ -181,7 +186,7 @@ const data = reactive<PageData<OperLogForm, OperLogQuery>>({
   rules: {}
 });
 
-const { queryParams, form } = toRefs(data);
+const { queryParams } = toRefs(data);
 
 /** 查询登录日志 */
 const getList = async () => {
@@ -191,15 +196,13 @@ const getList = async () => {
   total.value = res.total;
   loading.value = false;
 };
-/** 操作日志类型字典翻译 */
-const typeFormat = (row: OperLogForm) => {
-  return proxy?.selectDictLabel(sys_oper_type.value, row.businessType);
-};
+
 /** 搜索按钮操作 */
 const handleQuery = () => {
   queryParams.value.pageNum = 1;
   getList();
 };
+
 /** 重置按钮操作 */
 const resetQuery = () => {
   dateRange.value = ['', ''];
@@ -207,11 +210,13 @@ const resetQuery = () => {
   queryParams.value.pageNum = 1;
   operLogTableRef.value?.sort(defaultSort.value.prop, defaultSort.value.order);
 };
+
 /** 多选框选中数据 */
 const handleSelectionChange = (selection: OperLogVO[]) => {
   ids.value = selection.map((item) => item.operId);
   multiple.value = !selection.length;
 };
+
 /** 排序触发事件 */
 const handleSortChange = (column: any) => {
   queryParams.value.orderByColumn = column.prop;
@@ -220,6 +225,7 @@ const handleSortChange = (column: any) => {
 };
 
 const operInfoDialogRef = ref<InstanceType<typeof OperInfoDialog>>();
+
 /** 详细按钮操作 */
 const handleView = (row: OperLogVO) => {
   operInfoDialogRef.value.openDialog(row);
@@ -252,6 +258,7 @@ const handleExport = () => {
     `config_${new Date().getTime()}.xlsx`
   );
 };
+
 onMounted(() => {
   getList();
 });
