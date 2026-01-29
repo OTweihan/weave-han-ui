@@ -100,7 +100,7 @@
   </div>
 </template>
 
-<script setup name="Config" lang="ts">
+<script setup data-name="Config" lang="ts">
 import { listConfig, delConfig, refreshCache } from '@/api/system/config';
 import { ConfigForm, ConfigQuery, ConfigVO } from '@/api/system/config/types';
 import ConfigFormDialog from './components/ConfigFormDialog.vue';

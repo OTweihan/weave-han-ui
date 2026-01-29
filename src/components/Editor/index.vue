@@ -171,6 +171,11 @@ const handleUploadError = (err: any) => {
   white-space: pre-wrap !important;
   line-height: normal !important;
 }
+.editor .ql-editor {
+  white-space: pre-wrap !important;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
 .quill-img {
   display: none;
 }
