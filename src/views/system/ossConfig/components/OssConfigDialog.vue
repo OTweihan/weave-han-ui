@@ -23,7 +23,14 @@
           <el-input v-model="form.configData.host" placeholder="请输入主机地址" />
         </el-form-item>
         <el-form-item label="主机端口" prop="configData.port">
-          <el-input-number v-model="form.configData.port" :min="0" :max="65535" placeholder="请输入主机端口" />
+          <el-input-number
+            v-model="form.configData.port"
+            class="port-input-number"
+            :min="0"
+            :max="65535"
+            placeholder="请输入主机端口"
+            style="width: 100%"
+          />
         </el-form-item>
         <el-form-item label="用户名" prop="configData.username">
           <el-input v-model="form.configData.username" placeholder="请输入用户名" />
@@ -48,7 +55,14 @@
           <el-input v-model="form.configData.host" placeholder="请输入主机地址" />
         </el-form-item>
         <el-form-item label="主机端口" prop="configData.port">
-          <el-input-number v-model="form.configData.port" :min="0" :max="65535" placeholder="请输入主机端口" />
+          <el-input-number
+            v-model="form.configData.port"
+            class="port-input-number"
+            :min="0"
+            :max="65535"
+            placeholder="请输入主机端口"
+            style="width: 100%"
+          />
         </el-form-item>
         <el-form-item label="用户名" prop="configData.username">
           <el-input v-model="form.configData.username" placeholder="请输入用户名" />
@@ -176,6 +190,9 @@ const rules = computed(() => {
     baseRules['configData.password'] = [{ required: true, message: '密码不能为空', trigger: 'blur' }];
     baseRules['configData.basePath'] = [{ required: true, message: '基础路径不能为空', trigger: 'blur' }];
   }
+  if (form.value.storageType === 11) {
+    baseRules['configData.mode'] = [{ required: true, message: '连接模式不能为空', trigger: 'change' }];
+  }
   if (form.value.storageType === 20) {
     baseRules['configData.endpoint'] = [{ required: true, message: '节点地址不能为空', trigger: 'blur' }];
     baseRules['configData.bucket'] = [{ required: true, message: '存储Bucket不能为空', trigger: 'blur' }];
@@ -255,3 +272,9 @@ defineExpose({
   open
 });
 </script>
+
+<style scoped>
+:deep(.port-input-number .el-input__inner) {
+  text-align: left;
+}
+</style>
