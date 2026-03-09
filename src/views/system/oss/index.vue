@@ -36,7 +36,11 @@
       </div>
     </transition>
 
-    <el-card shadow="hover" class="flex-1 flex flex-col overflow-hidden" :body-style="{ flex: '1', overflow: 'hidden', display: 'flex', flexDirection: 'column' }">
+    <el-card
+      shadow="hover"
+      class="flex-1 flex flex-col overflow-hidden"
+      :body-style="{ flex: '1', overflow: 'hidden', display: 'flex', flexDirection: 'column' }"
+    >
       <template #header>
         <el-row :gutter="10" class="mb8">
           <el-col :span="1.5">
@@ -102,6 +106,9 @@
             <el-tooltip content="下载" placement="top">
               <el-button v-hasPermi="['system:oss:download']" link type="primary" icon="Download" @click="handleDownload(scope.row)"></el-button>
             </el-tooltip>
+            <el-tooltip content="复制链接" placement="top">
+              <el-button link type="primary" icon="CopyDocument" @click="handleCopyUrl(scope.row)"></el-button>
+            </el-tooltip>
             <el-tooltip content="删除" placement="top">
               <el-button v-hasPermi="['system:oss:remove']" link type="primary" icon="Delete" @click="handleDelete(scope.row)"></el-button>
             </el-tooltip>
@@ -129,13 +136,25 @@
   </div>
 </template>
 
-<script setup name="Oss" lang="ts">
+<script setup data-name="Oss" lang="ts">
 import { listOss, delOss } from '@/api/system/oss';
 import ImagePreview from '@/components/ImagePreview/index.vue';
 import { OssForm, OssQuery, OssVO } from '@/api/system/oss/types';
+import { useClipboard } from '@vueuse/core';
 
-const router = useRouter();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+
+const { copy } = useClipboard();
+
+/** 复制链接 */
+const handleCopyUrl = async (row: OssVO) => {
+  try {
+    await copy(row.url);
+    proxy?.$modal.msgSuccess('复制成功');
+  } catch (e) {
+    proxy?.$modal.msgError('复制失败');
+  }
+};
 
 const ossList = ref<OssVO[]>([]);
 const showTable = ref(true);

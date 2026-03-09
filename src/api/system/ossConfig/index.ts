@@ -58,3 +58,21 @@ export function changeOssConfigStatus(ossConfigId: string | number, status: stri
     data: data
   });
 }
+
+// 测试对象存储配置
+export function testOssConfig(ossConfigId: string | number): AxiosPromise<string> {
+  return request({
+    url: '/resource/oss/config/test',
+    method: 'get',
+    params: { ossConfigId }
+  });
+}
+
+// 设置为主配置
+export function updateOssConfigMaster(ossConfigId: string | number) {
+  return request({
+    url: '/resource/oss/config/updateMaster',
+    method: 'put',
+    data: { ossConfigId }
+  });
+}

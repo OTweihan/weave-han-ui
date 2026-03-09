@@ -53,6 +53,11 @@
         <el-table-column type="selection" width="50" align="center" />
         <el-table-column v-if="columns[0].visible" label="主建" align="center" prop="ossConfigId" />
         <el-table-column v-if="columns[1].visible" label="配置key" align="center" prop="configKey" />
+        <el-table-column v-if="columns[9].visible" label="存储器" align="center" prop="storageType">
+          <template #default="scope">
+            <dict-tag :options="infra_file_storage" :value="scope.row.storageType" />
+          </template>
+        </el-table-column>
         <el-table-column v-if="columns[2].visible" label="访问站点" align="center" prop="endpoint" width="200" />
         <el-table-column v-if="columns[3].visible" label="自定义域名" align="center" prop="domain" width="200" />
         <el-table-column v-if="columns[4].visible" label="桶名称" align="center" prop="bucketName" />
@@ -96,6 +101,7 @@ import { OssConfigQuery, OssConfigVO } from '@/api/system/ossConfig/types';
 import OssConfigDialog from './components/OssConfigDialog.vue';
 
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+const { infra_file_storage } = toRefs<any>(proxy?.useDict('infra_file_storage'));
 
 const ossConfigList = ref<OssConfigVO[]>([]);
 const loading = ref(true);
@@ -118,7 +124,8 @@ const columns = ref<FieldOption[]>([
   { key: 5, label: `前缀`, visible: true },
   { key: 6, label: `域`, visible: true },
   { key: 7, label: `桶权限类型`, visible: true },
-  { key: 8, label: `状态`, visible: true }
+  { key: 8, label: `状态`, visible: true },
+  { key: 9, label: `存储器`, visible: true }
 ]);
 
 const queryParams = reactive<OssConfigQuery>({
