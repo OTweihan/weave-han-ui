@@ -49,11 +49,6 @@
             <el-button v-hasPermi="['system:ossConfig:add']" type="primary" plain icon="Plus" @click="handleAdd">新增</el-button>
           </el-col>
           <el-col :span="1.5">
-            <el-button v-hasPermi="['system:ossConfig:edit']" type="success" plain icon="Edit" :disabled="single" @click="handleUpdate()">
-              修改
-            </el-button>
-          </el-col>
-          <el-col :span="1.5">
             <el-button v-hasPermi="['system:ossConfig:remove']" type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete()">
               删除
             </el-button>
@@ -109,8 +104,15 @@
     <OssConfigDialog ref="ossConfigDialogRef" @success="getList" />
 
     <el-dialog v-model="previewDialogVisible" title="测试上传预览" width="800px" append-to-body>
-      <div v-if="previewUrl" class="flex justify-center">
-        <img :key="previewUrl" :src="previewUrl" class="block max-w-full mx-auto" alt="上传预览图" @load="onPreviewLoad" @error="onPreviewError" />
+      <div v-if="previewUrl" class="flex justify-center items-center" style="height: 400px">
+        <img
+          :key="previewUrl"
+          :src="previewUrl"
+          class="block max-w-full max-h-full object-contain"
+          alt="上传预览图"
+          @load="onPreviewLoad"
+          @error="onPreviewError"
+        />
       </div>
       <el-empty v-else description="无可预览地址" />
     </el-dialog>
