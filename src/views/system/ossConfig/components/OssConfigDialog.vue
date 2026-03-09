@@ -11,8 +11,8 @@
       </el-form-item>
 
       <template v-if="form.storageType === 10">
-        <el-form-item label="存储路径" prop="configData.path">
-          <el-input v-model="form.configData.path" placeholder="请输入存储路径，如: /uploads" />
+        <el-form-item label="基础路径" prop="configData.basePath">
+          <el-input v-model="form.configData.basePath" placeholder="请输入基础路径，如: D:/uploads 或 /uploads" />
         </el-form-item>
       </template>
 
@@ -53,17 +53,16 @@
         <el-form-item label="accessSecret" prop="configData.accessSecret">
           <el-input v-model="form.configData.accessSecret" placeholder="请输入accessSecret" show-password />
         </el-form-item>
-        <el-form-item label="是否HTTPS">
-          <el-radio-group v-model="form.configData.enableHttps">
-            <el-radio :value="true">是</el-radio>
-            <el-radio :value="false">否</el-radio>
+        <el-form-item label="PathStyle 访问" prop="configData.enablePathStyleAccess">
+          <el-radio-group v-model="form.configData.enablePathStyleAccess">
+            <el-radio :value="true">开启</el-radio>
+            <el-radio :value="false">关闭</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="桶权限类型">
-          <el-radio-group v-model="form.configData.accessPolicy">
-            <el-radio value="0">private</el-radio>
-            <el-radio value="1">public</el-radio>
-            <el-radio value="2">custom</el-radio>
+        <el-form-item label="公开访问" prop="configData.enablePublicAccess">
+          <el-radio-group v-model="form.configData.enablePublicAccess">
+            <el-radio :value="true">是</el-radio>
+            <el-radio :value="false">否</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="域" prop="configData.region">
@@ -111,8 +110,6 @@ const initFormData = (): OssConfigForm => ({
   storageType: undefined,
   configData: {
     // 设置一些默认值，优化用户体验
-    enableHttps: true,
-    accessPolicy: '1',
     mode: 'Passive'
   },
   master: false,
@@ -120,6 +117,12 @@ const initFormData = (): OssConfigForm => ({
 });
 
 const form = ref<OssConfigForm>(initFormData());
+
+const resetForm = () => {
+  const initialData = initFormData();
+  Object.assign(form.value, initialData);
+  form.value.configData = { ...initialData.configData };
+};
 
 /** 校验 URL 格式 */
 const validateDomainUrl = (_rule: any, value: string, callback: any) => {
@@ -152,7 +155,7 @@ const rules = computed<FormRules>(() => {
 
   // 本地存储校验
   if (form.value.storageType === 10) {
-    baseRules['configData.path'] = [{ required: true, message: '存储路径不能为空', trigger: 'blur' }];
+    baseRules['configData.basePath'] = [{ required: true, message: '基础路径不能为空', trigger: 'blur' }];
   }
 
   // FTP/SFTP 校验
@@ -170,6 +173,8 @@ const rules = computed<FormRules>(() => {
     baseRules['configData.bucket'] = [{ required: true, message: '存储Bucket不能为空', trigger: 'blur' }];
     baseRules['configData.accessKey'] = [{ required: true, message: 'accessKey不能为空', trigger: 'blur' }];
     baseRules['configData.accessSecret'] = [{ required: true, message: 'accessSecret不能为空', trigger: 'blur' }];
+    baseRules['configData.enablePathStyleAccess'] = [{ required: true, message: 'PathStyle 访问不能为空', trigger: 'change' }];
+    baseRules['configData.enablePublicAccess'] = [{ required: true, message: '公开访问不能为空', trigger: 'change' }];
   }
 
   return baseRules;
@@ -187,8 +192,8 @@ const handleStorageTypeChange = (val: number) => {
   } else if (val === 12) {
     defaultData.port = 22;
   } else if (val === 20) {
-    defaultData.enableHttps = true;
-    defaultData.accessPolicy = '1';
+    defaultData.enablePathStyleAccess = true;
+    defaultData.enablePublicAccess = false;
   }
 
   form.value.configData = defaultData;
@@ -199,19 +204,21 @@ const handleStorageTypeChange = (val: number) => {
 
 /** 外部调用打开弹窗 */
 const open = async (param?: number | string | OssConfigVO) => {
+  resetForm();
   visible.value = true;
-  // 先重置数据，防止上次打开的残余
-  form.value = initFormData();
 
   if (param) {
     title.value = '修改对象存储配置';
     if (typeof param === 'object' && 'ossConfigId' in param) {
-      form.value = JSON.parse(JSON.stringify(param)); // 深拷贝防止污染列表
+      const data = JSON.parse(JSON.stringify(param));
+      Object.assign(form.value, data);
+      form.value.configData = data?.configData ?? {};
     } else {
       dialogLoading.value = true;
       try {
         const res = await getOssConfig(param);
-        form.value = res.data;
+        Object.assign(form.value, res.data);
+        form.value.configData = (res.data as any)?.configData ?? {};
       } finally {
         dialogLoading.value = false;
       }
@@ -220,16 +227,18 @@ const open = async (param?: number | string | OssConfigVO) => {
     title.value = '添加对象存储配置';
   }
 
-  // 确保 DOM 渲染后清除初始校验状态
-  nextTick(() => {
-    ossConfigFormRef.value?.clearValidate();
-  });
+  await nextTick();
+  ossConfigFormRef.value?.clearValidate();
 };
 
 /** 取消操作 */
 const cancel = () => {
   visible.value = false;
   buttonLoading.value = false;
+  resetForm();
+  nextTick(() => {
+    ossConfigFormRef.value?.clearValidate();
+  });
 };
 
 /** 提交表单 */
@@ -240,6 +249,12 @@ const submitForm = () => {
     if (valid) {
       buttonLoading.value = true;
       try {
+        if (typeof form.value.configData?.endpoint === 'string') {
+          form.value.configData.endpoint = form.value.configData.endpoint.replace(/`/g, '').trim();
+        }
+        if (typeof form.value.configData?.domain === 'string') {
+          form.value.configData.domain = form.value.configData.domain.replace(/`/g, '').trim();
+        }
         if (form.value.ossConfigId) {
           await updateOssConfig(form.value);
         } else {
@@ -247,6 +262,7 @@ const submitForm = () => {
         }
         proxy?.$modal.msgSuccess(form.value.ossConfigId ? '修改成功' : '新增成功');
         visible.value = false;
+        resetForm();
         emit('success');
       } catch (error) {
         console.error('提交失败:', error);
