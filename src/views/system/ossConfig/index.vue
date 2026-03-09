@@ -106,50 +106,50 @@
       <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
     </el-card>
 
-    <!-- 添加或修改对象存储配置对话框 -->
     <OssConfigDialog ref="ossConfigDialogRef" @success="getList" />
+
     <el-dialog v-model="previewDialogVisible" title="测试上传预览" width="800px" append-to-body>
-      <div v-if="previewUrl">
-        <img
-          :key="previewUrl"
-          :src="previewUrl"
-          style="display: block; max-width: 100%; margin: 0 auto"
-          @load="() => console.info('[OssConfig] 预览图片加载成功', { url: previewUrl })"
-          @error="() => console.error('[OssConfig] 预览图片加载失败', { url: previewUrl })"
-          alt=""
-        />
+      <div v-if="previewUrl" class="flex justify-center">
+        <img :key="previewUrl" :src="previewUrl" class="block max-w-full mx-auto" alt="上传预览图" @load="onPreviewLoad" @error="onPreviewError" />
       </div>
-      <div v-else>无可预览地址</div>
+      <el-empty v-else description="无可预览地址" />
     </el-dialog>
   </div>
 </template>
 
 <script setup data-name="OssConfig" lang="ts">
+import { ref, reactive, onMounted, watch, getCurrentInstance, toRefs } from 'vue';
+import type { ComponentInternalInstance } from 'vue';
+import { ElLoading, FormInstance } from 'element-plus';
+import request from '@/utils/request';
 import { listOssConfig, delOssConfig, testOssConfig, updateOssConfigMaster } from '@/api/system/ossConfig';
 import { OssConfigQuery, OssConfigVO } from '@/api/system/ossConfig/types';
 import OssConfigDialog from './components/OssConfigDialog.vue';
-import { ElLoading } from 'element-plus';
-import request from '@/utils/request';
 
+// 全局上下文与字典
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const { infra_file_storage } = toRefs<any>(proxy?.useDict('infra_file_storage'));
 
+// 表格与分页数据
 const ossConfigList = ref<OssConfigVO[]>([]);
+const total = ref(0);
 const loading = ref(true);
 const showSearch = ref(true);
+
+// 表格多选相关
 const ids = ref<Array<number | string>>([]);
 const selectionNames = ref<Array<string>>([]);
 const single = ref(true);
 const multiple = ref(true);
-const total = ref(0);
+
+// 预览相关数据
 const previewDialogVisible = ref(false);
 const previewUrl = ref('');
 const previewObjectUrl = ref('');
-const dateRange = ref<[DateModelType, DateModelType]>(['', '']);
 
-const queryFormRef = ref<ElFormInstance>();
-const ossConfigDialogRef = ref<InstanceType<typeof OssConfigDialog>>();
-
+// 查询表单参数
+const queryFormRef = ref<FormInstance>();
+const dateRange = ref<[any, any]>(['', '']); // 若有精确类型可替换 any
 const queryParams = reactive<OssConfigQuery>({
   pageNum: 1,
   pageSize: 10,
@@ -159,14 +159,20 @@ const queryParams = reactive<OssConfigQuery>({
   master: ''
 });
 
+// 对话框引用
+const ossConfigDialogRef = ref<InstanceType<typeof OssConfigDialog>>();
+
 /** 查询对象存储配置列表 */
 const getList = async () => {
   loading.value = true;
-  const params = proxy?.addDateRange(queryParams, dateRange.value) || queryParams;
-  const res = await listOssConfig(params);
-  ossConfigList.value = res.rows;
-  total.value = res.total;
-  loading.value = false;
+  try {
+    const params = proxy?.addDateRange(queryParams, dateRange.value) || queryParams;
+    const res = await listOssConfig(params);
+    ossConfigList.value = res.rows;
+    total.value = res.total;
+  } finally {
+    loading.value = false;
+  }
 };
 
 /** 搜索按钮操作 */
@@ -182,11 +188,11 @@ const resetQuery = () => {
   handleQuery();
 };
 
-/** 选择条数  */
+/** 表格复选框选择操作 */
 const handleSelectionChange = (selection: OssConfigVO[]) => {
   ids.value = selection.map((item) => item.ossConfigId);
   selectionNames.value = selection.map((item) => item.configName);
-  single.value = selection.length != 1;
+  single.value = selection.length !== 1;
   multiple.value = !selection.length;
 };
 
@@ -204,87 +210,97 @@ const handleUpdate = (row?: OssConfigVO) => {
 /** 设为主配置 */
 const handleMaster = async (row: OssConfigVO) => {
   try {
-    await proxy?.$modal.confirm('确认要将 "' + row.configName + '" 设为主配置吗?');
+    await proxy?.$modal.confirm(`确认要将 "${row.configName}" 设为主配置吗?`);
     await updateOssConfigMaster(row.ossConfigId);
+    proxy?.$modal.msgSuccess('设置主配置成功');
     await getList();
-    proxy?.$modal.msgSuccess('设置成功');
-  } catch {
-    return;
+  } catch (e) {
+    // 捕获取消操作或接口报错，避免控制台抛出 Uncaught Promise Error
+    console.info('取消设置主配置', e);
   }
 };
 
-/** 测试配置 */
+/** 释放当前的 Object URL 防内存泄漏 */
+const revokePreviewUrl = () => {
+  if (previewObjectUrl.value) {
+    URL.revokeObjectURL(previewObjectUrl.value);
+    previewObjectUrl.value = '';
+    previewUrl.value = '';
+  }
+};
+
+/** 测试配置上传 */
 const handleTest = async (row: OssConfigVO) => {
-  const debugMeta = {
-    ossConfigId: row?.ossConfigId,
-    configName: row?.configName,
-    storageType: row?.storageType
-  };
-  console.info('[OssConfig] 点击测试上传', debugMeta);
   proxy?.$modal.msg('开始测试上传...');
+  const loadingInstance = ElLoading.service({ text: '测试上传中...', background: 'rgba(0, 0, 0, 0.7)' });
 
-  let loadingInstance: any;
   try {
-    loadingInstance = ElLoading.service({
-      text: '测试上传中...'
-    });
-  } catch (e) {
-    console.error('[OssConfig] ElLoading 启动失败', e);
-  }
-  try {
-    console.info('[OssConfig] 准备请求 testOssConfig', debugMeta);
+    // 1. 获取测试上传的 URL
     const res: any = await testOssConfig(row.ossConfigId);
-    console.info('[OssConfig] testOssConfig 返回结果', { ...debugMeta, res });
     const urlFromRes = res?.data || res?.msg || '';
-    if (urlFromRes) {
-      console.info('[OssConfig] 测试上传返回地址', { ...debugMeta, urlFromRes });
-      const blob: any = await request({
-        url: urlFromRes,
-        method: 'get',
-        responseType: 'blob'
-      });
-      try {
-        if (previewObjectUrl.value) URL.revokeObjectURL(previewObjectUrl.value);
-      } catch {}
-      previewObjectUrl.value = URL.createObjectURL(blob);
-      previewUrl.value = previewObjectUrl.value;
-      console.info('[OssConfig] 预览 Blob 加载完成', { ...debugMeta, blobType: blob?.type, previewUrl: previewUrl.value });
-      previewDialogVisible.value = true;
-      proxy?.$modal.msgSuccess('测试上传成功');
-    } else {
-      console.warn('[OssConfig] 未获取到可预览地址', { ...debugMeta, res });
+
+    if (!urlFromRes) {
       proxy?.$modal.msgError('未获取到可预览地址');
+      return;
     }
+
+    // 2. 将 URL 转换为 Blob 进行预览
+    const blob = (await request({
+      url: urlFromRes,
+      method: 'get',
+      responseType: 'blob'
+    })) as Blob;
+
+    // 3. 释放旧的 URL 引用，生成新的 Blob URL
+    revokePreviewUrl();
+    previewObjectUrl.value = URL.createObjectURL(blob);
+    previewUrl.value = previewObjectUrl.value;
+
+    // 4. 打开弹窗
+    previewDialogVisible.value = true;
+    proxy?.$modal.msgSuccess('测试上传成功');
   } catch (e) {
-    console.error('[OssConfig] testOssConfig 请求失败', { ...debugMeta, error: e });
-    proxy?.$modal.msgError('测试上传失败，请打开控制台查看错误');
+    console.error('[OssConfig] 测试上传请求失败', e);
+    // request 拦截器通常已经弹出了错误提示，如果没有可以保留以下提示
+    // proxy?.$modal.msgError('测试上传失败，请查看控制台');
   } finally {
-    try {
-      loadingInstance?.close();
-    } catch (e) {
-      console.error('[OssConfig] ElLoading 关闭失败', e);
-    }
+    loadingInstance.close();
   }
 };
 
-watch(previewDialogVisible, (v) => {
-  if (v) return;
-  try {
-    if (previewObjectUrl.value) URL.revokeObjectURL(previewObjectUrl.value);
-  } catch {}
-  previewObjectUrl.value = '';
-  previewUrl.value = '';
+/** 图片加载成功回调 */
+const onPreviewLoad = () => {
+  console.info('[OssConfig] 预览图片加载成功', { url: previewUrl.value });
+};
+
+/** 图片加载失败回调 */
+const onPreviewError = () => {
+  console.error('[OssConfig] 预览图片加载失败', { url: previewUrl.value });
+};
+
+/** 监听弹窗关闭，释放 Blob 内存 */
+watch(previewDialogVisible, (isVisible) => {
+  if (!isVisible) {
+    revokePreviewUrl();
+  }
 });
 
 /** 删除按钮操作 */
 const handleDelete = async (row?: OssConfigVO) => {
   const ossConfigIds = row?.ossConfigId || ids.value;
-  const ossConfigNames = row?.configName || selectionNames.value;
-  await proxy?.$modal.confirm('是否确认删除配置名称为 "' + ossConfigNames + '" 的数据项?');
-  loading.value = true;
-  await delOssConfig(ossConfigIds).finally(() => (loading.value = false));
-  await getList();
-  proxy?.$modal.msgSuccess('删除成功');
+  const ossConfigNames = row?.configName || selectionNames.value.join(',');
+
+  try {
+    await proxy?.$modal.confirm(`是否确认删除配置名称为 "${ossConfigNames}" 的数据项?`);
+    loading.value = true;
+    await delOssConfig(ossConfigIds);
+    proxy?.$modal.msgSuccess('删除成功');
+    await getList();
+  } catch (e) {
+    console.info('取消删除或删除失败', e);
+  } finally {
+    loading.value = false;
+  }
 };
 
 onMounted(() => {

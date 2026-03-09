@@ -1,8 +1,8 @@
 <template>
-  <el-dialog v-model="visible" :title="title" width="800px" append-to-body>
+  <el-dialog v-model="visible" :title="title" width="800px" append-to-body @close="cancel">
     <el-form ref="ossConfigFormRef" v-loading="dialogLoading" :model="form" :rules="rules" label-width="120px" :validate-on-rule-change="false">
       <el-form-item label="配置名" prop="configName">
-        <el-input v-model="form.configName" placeholder="请输入配置名" />
+        <el-input v-model="form.configName" placeholder="请输入配置名" maxlength="100" />
       </el-form-item>
       <el-form-item label="存储器" prop="storageType">
         <el-select v-model="form.storageType" placeholder="请选择存储器" clearable @change="handleStorageTypeChange">
@@ -10,27 +10,18 @@
         </el-select>
       </el-form-item>
 
-      <!-- 本地存储 (10) -->
       <template v-if="form.storageType === 10">
         <el-form-item label="存储路径" prop="configData.path">
           <el-input v-model="form.configData.path" placeholder="请输入存储路径，如: /uploads" />
         </el-form-item>
       </template>
 
-      <!-- FTP (11) -->
-      <template v-if="form.storageType === 11">
+      <template v-if="form.storageType === 11 || form.storageType === 12">
         <el-form-item label="主机地址" prop="configData.host">
           <el-input v-model="form.configData.host" placeholder="请输入主机地址" />
         </el-form-item>
         <el-form-item label="主机端口" prop="configData.port">
-          <el-input-number
-            v-model="form.configData.port"
-            class="port-input-number"
-            :min="0"
-            :max="65535"
-            placeholder="请输入主机端口"
-            style="width: 100%"
-          />
+          <el-input-number v-model="form.configData.port" class="port-input-number" :min="0" :max="65535" placeholder="端口" style="width: 100%" />
         </el-form-item>
         <el-form-item label="用户名" prop="configData.username">
           <el-input v-model="form.configData.username" placeholder="请输入用户名" />
@@ -41,7 +32,7 @@
         <el-form-item label="基础路径" prop="configData.basePath">
           <el-input v-model="form.configData.basePath" placeholder="请输入基础路径" />
         </el-form-item>
-        <el-form-item label="连接模式" prop="configData.mode">
+        <el-form-item v-if="form.storageType === 11" label="连接模式" prop="configData.mode">
           <el-radio-group v-model="form.configData.mode">
             <el-radio value="Active">主动模式</el-radio>
             <el-radio value="Passive">被动模式</el-radio>
@@ -49,33 +40,6 @@
         </el-form-item>
       </template>
 
-      <!-- SFTP (12) -->
-      <template v-if="form.storageType === 12">
-        <el-form-item label="主机地址" prop="configData.host">
-          <el-input v-model="form.configData.host" placeholder="请输入主机地址" />
-        </el-form-item>
-        <el-form-item label="主机端口" prop="configData.port">
-          <el-input-number
-            v-model="form.configData.port"
-            class="port-input-number"
-            :min="0"
-            :max="65535"
-            placeholder="请输入主机端口"
-            style="width: 100%"
-          />
-        </el-form-item>
-        <el-form-item label="用户名" prop="configData.username">
-          <el-input v-model="form.configData.username" placeholder="请输入用户名" />
-        </el-form-item>
-        <el-form-item label="密码" prop="configData.password">
-          <el-input v-model="form.configData.password" placeholder="请输入密码" show-password />
-        </el-form-item>
-        <el-form-item label="基础路径" prop="configData.basePath">
-          <el-input v-model="form.configData.basePath" placeholder="请输入基础路径" />
-        </el-form-item>
-      </template>
-
-      <!-- S3 (20) -->
       <template v-if="form.storageType === 20">
         <el-form-item label="节点地址" prop="configData.endpoint">
           <el-input v-model="form.configData.endpoint" placeholder="请输入节点地址，如: http://localhost:9000" />
@@ -107,15 +71,15 @@
         </el-form-item>
       </template>
 
-      <!-- 通用：自定义域名 -->
       <el-form-item v-if="form.storageType" label="自定义域名" prop="configData.domain">
-        <el-input v-model="form.configData.domain" placeholder="请输入自定义域名，如: http://localhost:8080" />
+        <el-input v-model="form.configData.domain" placeholder="请输入自定义域名，如: http://oss.example.com" />
       </el-form-item>
 
       <el-form-item label="备注" prop="remark">
-        <el-input v-model="form.remark" type="textarea" placeholder="请输入备注" />
+        <el-input v-model="form.remark" type="textarea" :rows="3" placeholder="请输入备注" />
       </el-form-item>
     </el-form>
+
     <template #footer>
       <div class="dialog-footer">
         <el-button :loading="buttonLoading" type="primary" @click="submitForm">确 定</el-button>
@@ -128,51 +92,57 @@
 <script setup lang="ts">
 import { addOssConfig, updateOssConfig, getOssConfig } from '@/api/system/ossConfig';
 import { OssConfigForm, OssConfigVO } from '@/api/system/ossConfig/types';
+import type { FormInstance, FormRules } from 'element-plus';
 
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const { infra_file_storage } = toRefs<any>(proxy?.useDict('infra_file_storage'));
 
+// 状态控制
 const visible = ref(false);
 const title = ref('');
 const dialogLoading = ref(false);
 const buttonLoading = ref(false);
-const ossConfigFormRef = ref<ElFormInstance>();
+const ossConfigFormRef = ref<FormInstance>();
 
+// 初始化表单结构
 const initFormData = (): OssConfigForm => ({
   ossConfigId: undefined,
   configName: '',
   storageType: undefined,
-  configData: {},
+  configData: {
+    // 设置一些默认值，优化用户体验
+    enableHttps: true,
+    accessPolicy: '1',
+    mode: 'Passive'
+  },
   master: false,
   remark: ''
 });
 
 const form = ref<OssConfigForm>(initFormData());
 
+/** 校验 URL 格式 */
 const validateDomainUrl = (_rule: any, value: string, callback: any) => {
-  if (!value) {
-    callback();
-    return;
-  }
+  if (!value) return callback();
   try {
     const url = new URL(value.trim());
-    if (url.protocol === 'http:' || url.protocol === 'https:') {
-      callback();
-      return;
+    if (['http:', 'https:'].includes(url.protocol)) {
+      return callback();
     }
+    callback(new Error('域名必须以 http:// 或 https:// 开头'));
   } catch {
-    callback(new Error('自定义域名必须是URL格式'));
-    return;
+    callback(new Error('自定义域名格式不正确'));
   }
-  callback(new Error('自定义域名必须是URL格式'));
 };
 
-const rules = computed(() => {
+/** 动态计算校验规则 */
+const rules = computed<FormRules>(() => {
   const baseRules: any = {
     configName: [{ required: true, message: '配置名不能为空', trigger: 'blur' }],
     storageType: [{ required: true, message: '存储器不能为空', trigger: 'change' }]
   };
 
+  // 只要选择了存储器，就校验自定义域名
   if (form.value.storageType) {
     baseRules['configData.domain'] = [
       { required: true, message: '自定义域名不能为空', trigger: 'blur' },
@@ -180,19 +150,21 @@ const rules = computed(() => {
     ];
   }
 
+  // 本地存储校验
   if (form.value.storageType === 10) {
     baseRules['configData.path'] = [{ required: true, message: '存储路径不能为空', trigger: 'blur' }];
   }
-  if (form.value.storageType === 11 || form.value.storageType === 12) {
+
+  // FTP/SFTP 校验
+  if ([11, 12].includes(form.value.storageType as number)) {
     baseRules['configData.host'] = [{ required: true, message: '主机地址不能为空', trigger: 'blur' }];
     baseRules['configData.port'] = [{ required: true, message: '主机端口不能为空', trigger: 'blur' }];
     baseRules['configData.username'] = [{ required: true, message: '用户名不能为空', trigger: 'blur' }];
     baseRules['configData.password'] = [{ required: true, message: '密码不能为空', trigger: 'blur' }];
     baseRules['configData.basePath'] = [{ required: true, message: '基础路径不能为空', trigger: 'blur' }];
   }
-  if (form.value.storageType === 11) {
-    baseRules['configData.mode'] = [{ required: true, message: '连接模式不能为空', trigger: 'change' }];
-  }
+
+  // S3 校验
   if (form.value.storageType === 20) {
     baseRules['configData.endpoint'] = [{ required: true, message: '节点地址不能为空', trigger: 'blur' }];
     baseRules['configData.bucket'] = [{ required: true, message: '存储Bucket不能为空', trigger: 'blur' }];
@@ -205,51 +177,66 @@ const rules = computed(() => {
 
 const emit = defineEmits(['success']);
 
-const handleStorageTypeChange = () => {
-  form.value.configData = {};
+/** 切换存储器类型时，重置配置项数据并清除旧校验 */
+const handleStorageTypeChange = (val: number) => {
+  // 根据类型赋初值，避免 configData 为空导致深层绑定失效
+  const defaultData: any = { domain: '' };
+  if (val === 11) {
+    defaultData.port = 21;
+    defaultData.mode = 'Passive';
+  } else if (val === 12) {
+    defaultData.port = 22;
+  } else if (val === 20) {
+    defaultData.enableHttps = true;
+    defaultData.accessPolicy = '1';
+  }
+
+  form.value.configData = defaultData;
   nextTick(() => {
     ossConfigFormRef.value?.clearValidate();
   });
 };
 
+/** 外部调用打开弹窗 */
 const open = async (param?: number | string | OssConfigVO) => {
   visible.value = true;
+  // 先重置数据，防止上次打开的残余
+  form.value = initFormData();
+
   if (param) {
     title.value = '修改对象存储配置';
     if (typeof param === 'object' && 'ossConfigId' in param) {
-      // 如果传入的是对象，直接回显数据
-      form.value = { ...initFormData(), ...param };
+      form.value = JSON.parse(JSON.stringify(param)); // 深拷贝防止污染列表
     } else {
-      // 如果传入的是ID，则请求详情
       dialogLoading.value = true;
       try {
         const res = await getOssConfig(param);
-        form.value = { ...initFormData(), ...res.data };
+        form.value = res.data;
       } finally {
         dialogLoading.value = false;
       }
     }
   } else {
     title.value = '添加对象存储配置';
-    form.value = initFormData();
   }
+
+  // 确保 DOM 渲染后清除初始校验状态
   nextTick(() => {
     ossConfigFormRef.value?.clearValidate();
   });
 };
 
+/** 取消操作 */
 const cancel = () => {
   visible.value = false;
-  // reset();
+  buttonLoading.value = false;
 };
 
-const reset = () => {
-  form.value = initFormData();
-  ossConfigFormRef.value?.resetFields();
-};
-
+/** 提交表单 */
 const submitForm = () => {
-  ossConfigFormRef.value?.validate(async (valid: boolean) => {
+  if (!ossConfigFormRef.value) return;
+
+  ossConfigFormRef.value.validate(async (valid: boolean) => {
     if (valid) {
       buttonLoading.value = true;
       try {
@@ -261,6 +248,8 @@ const submitForm = () => {
         proxy?.$modal.msgSuccess(form.value.ossConfigId ? '修改成功' : '新增成功');
         visible.value = false;
         emit('success');
+      } catch (error) {
+        console.error('提交失败:', error);
       } finally {
         buttonLoading.value = false;
       }
@@ -274,7 +263,13 @@ defineExpose({
 </script>
 
 <style scoped>
+/* 强制端口数字输入框文字左对齐，符合表单习惯 */
 :deep(.port-input-number .el-input__inner) {
   text-align: left;
+}
+
+/* 调整对话框内表单间距 */
+.el-form-item {
+  margin-bottom: 22px;
 }
 </style>
