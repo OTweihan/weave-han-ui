@@ -17,7 +17,7 @@ export interface OssConfigQuery extends PageQuery {
 export interface OssConfigForm {
   ossConfigId: string | number | undefined;
   configName: string;
-  storageType: number;
+  storageType: number | undefined;
   configData: Record<string, any>;
   master: boolean;
   remark: string;

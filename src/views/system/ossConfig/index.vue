@@ -18,6 +18,17 @@
                 <el-option key="1" label="否" value="false" />
               </el-select>
             </el-form-item>
+            <el-form-item label="创建时间" style="width: 308px">
+              <el-date-picker
+                v-model="dateRange"
+                value-format="YYYY-MM-DD HH:mm:ss"
+                type="daterange"
+                range-separator="-"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期"
+                :default-time="[new Date(2000, 1, 1, 0, 0, 0), new Date(2000, 1, 1, 23, 59, 59)]"
+              />
+            </el-form-item>
             <el-form-item>
               <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
               <el-button icon="Refresh" @click="resetQuery">重置</el-button>
@@ -134,6 +145,7 @@ const total = ref(0);
 const previewDialogVisible = ref(false);
 const previewUrl = ref('');
 const previewObjectUrl = ref('');
+const dateRange = ref<[DateModelType, DateModelType]>(['', '']);
 
 const queryFormRef = ref<ElFormInstance>();
 const ossConfigDialogRef = ref<InstanceType<typeof OssConfigDialog>>();
@@ -150,7 +162,8 @@ const queryParams = reactive<OssConfigQuery>({
 /** 查询对象存储配置列表 */
 const getList = async () => {
   loading.value = true;
-  const res = await listOssConfig(queryParams);
+  const params = proxy?.addDateRange(queryParams, dateRange.value) || queryParams;
+  const res = await listOssConfig(params);
   ossConfigList.value = res.rows;
   total.value = res.total;
   loading.value = false;
@@ -164,6 +177,7 @@ const handleQuery = () => {
 
 /** 重置按钮操作 */
 const resetQuery = () => {
+  dateRange.value = ['', ''];
   queryFormRef.value?.resetFields();
   handleQuery();
 };

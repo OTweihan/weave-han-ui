@@ -127,7 +127,7 @@ const ossConfigFormRef = ref<ElFormInstance>();
 const initFormData = (): OssConfigForm => ({
   ossConfigId: undefined,
   configName: '',
-  storageType: '',
+  storageType: undefined,
   configData: {},
   master: false,
   remark: ''
@@ -135,11 +135,36 @@ const initFormData = (): OssConfigForm => ({
 
 const form = ref<OssConfigForm>(initFormData());
 
+const validateDomainUrl = (_rule: any, value: string, callback: any) => {
+  if (!value) {
+    callback();
+    return;
+  }
+  try {
+    const url = new URL(value.trim());
+    if (url.protocol === 'http:' || url.protocol === 'https:') {
+      callback();
+      return;
+    }
+  } catch {
+    callback(new Error('自定义域名必须是URL格式'));
+    return;
+  }
+  callback(new Error('自定义域名必须是URL格式'));
+};
+
 const rules = computed(() => {
   const baseRules: any = {
     configName: [{ required: true, message: '配置名不能为空', trigger: 'blur' }],
     storageType: [{ required: true, message: '存储器不能为空', trigger: 'change' }]
   };
+
+  if (form.value.storageType) {
+    baseRules['configData.domain'] = [
+      { required: true, message: '自定义域名不能为空', trigger: 'blur' },
+      { validator: validateDomainUrl, trigger: 'blur' }
+    ];
+  }
 
   if (form.value.storageType === 10) {
     baseRules['configData.path'] = [{ required: true, message: '存储路径不能为空', trigger: 'blur' }];
