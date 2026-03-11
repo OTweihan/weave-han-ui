@@ -89,8 +89,8 @@
 </template>
 
 <script setup lang="ts">
-import { addOssConfig, updateOssConfig, getOssConfig } from '@/api/system/ossConfig';
-import { OssConfigForm, OssConfigVO } from '@/api/system/ossConfig/types';
+import { addStorageConfig, updateStorageConfig, getStorageConfig } from '@/api/system/storageConfig';
+import { StorageConfigForm, StorageConfigVO } from '@/api/system/storageConfig/types';
 import type { FormInstance, FormRules } from 'element-plus';
 
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
@@ -104,8 +104,8 @@ const buttonLoading = ref(false);
 const ossConfigFormRef = ref<FormInstance>();
 
 // 初始化表单结构
-const initFormData = (): OssConfigForm => ({
-  ossConfigId: undefined,
+const initFormData = (): StorageConfigForm => ({
+  storageConfigId: undefined,
   configName: '',
   storageType: undefined,
   configData: {
@@ -116,7 +116,7 @@ const initFormData = (): OssConfigForm => ({
   remark: ''
 });
 
-const form = ref<OssConfigForm>(initFormData());
+const form = ref<StorageConfigForm>(initFormData());
 
 const resetForm = () => {
   const initialData = initFormData();
@@ -203,20 +203,20 @@ const handleStorageTypeChange = (val: number) => {
 };
 
 /** 外部调用打开弹窗 */
-const open = async (param?: number | string | OssConfigVO) => {
+const open = async (param?: number | string | StorageConfigVO) => {
   resetForm();
   visible.value = true;
 
   if (param) {
     title.value = '修改对象存储配置';
-    if (typeof param === 'object' && 'ossConfigId' in param) {
+    if (typeof param === 'object' && 'storageConfigId' in param) {
       const data = JSON.parse(JSON.stringify(param));
       Object.assign(form.value, data);
       form.value.configData = data?.configData ?? {};
     } else {
       dialogLoading.value = true;
       try {
-        const res = await getOssConfig(param);
+        const res = await getStorageConfig(param);
         Object.assign(form.value, res.data);
         form.value.configData = (res.data as any)?.configData ?? {};
       } finally {
@@ -255,12 +255,12 @@ const submitForm = () => {
         if (typeof form.value.configData?.domain === 'string') {
           form.value.configData.domain = form.value.configData.domain.replace(/`/g, '').trim();
         }
-        if (form.value.ossConfigId) {
-          await updateOssConfig(form.value);
+        if (form.value.storageConfigId) {
+          await updateStorageConfig(form.value);
         } else {
-          await addOssConfig(form.value);
+          await addStorageConfig(form.value);
         }
-        proxy?.$modal.msgSuccess(form.value.ossConfigId ? '修改成功' : '新增成功');
+        proxy?.$modal.msgSuccess(form.value.storageConfigId ? '修改成功' : '新增成功');
         visible.value = false;
         resetForm();
         emit('success');

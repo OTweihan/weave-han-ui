@@ -41,8 +41,8 @@
 </template>
 
 <script setup lang="ts">
-import { listByIds, delOss } from '@/api/system/oss';
-import { OssVO } from '@/api/system/oss/types';
+import { deleteFile, listFilesByIds } from '@/api/system/file';
+import { FileVO } from '@/api/system/file/types';
 import { propTypes } from '@/utils/propTypes';
 import { globalHeaders } from '@/utils/request';
 import { compressAccurately } from 'image-conversion';
@@ -80,7 +80,7 @@ const dialogImageUrl = ref('');
 const dialogVisible = ref(false);
 
 const baseUrl = import.meta.env.VITE_APP_BASE_API;
-const uploadImgUrl = ref(baseUrl + '/resource/oss/upload'); // 上传的图片服务器地址
+const uploadImgUrl = ref(baseUrl + '/resource/file/upload'); // 上传的图片服务器地址
 const headers = ref(globalHeaders());
 
 const fileList = ref<any[]>([]);
@@ -96,11 +96,13 @@ watch(
   async (val: string) => {
     if (val) {
       // 首先将值转为数组
-      let list: OssVO[] = [];
+      let list: FileVO[] = [];
       if (Array.isArray(val)) {
-        list = val as OssVO[];
+        list = val as FileVO[];
+      } else if (typeof val === 'object') {
+        list = [val as FileVO];
       } else {
-        const res = await listByIds(val);
+        const res = await listFilesByIds(val);
         list = res.data;
       }
       // 然后将数组转为对象数组
@@ -110,8 +112,8 @@ watch(
         if (typeof item === 'string') {
           itemData = { name: item, url: item };
         } else {
-          // 此处name使用ossId 防止删除出现重名
-          itemData = { name: item.ossId, url: item.url, ossId: item.ossId };
+          const fileId = item.id ?? item.ossId;
+          itemData = { id: fileId, name: String(fileId), url: item.url };
         }
         return itemData;
       });
@@ -174,7 +176,7 @@ const handleExceed = () => {
 // 上传成功回调
 const handleUploadSuccess = (res: any, file: UploadFile) => {
   if (res.code === 200) {
-    uploadList.value.push({ name: res.data.fileName, url: res.data.url, ossId: res.data.ossId });
+    uploadList.value.push({ id: res.data.id, name: String(res.data.id), url: res.data.url });
     uploadedSuccessfully();
   } else {
     number.value--;
@@ -189,8 +191,10 @@ const handleUploadSuccess = (res: any, file: UploadFile) => {
 const handleDelete = (file: UploadFile): boolean => {
   const findex = fileList.value.map((f) => f.name).indexOf(file.name);
   if (findex > -1 && uploadList.value.length === number.value) {
-    const ossId = fileList.value[findex].ossId;
-    delOss(ossId);
+    const fileId = fileList.value[findex].id;
+    if (fileId) {
+      deleteFile(fileId);
+    }
     fileList.value.splice(findex, 1);
     emit('update:modelValue', listToString(fileList.value));
     return false;
@@ -226,8 +230,9 @@ const listToString = (list: any[], separator?: string) => {
   let strs = '';
   separator = separator || ',';
   for (const i in list) {
-    if (undefined !== list[i].ossId && list[i].url.indexOf('blob:') !== 0) {
-      strs += list[i].ossId + separator;
+    const fileId = list[i].id ?? list[i].ossId;
+    if (undefined !== fileId && list[i].url.indexOf('blob:') !== 0) {
+      strs += fileId + separator;
     }
   }
   return strs != '' ? strs.substring(0, strs.length - 1) : '';

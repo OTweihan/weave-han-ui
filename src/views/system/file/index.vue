@@ -24,8 +24,8 @@
                 :default-time="[new Date(2000, 1, 1, 0, 0, 0), new Date(2000, 1, 1, 23, 59, 59)]"
               ></el-date-picker>
             </el-form-item>
-            <el-form-item label="服务商" prop="service">
-              <el-input v-model="queryParams.service" placeholder="请输入服务商" clearable @keyup.enter="handleQuery" />
+            <el-form-item label="存储类型" prop="storageType">
+              <el-input v-model="queryParams.storageType" placeholder="请输入存储类型" clearable @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item>
               <el-button type="primary" icon="search" @click="handleQuery">搜索</el-button>
@@ -44,19 +44,19 @@
       <template #header>
         <el-row :gutter="10" class="mb8">
           <el-col :span="1.5">
-            <el-button v-hasPermi="['system:oss:upload']" type="primary" plain icon="Upload" @click="handleFile">上传文件</el-button>
+            <el-button v-hasPermi="['system:file:upload']" type="primary" plain icon="Upload" @click="handleFile">上传文件</el-button>
           </el-col>
           <el-col :span="1.5">
-            <el-button v-hasPermi="['system:oss:upload']" type="primary" plain icon="Upload" @click="handleImage">上传图片</el-button>
+            <el-button v-hasPermi="['system:file:upload']" type="primary" plain icon="Upload" @click="handleImage">上传图片</el-button>
           </el-col>
           <el-col :span="1.5">
-            <el-button v-hasPermi="['system:oss:remove']" type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete()">
+            <el-button v-hasPermi="['system:file:delete']" type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete()">
               删除
             </el-button>
           </el-col>
           <el-col :span="1.5">
             <el-button
-              v-hasPermi="['system:oss:edit']"
+              v-hasPermi="['system:config:edit']"
               :type="previewListResource ? 'danger' : 'warning'"
               plain
               @click="handlePreviewListResource(!previewListResource)"
@@ -70,7 +70,7 @@
       <el-table
         v-if="showTable"
         v-loading="loading"
-        :data="ossList"
+        :data="fileRows"
         border
         class="flex-1"
         :header-cell-class-name="handleHeaderClass"
@@ -78,7 +78,7 @@
         @header-click="handleHeaderCLick"
       >
         <el-table-column type="selection" width="50" align="center" />
-        <el-table-column v-if="false" label="对象存储主键" align="center" prop="ossId" />
+        <el-table-column v-if="false" label="文件主键" align="center" prop="id" />
         <el-table-column label="文件名" align="center" prop="fileName" />
         <el-table-column label="原名" align="center" prop="originalName" />
         <el-table-column label="文件后缀" align="center" prop="fileSuffix" />
@@ -99,18 +99,17 @@
             <span>{{ proxy.parseTime(scope.row.createTime, '{y}-{m}-{d}') }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="上传人" align="center" prop="createByName" />
-        <el-table-column label="服务商" align="center" prop="service" sortable="custom" />
+        <el-table-column label="存储类型" align="center" prop="storageType" />
         <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
           <template #default="scope">
             <el-tooltip content="下载" placement="top">
-              <el-button v-hasPermi="['system:oss:download']" link type="primary" icon="Download" @click="handleDownload(scope.row)"></el-button>
+              <el-button v-hasPermi="['system:file:download']" link type="primary" icon="Download" @click="handleDownload(scope.row)"></el-button>
             </el-tooltip>
             <el-tooltip content="复制链接" placement="top">
               <el-button link type="primary" icon="CopyDocument" @click="handleCopyUrl(scope.row)"></el-button>
             </el-tooltip>
             <el-tooltip content="删除" placement="top">
-              <el-button v-hasPermi="['system:oss:remove']" link type="primary" icon="Delete" @click="handleDelete(scope.row)"></el-button>
+              <el-button v-hasPermi="['system:file:delete']" link type="primary" icon="Delete" @click="handleDelete(scope.row)"></el-button>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -118,7 +117,7 @@
 
       <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
     </el-card>
-    <!-- 添加或修改OSS对象存储对话框 -->
+    <!-- 上传文件对话框 -->
     <el-dialog v-model="dialog.visible" :title="dialog.title" width="500px" append-to-body>
       <el-form ref="ossFormRef" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="文件名">
@@ -136,10 +135,10 @@
   </div>
 </template>
 
-<script setup data-name="Oss" lang="ts">
-import { listOss, delOss } from '@/api/system/oss';
+<script setup data-name="File" lang="ts">
+import { deleteFile, listFile } from '@/api/system/file';
 import ImagePreview from '@/components/ImagePreview/index.vue';
-import { OssForm, OssQuery, OssVO } from '@/api/system/oss/types';
+import { FileForm, FileQuery, FileVO } from '@/api/system/file/types';
 import { useClipboard } from '@vueuse/core';
 
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
@@ -147,7 +146,7 @@ const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const { copy } = useClipboard();
 
 /** 复制链接 */
-const handleCopyUrl = async (row: OssVO) => {
+const handleCopyUrl = async (row: FileVO) => {
   try {
     await copy(row.url);
     proxy?.$modal.msgSuccess('复制成功');
@@ -156,7 +155,7 @@ const handleCopyUrl = async (row: OssVO) => {
   }
 };
 
-const ossList = ref<OssVO[]>([]);
+const fileRows = ref<FileVO[]>([]);
 const showTable = ref(true);
 const buttonLoading = ref(false);
 const loading = ref(true);
@@ -184,7 +183,7 @@ const initFormData = {
   file: undefined
 };
 
-const data = reactive<PageData<OssForm, OssQuery>>({
+const data = reactive<PageData<FileForm, FileQuery>>({
   form: { ...initFormData },
   // 查询参数
   queryParams: {
@@ -193,8 +192,7 @@ const data = reactive<PageData<OssForm, OssQuery>>({
     fileName: '',
     originalName: '',
     fileSuffix: '',
-    createTime: '',
-    service: '',
+    storageType: '',
     orderByColumn: defaultSort.value.prop,
     isAsc: defaultSort.value.order
   },
@@ -205,22 +203,22 @@ const data = reactive<PageData<OssForm, OssQuery>>({
 
 const { queryParams, form, rules } = toRefs(data);
 
-/** 查询OSS对象存储列表 */
+/** 查询文件列表 */
 const getList = async () => {
   loading.value = true;
   const res = await proxy?.getConfigKey('sys.oss.previewListResource');
   previewListResource.value = res?.data === undefined ? true : res.data === 'true';
-  const response = await listOss(proxy?.addDateRange(queryParams.value, dateRangeCreateTime.value, 'CreateTime'));
-  ossList.value = response.rows;
+  const response = await listFile(proxy?.addDateRange(queryParams.value, dateRangeCreateTime.value, 'CreateTime'));
+  fileRows.value = response.rows;
   total.value = response.total;
   loading.value = false;
   showTable.value = true;
 };
 
 function checkFileSuffix(fileSuffix: string | string[]) {
-  const arr = ['.png', '.jpg', '.jpeg'];
+  const arr = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'];
   const suffixArray = Array.isArray(fileSuffix) ? fileSuffix : [fileSuffix];
-  return suffixArray.some((suffix) => arr.includes(suffix.toLowerCase()));
+  return suffixArray.some((suffix) => arr.includes(String(suffix).replace('.', '').toLowerCase()));
 }
 
 /** 取消按钮 */
@@ -252,8 +250,8 @@ function resetQuery() {
 }
 
 /** 选择条数  */
-function handleSelectionChange(selection: OssVO[]) {
-  ids.value = selection.map((item) => item.ossId);
+function handleSelectionChange(selection: FileVO[]) {
+  ids.value = selection.map((item) => item.id);
   single.value = selection.length != 1;
   multiple.value = !selection.length;
 }
@@ -329,8 +327,8 @@ const submitForm = () => {
 };
 
 /** 下载按钮操作 */
-const handleDownload = (row: OssVO) => {
-  proxy?.$download.oss(row.ossId);
+const handleDownload = (row: FileVO) => {
+  proxy?.$download.file(row.id);
 };
 
 /** 预览开关按钮  */
@@ -347,11 +345,11 @@ const handlePreviewListResource = async (preview: boolean) => {
 };
 
 /** 删除按钮操作 */
-const handleDelete = async (row?: OssVO) => {
-  const ossIds = row?.ossId || ids.value;
-  await proxy?.$modal.confirm('是否确认删除OSS对象存储编号为"' + ossIds + '"的数据项?');
+const handleDelete = async (row?: FileVO) => {
+  const fileIds = row?.id || ids.value;
+  await proxy?.$modal.confirm('是否确认删除文件编号为"' + fileIds + '"的数据项?');
   loading.value = true;
-  await delOss(ossIds).finally(() => (loading.value = false));
+  await deleteFile(fileIds).finally(() => (loading.value = false));
   await getList();
   proxy?.$modal.msgSuccess('删除成功');
 };

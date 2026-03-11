@@ -8,8 +8,8 @@ import { globalHeaders } from '@/utils/request';
 const baseURL = import.meta.env.VITE_APP_BASE_API;
 let downloadLoadingInstance: LoadingInstance;
 export default {
-  async oss(ossId: string | number) {
-    const url = baseURL + '/resource/oss/download/' + ossId;
+  async file(fileId: string | number) {
+    const url = baseURL + '/resource/file/download/' + fileId;
     downloadLoadingInstance = ElLoading.service({ text: '正在下载数据，请稍候', background: 'rgba(0, 0, 0, 0.7)' });
     try {
       const res = await axios({
@@ -31,6 +31,9 @@ export default {
       ElMessage.error('下载文件出现错误，请联系管理员！');
       downloadLoadingInstance.close();
     }
+  },
+  async oss(fileId: string | number) {
+    return this.file(fileId);
   },
   async zip(url: string, name: string) {
     url = baseURL + url;

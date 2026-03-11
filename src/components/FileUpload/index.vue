@@ -46,7 +46,7 @@
 
 <script setup lang="ts">
 import { propTypes } from '@/utils/propTypes';
-import { delOss, listByIds } from '@/api/system/oss';
+import { deleteFile, listFilesByIds } from '@/api/system/file';
 import { globalHeaders } from '@/utils/request';
 
 const props = defineProps({
@@ -72,7 +72,7 @@ const number = ref(0);
 const uploadList = ref<any[]>([]);
 
 const baseUrl = import.meta.env.VITE_APP_BASE_API;
-const uploadFileUrl = ref(baseUrl + '/resource/oss/upload'); // 上传文件服务器地址
+const uploadFileUrl = ref(baseUrl + '/resource/file/upload'); // 上传文件服务器地址
 const headers = ref(globalHeaders());
 
 const fileList = ref<any[]>([]);
@@ -92,19 +92,21 @@ watch(
       let list: any[] = [];
       if (Array.isArray(val)) {
         list = val;
+      } else if (typeof val === 'object') {
+        list = [val];
       } else {
-        const res = await listByIds(val);
-        list = res.data.map((oss) => {
+        const res = await listFilesByIds(val);
+        list = res.data.map((file) => {
           return {
-            name: oss.originalName,
-            url: oss.url,
-            ossId: oss.ossId
+            id: file.id,
+            name: file.originalName,
+            url: file.url
           };
         });
       }
       // 然后将数组转为对象数组
       fileList.value = list.map((item) => {
-        item = { name: item.name, url: item.url, ossId: item.ossId };
+        item = { id: item.id ?? item.ossId, name: item.name, url: item.url };
         item.uid = item.uid || new Date().getTime() + temp++;
         return item;
       });
@@ -162,7 +164,7 @@ const handleUploadSuccess = (res: any, file: UploadFile) => {
     uploadList.value.push({
       name: res.data.fileName,
       url: res.data.url,
-      ossId: res.data.ossId
+      id: res.data.id
     });
     uploadedSuccessfully();
   } else {
@@ -176,8 +178,10 @@ const handleUploadSuccess = (res: any, file: UploadFile) => {
 
 // 删除文件
 const handleDelete = (index: number) => {
-  const ossId = fileList.value[index].ossId;
-  delOss(ossId);
+  const fileId = fileList.value[index].id;
+  if (fileId) {
+    deleteFile(fileId);
+  }
   fileList.value.splice(index, 1);
   emit('update:modelValue', listToString(fileList.value));
 };
@@ -208,8 +212,9 @@ const listToString = (list: any[], separator?: string) => {
   let strs = '';
   separator = separator || ',';
   list.forEach((item) => {
-    if (item.ossId) {
-      strs += item.ossId + separator;
+    const fileId = item.id ?? item.ossId;
+    if (fileId) {
+      strs += fileId + separator;
     }
   });
   return strs != '' ? strs.substring(0, strs.length - 1) : '';

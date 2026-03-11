@@ -46,10 +46,10 @@
       <template #header>
         <el-row :gutter="10" class="mb8">
           <el-col :span="1.5">
-            <el-button v-hasPermi="['system:ossConfig:add']" type="primary" plain icon="Plus" @click="handleAdd">新增</el-button>
+            <el-button v-hasPermi="['system:storageConfig:add']" type="primary" plain icon="Plus" @click="handleAdd">新增</el-button>
           </el-col>
           <el-col :span="1.5">
-            <el-button v-hasPermi="['system:ossConfig:remove']" type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete()">
+            <el-button v-hasPermi="['system:storageConfig:remove']" type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete()">
               删除
             </el-button>
           </el-col>
@@ -57,7 +57,7 @@
         </el-row>
       </template>
 
-      <el-table v-loading="loading" border :data="ossConfigList" height="100%" class="flex-1" @selection-change="handleSelectionChange">
+      <el-table v-loading="loading" border :data="storageConfigList" height="100%" class="flex-1" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="50" align="center" />
         <el-table-column label="配置名" align="center" prop="configName" />
         <el-table-column label="存储器" align="center" prop="storageType">
@@ -76,11 +76,11 @@
         <el-table-column label="操作" fixed="right" align="center" width="200" class-name="small-padding">
           <template #default="scope">
             <el-tooltip content="修改" placement="top">
-              <el-button v-hasPermi="['system:ossConfig:edit']" link type="primary" icon="Edit" @click="handleUpdate(scope.row)"></el-button>
+              <el-button v-hasPermi="['system:storageConfig:edit']" link type="primary" icon="Edit" @click="handleUpdate(scope.row)"></el-button>
             </el-tooltip>
             <el-tooltip content="主配置" placement="top">
               <el-button
-                v-hasPermi="['system:ossConfig:edit']"
+                v-hasPermi="['system:storageConfig:edit']"
                 link
                 type="primary"
                 icon="Star"
@@ -89,10 +89,10 @@
               ></el-button>
             </el-tooltip>
             <el-tooltip content="测试" placement="top">
-              <el-button v-hasPermi="['system:ossConfig:edit']" link type="primary" icon="Upload" @click="handleTest(scope.row)"></el-button>
+              <el-button v-hasPermi="['system:storageConfig:edit']" link type="primary" icon="Upload" @click="handleTest(scope.row)"></el-button>
             </el-tooltip>
             <el-tooltip content="删除" placement="top">
-              <el-button v-hasPermi="['system:ossConfig:remove']" link type="primary" icon="Delete" @click="handleDelete(scope.row)"></el-button>
+              <el-button v-hasPermi="['system:storageConfig:remove']" link type="primary" icon="Delete" @click="handleDelete(scope.row)"></el-button>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -101,7 +101,7 @@
       <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
     </el-card>
 
-    <OssConfigDialog ref="ossConfigDialogRef" @success="getList" />
+    <StorageConfigDialog ref="storageConfigDialogRef" @success="getList" />
 
     <el-dialog v-model="previewDialogVisible" title="测试上传预览" width="800px" append-to-body>
       <div v-if="previewUrl" class="flex justify-center items-center" style="height: 400px">
@@ -119,21 +119,21 @@
   </div>
 </template>
 
-<script setup data-name="OssConfig" lang="ts">
+<script setup data-name="StorageConfig" lang="ts">
 import { ref, reactive, onMounted, watch, getCurrentInstance, toRefs } from 'vue';
 import type { ComponentInternalInstance } from 'vue';
 import { ElLoading, FormInstance } from 'element-plus';
 import request from '@/utils/request';
-import { listOssConfig, delOssConfig, testOssConfig, updateOssConfigMaster } from '@/api/system/ossConfig';
-import { OssConfigQuery, OssConfigVO } from '@/api/system/ossConfig/types';
-import OssConfigDialog from './components/OssConfigDialog.vue';
+import { deleteStorageConfig, listStorageConfig, testStorageConfig, updateStorageConfigMaster } from '@/api/system/storageConfig';
+import { StorageConfigQuery, StorageConfigVO } from '@/api/system/storageConfig/types';
+import StorageConfigDialog from './components/StorageConfigDialog.vue';
 
 // 全局上下文与字典
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const { infra_file_storage } = toRefs<any>(proxy?.useDict('infra_file_storage'));
 
 // 表格与分页数据
-const ossConfigList = ref<OssConfigVO[]>([]);
+const storageConfigList = ref<StorageConfigVO[]>([]);
 const total = ref(0);
 const loading = ref(true);
 const showSearch = ref(true);
@@ -152,25 +152,24 @@ const previewObjectUrl = ref('');
 // 查询表单参数
 const queryFormRef = ref<FormInstance>();
 const dateRange = ref<[any, any]>(['', '']); // 若有精确类型可替换 any
-const queryParams = reactive<OssConfigQuery>({
+const queryParams = reactive<StorageConfigQuery>({
   pageNum: 1,
   pageSize: 10,
   configName: '',
-  bucketName: '',
   storageType: '',
   master: ''
 });
 
 // 对话框引用
-const ossConfigDialogRef = ref<InstanceType<typeof OssConfigDialog>>();
+const storageConfigDialogRef = ref<InstanceType<typeof StorageConfigDialog>>();
 
 /** 查询对象存储配置列表 */
 const getList = async () => {
   loading.value = true;
   try {
     const params = proxy?.addDateRange(queryParams, dateRange.value) || queryParams;
-    const res = await listOssConfig(params);
-    ossConfigList.value = res.rows;
+    const res = await listStorageConfig(params);
+    storageConfigList.value = res.rows;
     total.value = res.total;
   } finally {
     loading.value = false;
@@ -191,8 +190,8 @@ const resetQuery = () => {
 };
 
 /** 表格复选框选择操作 */
-const handleSelectionChange = (selection: OssConfigVO[]) => {
-  ids.value = selection.map((item) => item.ossConfigId);
+const handleSelectionChange = (selection: StorageConfigVO[]) => {
+  ids.value = selection.map((item) => item.storageConfigId);
   selectionNames.value = selection.map((item) => item.configName);
   single.value = selection.length !== 1;
   multiple.value = !selection.length;
@@ -200,20 +199,20 @@ const handleSelectionChange = (selection: OssConfigVO[]) => {
 
 /** 新增按钮操作 */
 const handleAdd = () => {
-  ossConfigDialogRef.value?.open();
+  storageConfigDialogRef.value?.open();
 };
 
 /** 修改按钮操作 */
-const handleUpdate = (row?: OssConfigVO) => {
+const handleUpdate = (row?: StorageConfigVO) => {
   const param = row || ids.value[0];
-  ossConfigDialogRef.value?.open(param);
+  storageConfigDialogRef.value?.open(param);
 };
 
 /** 设为主配置 */
-const handleMaster = async (row: OssConfigVO) => {
+const handleMaster = async (row: StorageConfigVO) => {
   try {
     await proxy?.$modal.confirm(`确认要将 "${row.configName}" 设为主配置吗?`);
-    await updateOssConfigMaster(row.ossConfigId);
+    await updateStorageConfigMaster(row.storageConfigId);
     proxy?.$modal.msgSuccess('设置主配置成功');
     await getList();
   } catch (e) {
@@ -232,13 +231,13 @@ const revokePreviewUrl = () => {
 };
 
 /** 测试配置上传 */
-const handleTest = async (row: OssConfigVO) => {
+const handleTest = async (row: StorageConfigVO) => {
   proxy?.$modal.msg('开始测试上传...');
   const loadingInstance = ElLoading.service({ text: '测试上传中...', background: 'rgba(0, 0, 0, 0.7)' });
 
   try {
     // 1. 获取测试上传的 URL
-    const res: any = await testOssConfig(row.ossConfigId);
+    const res: any = await testStorageConfig(row.storageConfigId);
     const urlFromRes = res?.data || res?.msg || '';
 
     if (!urlFromRes) {
@@ -288,14 +287,14 @@ watch(previewDialogVisible, (isVisible) => {
 });
 
 /** 删除按钮操作 */
-const handleDelete = async (row?: OssConfigVO) => {
-  const ossConfigIds = row?.ossConfigId || ids.value;
-  const ossConfigNames = row?.configName || selectionNames.value.join(',');
+const handleDelete = async (row?: StorageConfigVO) => {
+  const storageConfigIds = row?.storageConfigId || ids.value;
+  const storageConfigNames = row?.configName || selectionNames.value.join(',');
 
   try {
-    await proxy?.$modal.confirm(`是否确认删除配置名称为 "${ossConfigNames}" 的数据项?`);
+    await proxy?.$modal.confirm(`是否确认删除配置名称为 "${storageConfigNames}" 的数据项?`);
     loading.value = true;
-    await delOssConfig(ossConfigIds);
+    await deleteStorageConfig(storageConfigIds);
     proxy?.$modal.msgSuccess('删除成功');
     await getList();
   } catch (e) {
