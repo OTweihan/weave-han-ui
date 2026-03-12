@@ -1,5 +1,5 @@
 <template>
-  <div class="p-2">
+  <div class="p-2 h-full flex flex-col">
     <transition :enter-active-class="proxy?.animate.searchAnimate.enter" :leave-active-class="proxy?.animate.searchAnimate.leave">
       <div v-show="showSearch" class="search">
         <el-form ref="queryFormRef" :model="queryParams" :inline="true" label-width="85px">
@@ -22,7 +22,11 @@
       </div>
     </transition>
 
-    <el-card shadow="never">
+    <el-card
+      shadow="never"
+      class="flex-1 flex flex-col overflow-hidden"
+      :body-style="{ flex: '1', overflow: 'hidden', display: 'flex', flexDirection: 'column' }"
+    >
       <template #header>
         <el-row :gutter="10" class="mb8">
           <el-col :span="1.5">
@@ -45,30 +49,37 @@
         </el-row>
       </template>
 
-      <el-table v-loading="loading" :data="clientList" border @selection-change="handleSelectionChange">
+      <el-table v-loading="loading" :data="clientList" border height="100%" class="flex-1" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="50" align="center" />
-        <el-table-column v-if="true" label="id" align="center" prop="id" />
         <el-table-column label="客户端id" align="center" prop="clientId" />
-        <el-table-column label="客户端key" align="center" prop="clientKey" />
-        <el-table-column label="客户端秘钥" align="center" prop="clientSecret" />
+        <el-table-column label="客户端key" align="center" prop="clientKey" width="120" />
+        <el-table-column label="客户端秘钥" align="center" prop="clientSecret" width="120" />
         <el-table-column label="授权类型" align="center">
           <template #default="scope">
             <dict-tag :options="sys_grant_type" :value="scope.row.grantTypeList" />
           </template>
         </el-table-column>
-        <el-table-column label="设备类型" align="center">
+        <el-table-column label="设备类型" align="center" width="120">
           <template #default="scope">
             <dict-tag :options="sys_device_type" :value="scope.row.deviceType" />
           </template>
         </el-table-column>
-        <el-table-column label="Token活跃超时时间" align="center" prop="activeTimeout" />
-        <el-table-column label="Token固定超时时间" align="center" prop="timeout" />
-        <el-table-column key="status" label="状态" align="center">
+        <el-table-column label="Token活跃超时时间" align="center" prop="activeTimeout" width="160">
+          <template #default="scope">
+            <span>{{ scope.row.activeTimeout != null ? `${scope.row.activeTimeout} 秒` : '-' }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="Token固定超时时间" align="center" prop="timeout" width="160">
+          <template #default="scope">
+            <span>{{ scope.row.timeout != null ? `${scope.row.timeout} 秒` : '-' }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column key="status" label="状态" align="center" width="120">
           <template #default="scope">
             <el-switch v-model="scope.row.status" active-value="0" inactive-value="1" @change="handleStatusChange(scope.row)"></el-switch>
           </template>
         </el-table-column>
-        <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+        <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="120">
           <template #default="scope">
             <el-tooltip content="修改" placement="top">
               <el-button v-hasPermi="['system:client:edit']" link type="primary" icon="Edit" @click="handleUpdate(scope.row)"></el-button>
@@ -107,10 +118,12 @@
               <el-tooltip content="指定时间无操作则过期（单位：秒），默认30分钟（1800秒）" placement="top">
                 <el-icon><question-filled /></el-icon>
               </el-tooltip>
-              Token活跃超时时间
+              Token活跃超时时间(秒)
             </span>
           </template>
-          <el-input v-model="form.activeTimeout" placeholder="请输入Token活跃超时时间" />
+          <el-input v-model="form.activeTimeout" placeholder="请输入Token活跃超时时间（秒）">
+            <template #append>秒</template>
+          </el-input>
         </el-form-item>
         <el-form-item prop="timeout" label-width="auto">
           <template #label>
@@ -118,10 +131,12 @@
               <el-tooltip content="指定时间必定过期（单位：秒），默认七天（604800秒）" placement="top">
                 <el-icon><question-filled /></el-icon>
               </el-tooltip>
-              Token固定超时时间
+              Token固定超时时间(秒)
             </span>
           </template>
-          <el-input v-model="form.timeout" placeholder="请输入Token固定超时时间" />
+          <el-input v-model="form.timeout" placeholder="请输入Token固定超时时间（秒）">
+            <template #append>秒</template>
+          </el-input>
         </el-form-item>
         <el-form-item label="状态">
           <el-radio-group v-model="form.status">
@@ -142,8 +157,8 @@
 </template>
 
 <script setup name="Client" lang="ts">
-import { listClient, getClient, delClient, addClient, updateClient, changeStatus } from '@/api/system/client';
-import { ClientVO, ClientQuery, ClientForm } from '@/api/system/client/types';
+import { addClient, changeStatus, delClient, getClient, listClient, updateClient } from '@/api/system/client';
+import { ClientForm, ClientQuery, ClientVO } from '@/api/system/client/types';
 
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const { sys_normal_disable } = toRefs<any>(proxy?.useDict('sys_normal_disable'));
