@@ -10,13 +10,13 @@
         </el-select>
       </el-form-item>
 
-      <template v-if="form.storageType === 10">
+      <template v-if="isLocalType">
         <el-form-item label="基础路径" prop="configData.basePath">
           <el-input v-model="form.configData.basePath" placeholder="请输入基础路径，如: D:/uploads 或 /uploads" />
         </el-form-item>
       </template>
 
-      <template v-if="form.storageType === 11 || form.storageType === 12">
+      <template v-if="isFtpFamilyType">
         <el-form-item label="主机地址" prop="configData.host">
           <el-input v-model="form.configData.host" placeholder="请输入主机地址" />
         </el-form-item>
@@ -32,7 +32,7 @@
         <el-form-item label="基础路径" prop="configData.basePath">
           <el-input v-model="form.configData.basePath" placeholder="请输入基础路径" />
         </el-form-item>
-        <el-form-item v-if="form.storageType === 11" label="连接模式" prop="configData.mode">
+        <el-form-item v-if="isFtpType" label="连接模式" prop="configData.mode">
           <el-radio-group v-model="form.configData.mode">
             <el-radio value="Active">主动模式</el-radio>
             <el-radio value="Passive">被动模式</el-radio>
@@ -40,7 +40,7 @@
         </el-form-item>
       </template>
 
-      <template v-if="form.storageType === 20">
+      <template v-if="isS3Type">
         <el-form-item label="节点地址" prop="configData.endpoint">
           <el-input v-model="form.configData.endpoint" placeholder="请输入节点地址，如: http://localhost:9000" />
         </el-form-item>
@@ -70,7 +70,7 @@
         </el-form-item>
       </template>
 
-      <el-form-item v-if="form.storageType" label="自定义域名" prop="configData.domain">
+      <el-form-item v-if="hasStorageType" label="自定义域名" prop="configData.domain">
         <el-input v-model="form.configData.domain" placeholder="请输入自定义域名，如: http://oss.example.com" />
       </el-form-item>
 
@@ -93,6 +93,18 @@ import { addStorageConfig, updateStorageConfig, getStorageConfig } from '@/api/s
 import { StorageConfigForm, StorageConfigVO } from '@/api/system/storageConfig/types';
 import type { FormInstance, FormRules } from 'element-plus';
 
+const STORAGE_TYPE = {
+  LOCAL: 10,
+  FTP: 11,
+  SFTP: 12,
+  S3: 20
+} as const;
+
+type StorageConfigPayload = Partial<Omit<StorageConfigForm, 'storageType'>> & {
+  storageType?: number | string | null;
+  configData?: Record<string, any> | null;
+};
+
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const { infra_file_storage } = toRefs<any>(proxy?.useDict('infra_file_storage'));
 
@@ -103,15 +115,27 @@ const dialogLoading = ref(false);
 const buttonLoading = ref(false);
 const ossConfigFormRef = ref<FormInstance>();
 
+// 根据存储类型构建 configData 初始值，确保深层字段绑定稳定可用
+const buildDefaultConfigData = (storageType?: number): Record<string, any> => {
+  const defaultData: Record<string, any> = { domain: '' };
+  if (storageType === STORAGE_TYPE.FTP) {
+    defaultData.port = 21;
+    defaultData.mode = 'Passive';
+  } else if (storageType === STORAGE_TYPE.SFTP) {
+    defaultData.port = 22;
+  } else if (storageType === STORAGE_TYPE.S3) {
+    defaultData.enablePathStyleAccess = true;
+    defaultData.enablePublicAccess = false;
+  }
+  return defaultData;
+};
+
 // 初始化表单结构
 const initFormData = (): StorageConfigForm => ({
   storageConfigId: undefined,
   configName: '',
   storageType: undefined,
-  configData: {
-    // 设置一些默认值，优化用户体验
-    mode: 'Passive'
-  },
+  configData: buildDefaultConfigData(),
   master: false,
   remark: ''
 });
@@ -119,13 +143,11 @@ const initFormData = (): StorageConfigForm => ({
 const form = ref<StorageConfigForm>(initFormData());
 
 const resetForm = () => {
-  const initialData = initFormData();
-  Object.assign(form.value, initialData);
-  form.value.configData = { ...initialData.configData };
+  form.value = initFormData();
 };
 
 /** 校验 URL 格式 */
-const validateDomainUrl = (_rule: any, value: string, callback: any) => {
+const validateDomainUrl = (_rule: unknown, value: string, callback: (error?: Error) => void) => {
   if (!value) return callback();
   try {
     const url = new URL(value.trim());
@@ -138,15 +160,30 @@ const validateDomainUrl = (_rule: any, value: string, callback: any) => {
   }
 };
 
+/** 将接口数据合并到表单，并补齐当前类型下的默认配置字段 */
+const applyFormData = (source: StorageConfigPayload) => {
+  const normalizedStorageType = source.storageType === undefined || source.storageType === null ? undefined : Number(source.storageType);
+  form.value = {
+    ...initFormData(),
+    ...source,
+    storageType: normalizedStorageType,
+    configData: {
+      ...buildDefaultConfigData(normalizedStorageType),
+      ...((source.configData as Record<string, any>) ?? {})
+    }
+  };
+};
+
 /** 动态计算校验规则 */
 const rules = computed<FormRules>(() => {
-  const baseRules: any = {
+  const storageType = form.value.storageType;
+  const baseRules: FormRules = {
     configName: [{ required: true, message: '配置名不能为空', trigger: 'blur' }],
     storageType: [{ required: true, message: '存储器不能为空', trigger: 'change' }]
   };
 
   // 只要选择了存储器，就校验自定义域名
-  if (form.value.storageType) {
+  if (storageType !== undefined && storageType !== null) {
     baseRules['configData.domain'] = [
       { required: true, message: '自定义域名不能为空', trigger: 'blur' },
       { validator: validateDomainUrl, trigger: 'blur' }
@@ -154,12 +191,12 @@ const rules = computed<FormRules>(() => {
   }
 
   // 本地存储校验
-  if (form.value.storageType === 10) {
+  if (storageType === STORAGE_TYPE.LOCAL) {
     baseRules['configData.basePath'] = [{ required: true, message: '基础路径不能为空', trigger: 'blur' }];
   }
 
   // FTP/SFTP 校验
-  if ([11, 12].includes(form.value.storageType as number)) {
+  if (storageType === STORAGE_TYPE.FTP || storageType === STORAGE_TYPE.SFTP) {
     baseRules['configData.host'] = [{ required: true, message: '主机地址不能为空', trigger: 'blur' }];
     baseRules['configData.port'] = [{ required: true, message: '主机端口不能为空', trigger: 'blur' }];
     baseRules['configData.username'] = [{ required: true, message: '用户名不能为空', trigger: 'blur' }];
@@ -168,7 +205,7 @@ const rules = computed<FormRules>(() => {
   }
 
   // S3 校验
-  if (form.value.storageType === 20) {
+  if (storageType === STORAGE_TYPE.S3) {
     baseRules['configData.endpoint'] = [{ required: true, message: '节点地址不能为空', trigger: 'blur' }];
     baseRules['configData.bucket'] = [{ required: true, message: '存储Bucket不能为空', trigger: 'blur' }];
     baseRules['configData.accessKey'] = [{ required: true, message: 'accessKey不能为空', trigger: 'blur' }];
@@ -182,21 +219,17 @@ const rules = computed<FormRules>(() => {
 
 const emit = defineEmits(['success']);
 
-/** 切换存储器类型时，重置配置项数据并清除旧校验 */
-const handleStorageTypeChange = (val: number) => {
-  // 根据类型赋初值，避免 configData 为空导致深层绑定失效
-  const defaultData: any = { domain: '' };
-  if (val === 11) {
-    defaultData.port = 21;
-    defaultData.mode = 'Passive';
-  } else if (val === 12) {
-    defaultData.port = 22;
-  } else if (val === 20) {
-    defaultData.enablePathStyleAccess = true;
-    defaultData.enablePublicAccess = false;
-  }
+// 模板层语义化状态，减少魔法数字和重复判断
+const isLocalType = computed(() => form.value.storageType === STORAGE_TYPE.LOCAL);
+const isFtpType = computed(() => form.value.storageType === STORAGE_TYPE.FTP);
+const isFtpFamilyType = computed(() => form.value.storageType === STORAGE_TYPE.FTP || form.value.storageType === STORAGE_TYPE.SFTP);
+const isS3Type = computed(() => form.value.storageType === STORAGE_TYPE.S3);
+const hasStorageType = computed(() => form.value.storageType !== undefined && form.value.storageType !== null);
 
-  form.value.configData = defaultData;
+/** 切换存储器类型时，重置配置项数据并清除旧校验 */
+const handleStorageTypeChange = (val?: number | null) => {
+  // 类型变化后重建 configData，避免旧字段残留导致提交脏数据
+  form.value.configData = buildDefaultConfigData(val);
   nextTick(() => {
     ossConfigFormRef.value?.clearValidate();
   });
@@ -210,15 +243,13 @@ const open = async (param?: number | string | StorageConfigVO) => {
   if (param) {
     title.value = '修改对象存储配置';
     if (typeof param === 'object' && 'storageConfigId' in param) {
-      const data = JSON.parse(JSON.stringify(param));
-      Object.assign(form.value, data);
-      form.value.configData = data?.configData ?? {};
+      const data = JSON.parse(JSON.stringify(param)) as StorageConfigVO;
+      applyFormData(data);
     } else {
       dialogLoading.value = true;
       try {
         const res = await getStorageConfig(param);
-        Object.assign(form.value, res.data);
-        form.value.configData = (res.data as any)?.configData ?? {};
+        applyFormData(res.data);
       } finally {
         dialogLoading.value = false;
       }
@@ -241,36 +272,48 @@ const cancel = () => {
   });
 };
 
-/** 提交表单 */
-const submitForm = () => {
-  if (!ossConfigFormRef.value) return;
-
-  ossConfigFormRef.value.validate(async (valid: boolean) => {
-    if (valid) {
-      buttonLoading.value = true;
-      try {
-        if (typeof form.value.configData?.endpoint === 'string') {
-          form.value.configData.endpoint = form.value.configData.endpoint.replace(/`/g, '').trim();
-        }
-        if (typeof form.value.configData?.domain === 'string') {
-          form.value.configData.domain = form.value.configData.domain.replace(/`/g, '').trim();
-        }
-        if (form.value.storageConfigId) {
-          await updateStorageConfig(form.value);
-        } else {
-          await addStorageConfig(form.value);
-        }
-        proxy?.$modal.msgSuccess(form.value.storageConfigId ? '修改成功' : '新增成功');
-        visible.value = false;
-        resetForm();
-        emit('success');
-      } catch (error) {
-        console.error('提交失败:', error);
-      } finally {
-        buttonLoading.value = false;
-      }
+/** 统一清洗可输入 URL 的字符串字段，避免尾部空格与非法字符影响后端校验 */
+const normalizeConfigTextFields = () => {
+  const { configData } = form.value;
+  const normalizeKeys = ['endpoint', 'domain'] as const;
+  normalizeKeys.forEach((key) => {
+    const raw = configData?.[key];
+    if (typeof raw === 'string') {
+      configData[key] = raw.replace(/`/g, '').trim();
     }
   });
+};
+
+/** 提交表单 */
+const submitForm = async () => {
+  if (!ossConfigFormRef.value) {
+    return;
+  }
+
+  try {
+    await ossConfigFormRef.value.validate();
+  } catch {
+    return;
+  }
+
+  buttonLoading.value = true;
+  try {
+    normalizeConfigTextFields();
+    const isEdit = form.value.storageConfigId !== undefined && form.value.storageConfigId !== null;
+    if (isEdit) {
+      await updateStorageConfig(form.value);
+    } else {
+      await addStorageConfig(form.value);
+    }
+    proxy?.$modal.msgSuccess(isEdit ? '修改成功' : '新增成功');
+    visible.value = false;
+    resetForm();
+    emit('success');
+  } catch (error) {
+    console.error('提交失败:', error);
+  } finally {
+    buttonLoading.value = false;
+  }
 };
 
 defineExpose({

@@ -120,13 +120,19 @@
 </template>
 
 <script setup data-name="StorageConfig" lang="ts">
-import { ref, reactive, onMounted, watch, getCurrentInstance, toRefs } from 'vue';
+import { ref, reactive, onMounted, onBeforeUnmount, watch, getCurrentInstance, toRefs } from 'vue';
 import type { ComponentInternalInstance } from 'vue';
 import { ElLoading, FormInstance } from 'element-plus';
 import request from '@/utils/request';
 import { deleteStorageConfig, listStorageConfig, testStorageConfig, updateStorageConfigMaster } from '@/api/system/storageConfig';
 import { StorageConfigQuery, StorageConfigVO } from '@/api/system/storageConfig/types';
 import StorageConfigDialog from './components/StorageConfigDialog.vue';
+
+type DateRangeValue = [string, string] | [];
+type TestStorageConfigResponse = {
+  data?: string;
+  msg?: string;
+};
 
 // 全局上下文与字典
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
@@ -141,7 +147,6 @@ const showSearch = ref(true);
 // 表格多选相关
 const ids = ref<Array<number | string>>([]);
 const selectionNames = ref<Array<string>>([]);
-const single = ref(true);
 const multiple = ref(true);
 
 // 预览相关数据
@@ -151,7 +156,7 @@ const previewObjectUrl = ref('');
 
 // 查询表单参数
 const queryFormRef = ref<FormInstance>();
-const dateRange = ref<[any, any]>(['', '']); // 若有精确类型可替换 any
+const dateRange = ref<DateRangeValue>([]);
 const queryParams = reactive<StorageConfigQuery>({
   pageNum: 1,
   pageSize: 10,
@@ -167,7 +172,9 @@ const storageConfigDialogRef = ref<InstanceType<typeof StorageConfigDialog>>();
 const getList = async () => {
   loading.value = true;
   try {
-    const params = proxy?.addDateRange(queryParams, dateRange.value) || queryParams;
+    // 通过浅拷贝隔离查询参数，避免 addDateRange 持续向 queryParams 注入 params 字段
+    const requestQuery = { ...queryParams };
+    const params = proxy?.addDateRange(requestQuery, dateRange.value) || requestQuery;
     const res = await listStorageConfig(params);
     storageConfigList.value = res.rows;
     total.value = res.total;
@@ -184,7 +191,7 @@ const handleQuery = () => {
 
 /** 重置按钮操作 */
 const resetQuery = () => {
-  dateRange.value = ['', ''];
+  dateRange.value = [];
   queryFormRef.value?.resetFields();
   handleQuery();
 };
@@ -193,7 +200,6 @@ const resetQuery = () => {
 const handleSelectionChange = (selection: StorageConfigVO[]) => {
   ids.value = selection.map((item) => item.storageConfigId);
   selectionNames.value = selection.map((item) => item.configName);
-  single.value = selection.length !== 1;
   multiple.value = !selection.length;
 };
 
@@ -204,7 +210,11 @@ const handleAdd = () => {
 
 /** 修改按钮操作 */
 const handleUpdate = (row?: StorageConfigVO) => {
-  const param = row || ids.value[0];
+  const param = row ?? ids.value[0];
+  if (param == null) {
+    proxy?.$modal.msgWarning('请先选择需要修改的配置');
+    return;
+  }
   storageConfigDialogRef.value?.open(param);
 };
 
@@ -230,15 +240,41 @@ const revokePreviewUrl = () => {
   }
 };
 
+/** 兼容接口返回体，优先读取 data 字段中的预览地址 */
+const extractPreviewUrl = (response: unknown): string => {
+  if (typeof response === 'string') {
+    return response.trim();
+  }
+  if (typeof response === 'object' && response !== null) {
+    const { data, msg } = response as TestStorageConfigResponse;
+    if (typeof data === 'string') {
+      return data.trim();
+    }
+    if (typeof msg === 'string') {
+      return msg.trim();
+    }
+  }
+  return '';
+};
+
+/** 下载预览资源并转换为 Blob，便于在弹窗中统一展示 */
+const fetchPreviewBlob = async (url: string): Promise<Blob> => {
+  return (await request({
+    url,
+    method: 'get',
+    responseType: 'blob'
+  })) as Blob;
+};
+
 /** 测试配置上传 */
 const handleTest = async (row: StorageConfigVO) => {
   proxy?.$modal.msg('开始测试上传...');
   const loadingInstance = ElLoading.service({ text: '测试上传中...', background: 'rgba(0, 0, 0, 0.7)' });
 
   try {
-    // 1. 获取测试上传的 URL
-    const res: any = await testStorageConfig(row.storageConfigId);
-    const urlFromRes = res?.data || res?.msg || '';
+    // 1. 获取测试上传后返回的可访问地址
+    const response = await testStorageConfig(row.storageConfigId);
+    const urlFromRes = extractPreviewUrl(response);
 
     if (!urlFromRes) {
       proxy?.$modal.msgError('未获取到可预览地址');
@@ -246,11 +282,7 @@ const handleTest = async (row: StorageConfigVO) => {
     }
 
     // 2. 将 URL 转换为 Blob 进行预览
-    const blob = (await request({
-      url: urlFromRes,
-      method: 'get',
-      responseType: 'blob'
-    })) as Blob;
+    const blob = await fetchPreviewBlob(urlFromRes);
 
     // 3. 释放旧的 URL 引用，生成新的 Blob URL
     revokePreviewUrl();
@@ -286,10 +318,20 @@ watch(previewDialogVisible, (isVisible) => {
   }
 });
 
+/** 组件销毁时也要兜底释放 Blob URL，避免内存泄漏 */
+onBeforeUnmount(() => {
+  revokePreviewUrl();
+});
+
 /** 删除按钮操作 */
 const handleDelete = async (row?: StorageConfigVO) => {
-  const storageConfigIds = row?.storageConfigId || ids.value;
-  const storageConfigNames = row?.configName || selectionNames.value.join(',');
+  const storageConfigIds = row?.storageConfigId ?? ids.value;
+  if (Array.isArray(storageConfigIds) && storageConfigIds.length === 0) {
+    proxy?.$modal.msgWarning('请先选择需要删除的配置');
+    return;
+  }
+
+  const storageConfigNames = row?.configName ?? selectionNames.value.join(',');
 
   try {
     await proxy?.$modal.confirm(`是否确认删除配置名称为 "${storageConfigNames}" 的数据项?`);
