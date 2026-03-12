@@ -4,16 +4,15 @@
       <div v-show="showSearch" class="mb-[10px]">
         <el-card shadow="hover">
           <el-form ref="queryFormRef" :model="queryParams" :inline="true">
-            <el-form-item label="文件名" prop="fileName">
-              <el-input v-model="queryParams.fileName" placeholder="请输入文件名" clearable @keyup.enter="handleQuery" />
-            </el-form-item>
             <el-form-item label="原名" prop="originalName">
               <el-input v-model="queryParams.originalName" placeholder="请输入原名" clearable @keyup.enter="handleQuery" />
             </el-form-item>
-            <el-form-item label="文件后缀" prop="fileSuffix">
-              <el-input v-model="queryParams.fileSuffix" placeholder="请输入文件后缀" clearable @keyup.enter="handleQuery" />
+            <el-form-item label="文件类型" prop="mimeType">
+              <el-select v-model="queryParams.mimeType" placeholder="请选择文件类型" clearable filterable>
+                <el-option v-for="dict in sys_file_mime_type" :key="dict.value" :label="dict.label" :value="dict.value" />
+              </el-select>
             </el-form-item>
-            <el-form-item label="创建时间" style="width: 308px">
+            <el-form-item label="上传时间" style="width: 308px">
               <el-date-picker
                 v-model="dateRangeCreateTime"
                 value-format="YYYY-MM-DD HH:mm:ss"
@@ -23,9 +22,6 @@
                 end-placeholder="结束日期"
                 :default-time="[new Date(2000, 1, 1, 0, 0, 0), new Date(2000, 1, 1, 23, 59, 59)]"
               ></el-date-picker>
-            </el-form-item>
-            <el-form-item label="存储类型" prop="storageType">
-              <el-input v-model="queryParams.storageType" placeholder="请输入存储类型" clearable @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item>
               <el-button type="primary" icon="search" @click="handleQuery">搜索</el-button>
@@ -54,15 +50,6 @@
               删除
             </el-button>
           </el-col>
-          <el-col :span="1.5">
-            <el-button
-              v-hasPermi="['system:config:edit']"
-              :type="previewListResource ? 'danger' : 'warning'"
-              plain
-              @click="handlePreviewListResource(!previewListResource)"
-              >预览开关 : {{ previewListResource ? '禁用' : '启用' }}</el-button
-            >
-          </el-col>
           <right-toolbar v-model:show-search="showSearch" @query-table="getList"></right-toolbar>
         </el-row>
       </template>
@@ -72,35 +59,26 @@
         v-loading="loading"
         :data="fileRows"
         border
-        class="flex-1"
+        class="flex-1 table-single-line"
         :header-cell-class-name="handleHeaderClass"
         @selection-change="handleSelectionChange"
         @header-click="handleHeaderCLick"
       >
         <el-table-column type="selection" width="50" align="center" />
-        <el-table-column v-if="false" label="文件主键" align="center" prop="id" />
-        <el-table-column label="文件名" align="center" prop="fileName" />
-        <el-table-column label="原名" align="center" prop="originalName" />
-        <el-table-column label="文件后缀" align="center" prop="fileSuffix" />
-        <el-table-column label="文件展示" align="center" prop="url">
+        <el-table-column label="文件名" align="center" prop="fileName" show-overflow-tooltip min-width="160"/>
+        <el-table-column label="原名" align="center" prop="originalName" show-overflow-tooltip />
+        <el-table-column label="文件类型" align="center" prop="mimeType" min-width="140" show-overflow-tooltip width="160"/>
+        <el-table-column label="文件大小" align="center" prop="fileSize" width="140" show-overflow-tooltip>
           <template #default="scope">
-            <ImagePreview
-              v-if="previewListResource && checkFileSuffix(scope.row.fileSuffix)"
-              :width="100"
-              :height="100"
-              :src="scope.row.url"
-              :preview-src-list="[scope.row.url]"
-            />
-            <span v-if="!checkFileSuffix(scope.row.fileSuffix) || !previewListResource" v-text="scope.row.url" />
+            <span>{{ formatFileSizeKb(scope.row.fileSize) }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="创建时间" align="center" prop="createTime" width="180" sortable="custom">
+        <el-table-column label="上传时间" align="center" prop="createTime" width="240" sortable="custom" show-overflow-tooltip>
           <template #default="scope">
-            <span>{{ proxy.parseTime(scope.row.createTime, '{y}-{m}-{d}') }}</span>
+            <span>{{ proxy.parseTime(scope.row.createTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="存储类型" align="center" prop="storageType" />
-        <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+        <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="160">
           <template #default="scope">
             <el-tooltip content="下载" placement="top">
               <el-button v-hasPermi="['system:file:download']" link type="primary" icon="Download" @click="handleDownload(scope.row)"></el-button>
@@ -137,7 +115,6 @@
 
 <script setup data-name="File" lang="ts">
 import { deleteFile, listFile } from '@/api/system/file';
-import ImagePreview from '@/components/ImagePreview/index.vue';
 import { FileForm, FileQuery, FileVO } from '@/api/system/file/types';
 import { useClipboard } from '@vueuse/core';
 
@@ -148,7 +125,7 @@ const { copy } = useClipboard();
 /** 复制链接 */
 const handleCopyUrl = async (row: FileVO) => {
   try {
-    await copy(row.url);
+    await copy(normalizeFileUrl(row.url));
     proxy?.$modal.msgSuccess('复制成功');
   } catch (e) {
     proxy?.$modal.msgError('复制失败');
@@ -165,7 +142,6 @@ const single = ref(true);
 const multiple = ref(true);
 const total = ref(0);
 const type = ref(0);
-const previewListResource = ref(true);
 const dateRangeCreateTime = ref<[DateModelType, DateModelType]>(['', '']);
 
 const dialog = reactive<DialogOption>({
@@ -178,6 +154,7 @@ const defaultSort = ref({ prop: 'createTime', order: 'ascending' });
 
 const ossFormRef = ref<ElFormInstance>();
 const queryFormRef = ref<ElFormInstance>();
+const { sys_file_mime_type } = toRefs<any>(proxy?.useDict('sys_file_mime_type'));
 
 const initFormData = {
   file: undefined
@@ -191,8 +168,7 @@ const data = reactive<PageData<FileForm, FileQuery>>({
     pageSize: 10,
     fileName: '',
     originalName: '',
-    fileSuffix: '',
-    storageType: '',
+    mimeType: '',
     orderByColumn: defaultSort.value.prop,
     isAsc: defaultSort.value.order
   },
@@ -206,8 +182,6 @@ const { queryParams, form, rules } = toRefs(data);
 /** 查询文件列表 */
 const getList = async () => {
   loading.value = true;
-  const res = await proxy?.getConfigKey('sys.oss.previewListResource');
-  previewListResource.value = res?.data === undefined ? true : res.data === 'true';
   const response = await listFile(proxy?.addDateRange(queryParams.value, dateRangeCreateTime.value, 'CreateTime'));
   fileRows.value = response.rows;
   total.value = response.total;
@@ -215,10 +189,16 @@ const getList = async () => {
   showTable.value = true;
 };
 
-function checkFileSuffix(fileSuffix: string | string[]) {
-  const arr = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'];
-  const suffixArray = Array.isArray(fileSuffix) ? fileSuffix : [fileSuffix];
-  return suffixArray.some((suffix) => arr.includes(String(suffix).replace('.', '').toLowerCase()));
+const normalizeFileUrl = (url: string) => {
+  if (!url) {
+    return url;
+  }
+  return url.replace('/resource/storage/', '/resource/file/');
+};
+
+function formatFileSizeKb(fileSize?: number) {
+  const size = Number(fileSize ?? 0);
+  return `${(size / 1024).toFixed(2)} KB`;
 }
 
 /** 取消按钮 */
@@ -331,19 +311,6 @@ const handleDownload = (row: FileVO) => {
   proxy?.$download.file(row.id);
 };
 
-/** 预览开关按钮  */
-const handlePreviewListResource = async (preview: boolean) => {
-  const text = preview ? '启用' : '停用';
-  try {
-    await proxy?.$modal.confirm('确认要"' + text + '""预览列表图片"配置吗?');
-    await proxy?.updateConfigByKey('sys.oss.previewListResource', preview);
-    await getList();
-    proxy?.$modal.msgSuccess(text + '成功');
-  } catch {
-    return;
-  }
-};
-
 /** 删除按钮操作 */
 const handleDelete = async (row?: FileVO) => {
   const fileIds = row?.id || ids.value;
@@ -358,3 +325,15 @@ onMounted(() => {
   getList();
 });
 </script>
+
+<style scoped>
+.table-single-line :deep(.el-table__cell .cell) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.table-single-line :deep(.el-table__header .cell) {
+  white-space: nowrap;
+}
+</style>

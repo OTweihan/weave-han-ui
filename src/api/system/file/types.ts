@@ -5,7 +5,6 @@ export interface FileVO extends BaseEntity {
   originalName: string;
   fileSuffix: string;
   url: string;
-  storageType?: string;
   mimeType?: string;
   fileSize?: number;
   ossId?: string | number;
@@ -14,8 +13,7 @@ export interface FileVO extends BaseEntity {
 export interface FileQuery extends PageQuery {
   fileName: string;
   originalName: string;
-  fileSuffix: string;
-  storageType: string;
+  mimeType: string;
   orderByColumn: string;
   isAsc: string;
 }
