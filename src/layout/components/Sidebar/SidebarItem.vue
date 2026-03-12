@@ -3,7 +3,6 @@
     <template v-if="hasOneShowingChild(item, item.children) && (!onlyOneChild.children || onlyOneChild.noShowingChildren) && !item.alwaysShow">
       <app-link v-if="onlyOneChild.meta" :to="resolvePath(onlyOneChild.path, onlyOneChild.query)">
         <el-menu-item :index="resolvePath(onlyOneChild.path)" :class="{ 'sub-menu-title-noDropdown': !isNest }">
-          <div class="menu-dot"></div>
           <template #title>
             <span class="menu-title" :title="hasTitle(onlyOneChild.meta.title)">{{ onlyOneChild.meta.title }}</span>
           </template>
@@ -13,7 +12,6 @@
 
     <el-sub-menu v-else ref="subMenu" :index="resolvePath(item.path)" teleported>
       <template v-if="item.meta" #title>
-        <div class="menu-dot"></div>
         <span class="menu-title" :title="hasTitle(item.meta?.title)">{{ item.meta?.title }}</span>
       </template>
 
@@ -30,10 +28,10 @@
 </template>
 
 <script setup lang="ts">
-import { isExternal } from '@/utils/validate';
-import AppLink from './Link.vue';
 import { getNormalPath } from '@/utils/ruoyi';
+import { isExternal } from '@/utils/validate';
 import { RouteRecordRaw } from 'vue-router';
+import AppLink from './Link.vue';
 
 const props = defineProps({
   item: {
@@ -99,68 +97,55 @@ const hasTitle = (title: string | undefined): string => {
 </script>
 
 <style lang="scss" scoped>
-.menu-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: #d1d5db; /* 默认灰色 */
-  margin-right: 12px;
-  transition: all 0.3s ease;
-  flex-shrink: 0;
-}
-
 :deep(.el-menu-item) {
-  transition: all 0.3s ease;
+  position: relative;
+  display: flex;
+  align-items: center;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
 
-  &:hover {
-    .menu-dot {
-      background-color: #409eff;
-      transform: scale(1.2);
-    }
+  &:not(.is-active):hover {
+    transform: translateX(2px);
   }
 
   &.is-active {
-    position: relative;
-
     &::before {
       content: '';
       position: absolute;
       left: 0;
       top: 50%;
       transform: translateY(-50%);
-      width: 4px;
-      height: 24px;
-      background-color: #409eff;
-      border-radius: 0 4px 4px 0;
-      box-shadow: 0 0 4px rgba(64, 158, 255, 0.4);
-    }
-
-    .menu-dot {
-      background-color: #409eff !important;
-      box-shadow: 0 0 10px rgba(64, 158, 255, 0.6);
-      transform: scale(1.2);
+      width: 3px;
+      height: 20px;
+      background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%);
+      border-radius: 0 3px 3px 0;
     }
 
     .menu-title {
       color: #409eff !important;
+      font-weight: 600;
     }
   }
 }
 
 :deep(.el-sub-menu__title) {
-  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
 
   &:hover {
-    .menu-dot {
-      background-color: #409eff;
-      transform: scale(1.2);
-    }
+    transform: translateX(2px);
   }
 }
 
 .menu-title {
   font-size: 14px;
   letter-spacing: 0.5px;
-  transition: color 0.3s;
+  line-height: 1;
+  transition: color 0.2s ease;
 }
 </style>
