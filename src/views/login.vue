@@ -1,30 +1,41 @@
 <template>
-  <div class="relative flex min-h-screen flex-col justify-center items-center bg-gray-50 px-4 sm:px-6 lg:px-8">
-    <div class="w-full max-w-md space-y-8 flex flex-col items-center">
-      <div class="text-center">
-        <h1 class="text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-          {{ title }}
-        </h1>
-      </div>
+  <div class="login-page">
+    <div class="login-bg">
+      <span class="bg-mesh"></span>
+      <span class="bg-light-sweep"></span>
+      <span class="bg-orb bg-orb-a"></span>
+      <span class="bg-orb bg-orb-b"></span>
+      <span class="bg-orb bg-orb-c"></span>
+    </div>
 
-      <div class="w-full bg-white rounded-2xl shadow-xl ring-1 ring-gray-900/5 p-8 sm:p-10">
-        <el-form ref="loginRef" :model="loginForm" :rules="loginRules" class="space-y-6">
-          <el-form-item prop="userAccount" class="!mb-5">
-            <div class="font-medium text-gray-700 mb-1.5 text-sm ml-1">{{ proxy.$t('login.username') }}</div>
+    <div class="login-shell">
+      <section class="login-card">
+        <span class="card-ambient card-ambient-a"></span>
+        <span class="card-ambient card-ambient-b"></span>
+        <div class="card-header">
+          <p class="brand-kicker">WEAVE HAN</p>
+          <h1 class="brand-title">{{ title }}</h1>
+          <h2>{{ proxy.$t('login.login') }}</h2>
+          <p>欢迎回来，请完成身份验证</p>
+        </div>
+
+        <el-form ref="loginRef" :model="loginForm" :rules="loginRules" class="login-form">
+          <el-form-item prop="userAccount">
+            <div class="field-label">{{ proxy.$t('login.username') }}</div>
             <el-input
               v-model="loginForm.userAccount"
               type="text"
               size="large"
               auto-complete="off"
               :placeholder="proxy.$t('login.username')"
-              class="!h-11 login-input"
+              class="login-input"
             >
-              <template #prefix><svg-icon icon-class="user" class="text-gray-400 text-lg" /></template>
+              <template #prefix><svg-icon icon-class="user" class="input-icon" /></template>
             </el-input>
           </el-form-item>
 
-          <el-form-item prop="password" class="!mb-5">
-            <div class="font-medium text-gray-700 mb-1.5 text-sm ml-1">{{ proxy.$t('login.password') }}</div>
+          <el-form-item prop="password">
+            <div class="field-label">{{ proxy.$t('login.password') }}</div>
             <el-input
               v-model="loginForm.password"
               type="password"
@@ -33,51 +44,50 @@
               :placeholder="proxy.$t('login.password')"
               @keyup.enter="handleLogin"
               show-password
-              class="!h-11 login-input"
+              class="login-input"
             >
-              <template #prefix><svg-icon icon-class="password" class="text-gray-400 text-lg" /></template>
+              <template #prefix><svg-icon icon-class="password" class="input-icon" /></template>
             </el-input>
           </el-form-item>
 
-          <el-form-item v-if="captchaEnabled" prop="code" class="!mb-5">
-            <div class="font-medium text-gray-700 mb-1.5 text-sm ml-1">{{ proxy.$t('login.code') }}</div>
-            <div class="flex items-center gap-3 w-full">
+          <el-form-item v-if="captchaEnabled" prop="code">
+            <div class="field-label">{{ proxy.$t('login.code') }}</div>
+            <div class="captcha-row">
               <el-input
                 v-model="loginForm.code"
                 size="large"
                 auto-complete="off"
                 :placeholder="proxy.$t('login.code')"
-                class="flex-1 !h-11 login-input"
+                class="login-input captcha-input"
                 @keyup.enter="handleLogin"
               >
-                <template #prefix><svg-icon icon-class="validCode" class="text-gray-400 text-lg" /></template>
+                <template #prefix><svg-icon icon-class="validCode" class="input-icon" /></template>
               </el-input>
-              <div class="w-[110px] h-[44px] overflow-hidden rounded-md border border-gray-200 hover:shadow-sm transition-shadow">
-                <img :src="codeUrl" class="w-full h-full object-cover cursor-pointer" @click="getCode" title="点击切换验证码" />
+              <div class="captcha-box">
+                <img :src="codeUrl" class="captcha-image" @click="getCode" title="点击切换验证码" alt="" />
               </div>
             </div>
           </el-form-item>
 
-          <div class="flex items-center justify-between">
-            <el-checkbox v-model="loginForm.rememberMe" class="!text-gray-600">{{ proxy.$t('login.rememberPassword') }}</el-checkbox>
-            <div class="flex items-center gap-2">
-              <span class="text-xs text-gray-400">其他登录</span>
-              <div
-                class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 hover:bg-green-50 text-gray-400 hover:text-green-600 cursor-pointer transition-colors duration-300 border border-gray-100"
-                :title="proxy.$t('login.social.wechat')"
-                @click="doSocialLogin('wechat')"
-              >
+          <div class="login-meta">
+            <el-checkbox v-model="loginForm.rememberMe" class="remember-check">{{ proxy.$t('login.rememberPassword') }}</el-checkbox>
+            <div class="social-entry">
+              <span>其他登录</span>
+              <button class="wechat-btn" :title="proxy.$t('login.social.wechat')" @click="doSocialLogin('wechat')">
                 <svg-icon icon-class="wechat" class="text-lg" />
-              </div>
+              </button>
             </div>
           </div>
 
-          <el-form-item class="!mb-0">
+          <el-form-item class="login-submit">
             <el-button
               :loading="loading"
               size="large"
               type="primary"
-              class="!w-full !h-11 !rounded-lg !text-base !font-semibold !bg-blue-600 hover:!bg-blue-700 !border-none shadow-md hover:shadow-lg transition-all duration-300"
+              class="submit-btn"
+              :style="submitBtnStyle"
+              @mousemove="handleSubmitMouseMove"
+              @mouseleave="resetSubmitMouse"
               @click.prevent="handleLogin"
             >
               <span v-if="!loading">{{ proxy.$t('login.login') }}</span>
@@ -86,28 +96,26 @@
           </el-form-item>
         </el-form>
 
-        <div class="mt-6 flex items-center justify-between text-sm">
-          <router-link v-if="register" to="/register" class="font-medium text-blue-600 hover:text-blue-500 transition-colors">
+        <div class="card-footer">
+          <router-link v-if="register" to="/register" class="register-link">
             {{ proxy.$t('login.switchRegisterPage') }}
           </router-link>
-          <div class="text-gray-400 hover:text-gray-600 cursor-pointer transition-colors" @click="goToMain">返回网站 &rarr;</div>
+          <button class="main-link" @click="goToMain">返回网站</button>
         </div>
-      </div>
+      </section>
     </div>
 
-    <div class="absolute bottom-6 w-full text-center text-xs text-gray-400">
-      &copy; {{ new Date().getFullYear() }} {{ title }}. All rights reserved.
-    </div>
+    <div class="login-copyright">&copy; {{ new Date().getFullYear() }} {{ title }}. All rights reserved.</div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { getCodeImg } from '@/api/login';
 import { authBinding } from '@/api/system/social/auth';
-import { useUserStore } from '@/store/modules/user';
 import { LoginData } from '@/api/types';
-import { to } from 'await-to-js';
 import { HttpStatus } from '@/enums/RespEnum';
+import { useUserStore } from '@/store/modules/user';
+import { to } from 'await-to-js';
 import { useI18n } from 'vue-i18n';
 
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
@@ -137,6 +145,13 @@ const captchaEnabled = ref(true);
 const register = ref(true);
 const redirect = ref('/index');
 const loginRef = ref<ElFormInstance>();
+const submitHoverPos = ref({ x: '50%', y: '50%' });
+let submitResetTimer: ReturnType<typeof setTimeout> | null = null;
+
+const submitBtnStyle = computed<Record<string, string>>(() => ({
+  '--mx': submitHoverPos.value.x,
+  '--my': submitHoverPos.value.y
+}));
 
 watch(
   () => router.currentRoute.value,
@@ -211,8 +226,46 @@ const doSocialLogin = (type: string) => {
   });
 };
 
+const handleSubmitMouseMove = (event: MouseEvent) => {
+  if (submitResetTimer) {
+    clearTimeout(submitResetTimer);
+    submitResetTimer = null;
+  }
+  const target = event.currentTarget as HTMLElement | null;
+  if (!target) {
+    return;
+  }
+  const rect = target.getBoundingClientRect();
+  const x = ((event.clientX - rect.left) / rect.width) * 100;
+  const y = ((event.clientY - rect.top) / rect.height) * 100;
+  submitHoverPos.value = {
+    x: `${x.toFixed(2)}%`,
+    y: `${y.toFixed(2)}%`
+  };
+};
+
+const resetSubmitMouse = () => {
+  if (submitResetTimer) {
+    clearTimeout(submitResetTimer);
+  }
+  // 先淡出高光，再回到中心，避免视觉上“回弹”
+  submitResetTimer = setTimeout(() => {
+    submitHoverPos.value = { x: '50%', y: '50%' };
+    submitResetTimer = null;
+  }, 260);
+};
+
 onMounted(() => {
   getCode();
   getLoginData();
 });
+
+onBeforeUnmount(() => {
+  if (submitResetTimer) {
+    clearTimeout(submitResetTimer);
+    submitResetTimer = null;
+  }
+});
 </script>
+
+<style scoped src="../assets/styles/views/login.css"></style>

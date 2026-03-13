@@ -1,68 +1,112 @@
 <template>
-  <div class="register">
-    <el-form ref="registerRef" :model="registerForm" :rules="registerRules" class="register-form">
-      <div class="title-box">
-        <h3 class="title">{{ title }}</h3>
-        <lang-select />
-      </div>
-      <el-form-item prop="userAccount">
-        <el-input v-model="registerForm.userAccount" type="text" size="large" auto-complete="off" :placeholder="proxy.$t('register.username')">
-          <template #prefix><svg-icon icon-class="user" class="el-input__icon input-icon" /></template>
-        </el-input>
-      </el-form-item>
-      <el-form-item prop="password">
-        <el-input
-          v-model="registerForm.password"
-          type="password"
-          size="large"
-          auto-complete="off"
-          :placeholder="proxy.$t('register.password')"
-          @keyup.enter="handleRegister"
-        >
-          <template #prefix><svg-icon icon-class="password" class="el-input__icon input-icon" /></template>
-        </el-input>
-      </el-form-item>
-      <el-form-item prop="confirmPassword">
-        <el-input
-          v-model="registerForm.confirmPassword"
-          type="password"
-          size="large"
-          auto-complete="off"
-          :placeholder="proxy.$t('register.confirmPassword')"
-          @keyup.enter="handleRegister"
-        >
-          <template #prefix><svg-icon icon-class="password" class="el-input__icon input-icon" /></template>
-        </el-input>
-      </el-form-item>
-      <el-form-item v-if="captchaEnabled" prop="code">
-        <el-input
-          v-model="registerForm.code"
-          size="large"
-          auto-complete="off"
-          :placeholder="proxy.$t('register.code')"
-          style="width: 63%"
-          @keyup.enter="handleRegister"
-        >
-          <template #prefix><svg-icon icon-class="validCode" class="el-input__icon input-icon" /></template>
-        </el-input>
-        <div class="register-code">
-          <img :src="codeUrl" class="register-code-img" @click="getCode" />
-        </div>
-      </el-form-item>
-      <el-form-item style="width: 100%">
-        <el-button :loading="loading" size="large" type="primary" style="width: 100%" @click.prevent="handleRegister">
-          <span v-if="!loading">{{ proxy.$t('register.register') }}</span>
-          <span v-else>{{ proxy.$t('register.registering') }}</span>
-        </el-button>
-        <div style="float: right">
-          <router-link class="link-type" :to="'/login'">{{ proxy.$t('register.switchLoginPage') }}</router-link>
-        </div>
-      </el-form-item>
-    </el-form>
-    <!--  底部  -->
-    <div class="el-register-footer">
-      <span>Copyright © 2018-2025 疯狂的狮子Li All Rights Reserved.</span>
+  <div class="login-page">
+    <div class="login-bg">
+      <span class="bg-mesh"></span>
+      <span class="bg-light-sweep"></span>
+      <span class="bg-orb bg-orb-a"></span>
+      <span class="bg-orb bg-orb-b"></span>
+      <span class="bg-orb bg-orb-c"></span>
     </div>
+
+    <div class="login-shell">
+      <section class="login-card">
+        <div class="card-header">
+          <div class="card-header-top">
+            <p class="brand-kicker">WEAVE HAN</p>
+          </div>
+          <h1 class="brand-title">{{ title }}</h1>
+          <h2>{{ proxy.$t('register.register') }}</h2>
+          <p>欢迎加入，请完成账号创建</p>
+        </div>
+
+        <el-form ref="registerRef" :model="registerForm" :rules="registerRules" class="login-form">
+          <el-form-item prop="userAccount">
+            <div class="field-label">{{ proxy.$t('register.username') }}</div>
+            <el-input
+              v-model="registerForm.userAccount"
+              type="text"
+              size="large"
+              auto-complete="off"
+              :placeholder="proxy.$t('register.username')"
+              class="login-input"
+            >
+              <template #prefix><svg-icon icon-class="user" class="input-icon" /></template>
+            </el-input>
+          </el-form-item>
+
+          <el-form-item prop="password">
+            <div class="field-label">{{ proxy.$t('register.password') }}</div>
+            <el-input
+              v-model="registerForm.password"
+              type="password"
+              size="large"
+              auto-complete="off"
+              :placeholder="proxy.$t('register.password')"
+              class="login-input"
+              @keyup.enter="handleRegister"
+            >
+              <template #prefix><svg-icon icon-class="password" class="input-icon" /></template>
+            </el-input>
+          </el-form-item>
+
+          <el-form-item prop="confirmPassword">
+            <div class="field-label">{{ proxy.$t('register.confirmPassword') }}</div>
+            <el-input
+              v-model="registerForm.confirmPassword"
+              type="password"
+              size="large"
+              auto-complete="off"
+              :placeholder="proxy.$t('register.confirmPassword')"
+              class="login-input"
+              @keyup.enter="handleRegister"
+            >
+              <template #prefix><svg-icon icon-class="password" class="input-icon" /></template>
+            </el-input>
+          </el-form-item>
+
+          <el-form-item v-if="captchaEnabled" prop="code">
+            <div class="field-label">{{ proxy.$t('register.code') }}</div>
+            <div class="captcha-row">
+              <el-input
+                v-model="registerForm.code"
+                size="large"
+                auto-complete="off"
+                :placeholder="proxy.$t('register.code')"
+                class="login-input captcha-input"
+                @keyup.enter="handleRegister"
+              >
+                <template #prefix><svg-icon icon-class="validCode" class="input-icon" /></template>
+              </el-input>
+              <div class="captcha-box">
+                <img :src="codeUrl" class="captcha-image" @click="getCode" title="点击切换验证码" alt="" />
+              </div>
+            </div>
+          </el-form-item>
+
+          <el-form-item class="login-submit">
+            <el-button
+              :loading="loading"
+              size="large"
+              type="primary"
+              class="submit-btn"
+              :style="submitBtnStyle"
+              @mousemove="handleSubmitMouseMove"
+              @mouseleave="resetSubmitMouse"
+              @click.prevent="handleRegister"
+            >
+              <span v-if="!loading">{{ proxy.$t('register.register') }}</span>
+              <span v-else>{{ proxy.$t('register.registering') }}</span>
+            </el-button>
+          </el-form-item>
+        </el-form>
+
+        <div class="card-footer register-footer-actions">
+          <router-link class="register-link" :to="'/login'">{{ proxy.$t('register.switchLoginPage') }}</router-link>
+        </div>
+      </section>
+    </div>
+
+    <div class="login-copyright">&copy; {{ new Date().getFullYear() }} {{ title }}. All rights reserved.</div>
   </div>
 </template>
 
@@ -88,7 +132,7 @@ const registerForm = ref<RegisterForm>({
   userType: 'sys_user'
 });
 
-const equalToPassword = (rule: any, value: string, callback: any) => {
+const equalToPassword = (_rule: any, value: string, callback: any) => {
   if (registerForm.value.password !== value) {
     callback(new Error(t('register.rule.confirmPassword.equalToPassword')));
   } else {
@@ -113,10 +157,19 @@ const registerRules: ElFormRules = {
   ],
   code: [{ required: true, trigger: 'change', message: t('register.rule.code.required') }]
 };
+
 const codeUrl = ref('');
 const loading = ref(false);
 const captchaEnabled = ref(true);
 const registerRef = ref<ElFormInstance>();
+
+const submitHoverPos = ref({ x: '50%', y: '50%' });
+let submitResetTimer: ReturnType<typeof setTimeout> | null = null;
+
+const submitBtnStyle = computed<Record<string, string>>(() => ({
+  '--mx': submitHoverPos.value.x,
+  '--my': submitHoverPos.value.y
+}));
 
 const handleRegister = () => {
   registerRef.value?.validate(async (valid: boolean) => {
@@ -125,8 +178,7 @@ const handleRegister = () => {
       const [err] = await to(register(registerForm.value));
       if (!err) {
         const username = registerForm.value.userAccount;
-        await ElMessageBox.alert('<span style="color: red; ">' + t('register.registerSuccess', { username }) + '</font>', '系统提示', {
-          app: undefined,
+        await ElMessageBox.alert('<span style="color: red; ">' + t('register.registerSuccess', { username }) + '</span>', '系统提示', {
           dangerouslyUseHTMLString: true,
           type: 'success'
         });
@@ -134,7 +186,7 @@ const handleRegister = () => {
       } else {
         loading.value = false;
         if (captchaEnabled.value) {
-          getCode();
+          await getCode();
         }
       }
     }
@@ -151,89 +203,44 @@ const getCode = async () => {
   }
 };
 
+const handleSubmitMouseMove = (event: MouseEvent) => {
+  if (submitResetTimer) {
+    clearTimeout(submitResetTimer);
+    submitResetTimer = null;
+  }
+  const target = event.currentTarget as HTMLElement | null;
+  if (!target) {
+    return;
+  }
+  const rect = target.getBoundingClientRect();
+  const x = ((event.clientX - rect.left) / rect.width) * 100;
+  const y = ((event.clientY - rect.top) / rect.height) * 100;
+  submitHoverPos.value = {
+    x: `${x.toFixed(2)}%`,
+    y: `${y.toFixed(2)}%`
+  };
+};
+
+const resetSubmitMouse = () => {
+  if (submitResetTimer) {
+    clearTimeout(submitResetTimer);
+  }
+  submitResetTimer = setTimeout(() => {
+    submitHoverPos.value = { x: '50%', y: '50%' };
+    submitResetTimer = null;
+  }, 260);
+};
+
 onMounted(() => {
   getCode();
 });
+
+onBeforeUnmount(() => {
+  if (submitResetTimer) {
+    clearTimeout(submitResetTimer);
+    submitResetTimer = null;
+  }
+});
 </script>
 
-<style lang="scss" scoped>
-.register {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  background-image: url('../assets/images/login-background.jpg');
-  background-size: cover;
-}
-
-.title-box {
-  display: flex;
-
-  .title {
-    margin: 0px auto 30px auto;
-    text-align: center;
-    color: #707070;
-  }
-
-  :deep(.lang-select--style) {
-    line-height: 0;
-    color: #7483a3;
-  }
-}
-
-.register-form {
-  border-radius: 6px;
-  background: #ffffff;
-  width: 400px;
-  padding: 25px 25px 5px 25px;
-
-  .el-input {
-    height: 40px;
-
-    input {
-      height: 40px;
-    }
-  }
-
-  .input-icon {
-    height: 39px;
-    width: 14px;
-    margin-left: 0;
-  }
-}
-
-.register-tip {
-  font-size: 13px;
-  text-align: center;
-  color: #bfbfbf;
-}
-
-.register-code {
-  width: 33%;
-  height: 40px;
-  float: right;
-
-  img {
-    cursor: pointer;
-    vertical-align: middle;
-  }
-}
-
-.el-register-footer {
-  height: 40px;
-  line-height: 40px;
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  text-align: center;
-  color: #fff;
-  font-family: Arial, serif;
-  font-size: 12px;
-  letter-spacing: 1px;
-}
-
-.register-code-img {
-  height: 40px;
-  padding-left: 12px;
-}
-</style>
+<style scoped src="../assets/styles/views/register.css"></style>
