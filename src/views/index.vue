@@ -2,6 +2,6 @@
   <div class="app-container home"></div>
 </template>
 
-<script setup name="Index" lang="ts"></script>
+<script setup data-name="Index" lang="ts"></script>
 
 <style lang="scss" scoped></style>

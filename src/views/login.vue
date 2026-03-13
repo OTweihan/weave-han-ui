@@ -109,7 +109,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup data-name="login" lang="ts">
 import { getCodeImg } from '@/api/login';
 import { authBinding } from '@/api/system/social/auth';
 import { LoginData } from '@/api/types';

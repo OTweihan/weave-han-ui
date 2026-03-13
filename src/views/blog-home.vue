@@ -10,7 +10,7 @@
   </div>
 </template>
 
-<script setup name="Main" lang="ts">
+<script setup data-name="blog-home" lang="ts">
 import { useRouter } from 'vue-router';
 import { getToken, removeToken } from '@/utils/auth';
 

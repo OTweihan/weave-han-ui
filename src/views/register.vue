@@ -110,7 +110,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup data-name="register" lang="ts">
 import { getCodeImg, register } from '@/api/login';
 import { RegisterForm } from '@/api/types';
 import { to } from 'await-to-js';

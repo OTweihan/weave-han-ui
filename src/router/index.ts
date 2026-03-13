@@ -68,7 +68,7 @@ export const constantRoutes: RouteRecordRaw[] = [
   },
   {
     path: '/main',
-    component: () => import('@/views/main.vue'),
+    component: () => import('@/views/blog-home.vue'),
     name: 'Main',
     hidden: true
   },
@@ -120,3 +120,4 @@ const router = createRouter({
 });
 
 export default router;
+
