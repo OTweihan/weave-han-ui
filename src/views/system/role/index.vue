@@ -84,7 +84,7 @@
               <el-switch v-model="scope.row.status" active-value="0" inactive-value="1" @change="handleStatusChange(scope.row)"></el-switch>
             </template>
           </el-table-column>
-          <el-table-column fixed="right" label="操作" width="180">
+          <el-table-column fixed="right" align="center" label="操作" width="180">
             <template #default="scope">
               <el-tooltip v-if="scope.row.roleId !== 1" content="修改" placement="top">
                 <el-button v-hasPermi="['system:role:edit']" link type="primary" icon="Edit" @click="handleUpdate(scope.row)"></el-button>
@@ -140,11 +140,11 @@
 </template>
 
 <script setup name="Role" lang="ts">
-import { changeRoleStatus, dataScope, delRole, getRole, listRole, changeRoleSort } from '@/api/system/role';
-import { RoleVO, RoleForm, RoleQuery } from '@/api/system/role/types';
-import RoleFormDialog from './components/RoleFormDialog.vue';
-import Sortable from 'sortablejs';
+import { changeRoleSort, changeRoleStatus, dataScope, delRole, getRole, listRole } from '@/api/system/role';
+import { RoleForm, RoleQuery, RoleVO } from '@/api/system/role/types';
 import { Rank } from '@element-plus/icons-vue';
+import Sortable from 'sortablejs';
+import RoleFormDialog from './components/RoleFormDialog.vue';
 
 const router = useRouter();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;

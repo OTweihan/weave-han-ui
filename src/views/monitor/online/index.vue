@@ -28,7 +28,7 @@
         height="100%"
         class="flex-1"
       >
-        <el-table-column label="序号" width="50" type="index" align="center">
+        <el-table-column label="序号" width="60" type="index" align="center">
           <template #default="scope">
             <span>{{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}</span>
           </template>
