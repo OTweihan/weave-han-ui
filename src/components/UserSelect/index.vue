@@ -7,8 +7,8 @@
             <div v-show="showSearch" class="mb-[10px]">
               <el-card shadow="hover">
                 <el-form ref="queryFormRef" :model="queryParams" :inline="true">
-                  <el-form-item label="用户名称" prop="userName">
-                    <el-input v-model="queryParams.userName" placeholder="请输入用户名称" clearable @keyup.enter="handleQuery" />
+                  <el-form-item label="用户账号" prop="userAccount">
+                    <el-input v-model="queryParams.userAccount" placeholder="请输入用户账号" clearable @keyup.enter="handleQuery" />
                   </el-form-item>
                   <el-form-item label="手机号码" prop="phonenumber">
                     <el-input v-model="queryParams.phonenumber" placeholder="请输入手机号码" clearable @keyup.enter="handleQuery" />
@@ -43,7 +43,7 @@
             >
               <vxe-column type="checkbox" width="50" align="center" />
               <vxe-column key="userId" title="用户编号" align="center" field="userId" />
-              <vxe-column key="userName" title="用户名称" align="center" field="userName" />
+              <vxe-column key="userAccount" title="用户账号" align="center" field="userAccount" />
               <vxe-column key="nickName" title="用户昵称" align="center" field="nickName" />
               <vxe-column key="phonenumber" title="手机号码" align="center" field="phonenumber" width="120" />
               <vxe-column key="status" title="状态" align="center">
@@ -117,7 +117,7 @@ const userDialog = useDialog({
 const queryParams = ref<UserQuery>({
   pageNum: 1,
   pageSize: 10,
-  userName: '',
+  userAccount: '',
   phonenumber: '',
   status: '',
   roleId: '',

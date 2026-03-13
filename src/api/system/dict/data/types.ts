@@ -9,7 +9,7 @@ export interface DictDataVO extends BaseEntity {
   dictLabel: string;
   dictValue: string;
   cssClass: string;
-  listClass: ElTagType;
+  listClass: DictTagType;
   dictSort: number;
   remark: string;
 }
@@ -20,7 +20,7 @@ export interface DictDataForm {
   dictLabel: string;
   dictValue: string;
   cssClass: string;
-  listClass: ElTagType;
+  listClass: DictTagType;
   dictSort: number;
   remark: string;
 }
