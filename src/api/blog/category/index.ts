@@ -11,6 +11,14 @@ export function listCategory(query?: CategoryQuery): AxiosPromise<CategoryVO[]> 
   });
 }
 
+// 查询全部分类（不分页）
+export function listAllCategory(): AxiosPromise<CategoryVO[]> {
+  return request({
+    url: '/blog/category/all',
+    method: 'get'
+  });
+}
+
 // 查询分类详细
 export function getCategory(categoryId: number | string): AxiosPromise<CategoryVO> {
   return request({

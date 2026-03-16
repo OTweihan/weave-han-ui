@@ -6,6 +6,9 @@
           <el-form-item label="分类名称" prop="name">
             <el-input v-model="queryParams.name" placeholder="请输入分类名称" clearable @keyup.enter="handleQuery" />
           </el-form-item>
+          <el-form-item label="分类别名" prop="slug">
+            <el-input v-model="queryParams.slug" placeholder="请输入分类别名" clearable @keyup.enter="handleQuery" />
+          </el-form-item>
           <el-form-item>
             <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
             <el-button icon="Refresh" @click="resetQuery">重置</el-button>
@@ -31,20 +34,21 @@
         v-if="refreshTable"
         v-loading="loading"
         :data="categoryList"
+        border
         row-key="categoryId"
         :default-expand-all="isExpandAll"
         :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
       >
-        <el-table-column label="分类名称" prop="name" />
-        <el-table-column label="别名" prop="slug" />
-        <el-table-column label="排序" prop="sortOrder" width="100" />
+        <el-table-column label="分类名称" prop="name" align="left" width="240" />
+        <el-table-column label="别名" prop="slug" align="center" width="240" />
+        <el-table-column label="描述" prop="description" :show-overflow-tooltip="true" align="center" />
         <el-table-column label="文章数" prop="postCount" width="100" align="center" />
         <el-table-column label="创建时间" align="center" prop="createTime" width="200">
           <template #default="scope">
             <span>{{ parseTime(scope.row.createTime) }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+        <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="240">
           <template #default="scope">
             <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['blog:category:edit']">修改</el-button>
             <el-button link type="primary" icon="Plus" @click="handleAdd(scope.row)" v-hasPermi="['blog:category:add']">新增</el-button>
@@ -65,6 +69,7 @@
             value-key="categoryId"
             placeholder="选择上级分类"
             check-strictly
+            clearable
           />
         </el-form-item>
         <el-form-item label="分类名称" prop="name">
@@ -72,9 +77,6 @@
         </el-form-item>
         <el-form-item label="分类别名" prop="slug">
           <el-input v-model="form.slug" placeholder="请输入分类别名（如: tech-java）" />
-        </el-form-item>
-        <el-form-item label="显示排序" prop="sortOrder">
-          <el-input-number v-model="form.sortOrder" controls-position="right" :min="0" />
         </el-form-item>
         <el-form-item label="描述" prop="description">
           <el-input v-model="form.description" type="textarea" placeholder="请输入内容" />
@@ -91,64 +93,106 @@
 </template>
 
 <script setup name="Category" lang="ts">
-import { listCategory, getCategory, delCategory, addCategory, updateCategory } from '@/api/blog/category';
-import { CategoryVO, CategoryForm, CategoryQuery } from '@/api/blog/category/types';
+import { listCategory, listAllCategory, getCategory, delCategory, addCategory, updateCategory } from '@/api/blog/category';
+import { CategoryForm, CategoryQuery, CategoryVO } from '@/api/blog/category/types';
 
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 const categoryList = ref<CategoryVO[]>([]);
 const categoryOptions = ref<CategoryVO[]>([]);
 const open = ref(false);
-const loading = ref(true);
+const loading = ref(false);
 const showSearch = ref(true);
 const title = ref('');
-const isExpandAll = ref(true);
+const isExpandAll = ref(false);
 const refreshTable = ref(true);
 const categoryFormRef = ref<ElFormInstance>();
 const queryFormRef = ref<ElFormInstance>();
 
+const initFormData = (): CategoryForm => ({
+  categoryId: undefined,
+  parentId: 0,
+  name: '',
+  slug: '',
+  description: '',
+  coverImage: undefined
+});
+
 const data = reactive<PageData<CategoryForm, CategoryQuery>>({
-  form: {
-    categoryId: undefined,
-    parentId: undefined,
-    name: '',
-    slug: '',
-    sortOrder: 0,
-    description: '',
-    coverImage: undefined
-  },
+  form: initFormData(),
   queryParams: {
-    pageNum: 1,
-    pageSize: 10,
     name: undefined,
-    status: undefined
+    slug: undefined
   },
   rules: {
     name: [{ required: true, message: '分类名称不能为空', trigger: 'blur' }],
-    slug: [{ required: true, message: '分类别名不能为空', trigger: 'blur' }],
-    sortOrder: [{ required: true, message: '显示排序不能为空', trigger: 'blur' }]
+    slug: [{ required: true, message: '分类别名不能为空', trigger: 'blur' }]
   }
 });
 
 const { queryParams, form, rules } = toRefs(data);
 
+function extractCategoryList(res: any): CategoryVO[] {
+  if (Array.isArray(res?.rows)) {
+    return res.rows;
+  }
+  if (Array.isArray(res?.data)) {
+    return res.data;
+  }
+  if (Array.isArray(res)) {
+    return res;
+  }
+  return [];
+}
+
+function isSameId(left: string | number | null | undefined, right: string | number | null | undefined): boolean {
+  return String(left) === String(right);
+}
+
+function removeNodeWithChildren(nodes: CategoryVO[], excludeId: string | number): CategoryVO[] {
+  const result: CategoryVO[] = [];
+  for (const node of nodes) {
+    if (isSameId(node.categoryId, excludeId)) {
+      continue;
+    }
+    const nextChildren = node.children ? removeNodeWithChildren(node.children, excludeId) : [];
+    result.push({
+      ...node,
+      children: nextChildren
+    });
+  }
+  return result;
+}
+
 /** 查询分类列表 */
 async function getList() {
   loading.value = true;
-  const res = await listCategory(queryParams.value);
-  const data = (res as any).data || (res as any).rows || res;
-  categoryList.value = proxy?.handleTree<CategoryVO>(data, 'categoryId', 'parentId');
-  loading.value = false;
+  try {
+    const res = await listCategory(queryParams.value);
+    const list = extractCategoryList(res);
+    categoryList.value = proxy?.handleTree<CategoryVO>(list, 'categoryId', 'parentId') || [];
+  } finally {
+    loading.value = false;
+  }
 }
 
 /** 查询分类下拉树结构 */
-async function getTreeselect() {
-  const res = await listCategory();
-  categoryOptions.value = [];
-  const data = { categoryId: 0, name: '主类目', children: [] } as any;
-  const list = (res as any).data || (res as any).rows || res;
-  data.children = proxy?.handleTree<CategoryVO>(list, 'categoryId', 'parentId');
-  categoryOptions.value.push(data);
+async function getTreeselect(excludeCategoryId?: string | number) {
+  const res = await listAllCategory();
+  const list = extractCategoryList(res);
+  let tree = proxy?.handleTree<CategoryVO>(list, 'categoryId', 'parentId') || [];
+  if (excludeCategoryId !== undefined) {
+    tree = removeNodeWithChildren(tree, excludeCategoryId);
+  }
+  categoryOptions.value = [
+    {
+      categoryId: 0,
+      name: '主类目',
+      slug: '',
+      postCount: 0,
+      children: tree
+    } as CategoryVO
+  ];
 }
 
 /** 取消按钮 */
@@ -159,15 +203,7 @@ function cancel() {
 
 /** 表单重置 */
 function reset() {
-  form.value = {
-    categoryId: undefined,
-    parentId: 0,
-    name: '',
-    slug: '',
-    sortOrder: 0,
-    description: '',
-    coverImage: undefined
-  };
+  form.value = initFormData();
   categoryFormRef.value?.resetFields();
 }
 
@@ -183,9 +219,9 @@ function resetQuery() {
 }
 
 /** 新增按钮操作 */
-function handleAdd(row?: CategoryVO) {
+async function handleAdd(row?: CategoryVO) {
   reset();
-  getTreeselect();
+  await getTreeselect();
   if (row != null && row.categoryId) {
     form.value.parentId = row.categoryId;
   } else {
@@ -207,38 +243,55 @@ function toggleExpandAll() {
 /** 修改按钮操作 */
 async function handleUpdate(row: CategoryVO) {
   reset();
-  await getTreeselect();
+  await getTreeselect(row.categoryId);
   if (row.categoryId) {
     const res = await getCategory(row.categoryId);
-    Object.assign(form.value, res.data);
+    const detail = (res as any).data || res;
+    Object.assign(form.value, detail);
+    if (form.value.parentId === null || form.value.parentId === undefined) {
+      form.value.parentId = 0;
+    }
   }
   open.value = true;
   title.value = '修改分类';
 }
 
 /** 提交按钮 */
-function submitForm() {
-  (proxy?.$refs['categoryFormRef'] as any).validate(async (valid: boolean) => {
-    if (valid) {
-      if (form.value.categoryId != undefined) {
-        await updateCategory(form.value);
-        proxy?.$modal.msgSuccess('修改成功');
-      } else {
-        await addCategory(form.value);
-        proxy?.$modal.msgSuccess('新增成功');
-      }
-      open.value = false;
-      getList();
-    }
-  });
+function buildSubmitForm(): CategoryForm {
+  const submitData: CategoryForm = { ...form.value };
+  if (submitData.parentId === null || submitData.parentId === undefined || Number(submitData.parentId) === 0) {
+    submitData.parentId = 0;
+  }
+  return submitData;
+}
+
+async function submitForm() {
+  if (!categoryFormRef.value) {
+    return;
+  }
+  try {
+    await categoryFormRef.value.validate();
+  } catch {
+    return;
+  }
+  const submitData = buildSubmitForm();
+  if (submitData.categoryId != undefined) {
+    await updateCategory(submitData);
+    proxy?.$modal.msgSuccess('修改成功');
+  } else {
+    await addCategory(submitData);
+    proxy?.$modal.msgSuccess('新增成功');
+  }
+  open.value = false;
+  await getList();
 }
 
 /** 删除按钮操作 */
 async function handleDelete(row: CategoryVO) {
-  await proxy?.$modal.confirm('是否确认删除分类编号为"' + row.name + '"的数据项？');
+  await proxy?.$modal.confirm('是否确认删除分类名称为 "' + row.name + '" 的数据项？');
   await delCategory(row.categoryId);
   proxy?.$modal.msgSuccess('删除成功');
-  getList();
+  await getList();
 }
 
 onMounted(() => {

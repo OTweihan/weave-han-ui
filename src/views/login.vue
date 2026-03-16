@@ -19,7 +19,7 @@
           <p>欢迎回来，请完成身份验证</p>
         </div>
 
-        <el-form ref="loginRef" :model="loginForm" :rules="loginRules" class="login-form">
+        <el-form ref="loginRef" :model="loginForm" :rules="loginRules" class="login-form" @submit.prevent>
           <el-form-item prop="userAccount">
             <div class="field-label">{{ proxy.$t('login.username') }}</div>
             <el-input
@@ -73,7 +73,7 @@
             <el-checkbox v-model="loginForm.rememberMe" class="remember-check">{{ proxy.$t('login.rememberPassword') }}</el-checkbox>
             <div class="social-entry">
               <span>其他登录</span>
-              <button class="wechat-btn" :title="proxy.$t('login.social.wechat')" @click="doSocialLogin('wechat')">
+              <button type="button" class="wechat-btn" :title="proxy.$t('login.social.wechat')" @click.prevent="doSocialLogin('wechat')">
                 <svg-icon icon-class="wechat" class="text-lg" />
               </button>
             </div>

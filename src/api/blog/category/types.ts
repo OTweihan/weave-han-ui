@@ -2,10 +2,9 @@ export interface CategoryVO extends BaseEntity {
   categoryId: number | string;
   name: string;
   slug: string;
-  description: string;
-  parentId: number | string;
-  sortOrder: number;
-  coverImage: number | string;
+  description?: string;
+  parentId?: number | string | null;
+  coverImage?: number | string | null;
   postCount: number;
   children?: CategoryVO[];
 }
@@ -16,12 +15,11 @@ export interface CategoryForm {
   slug: string;
   description?: string;
   parentId?: number | string;
-  sortOrder?: number;
   coverImage?: number | string;
   remark?: string;
 }
 
-export interface CategoryQuery extends PageQuery {
+export interface CategoryQuery {
   name?: string;
-  status?: string;
+  slug?: string;
 }
