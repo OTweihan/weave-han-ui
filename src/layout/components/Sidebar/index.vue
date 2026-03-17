@@ -1,5 +1,5 @@
 <template>
-  <div class="sidebar-shell" :class="{ 'has-logo': showLogo }" :style="{ backgroundColor: bgColor }">
+  <div class="sidebar-shell" :class="{ 'has-logo': showLogo }" :style="{ backgroundColor: menuBackgroundColor }">
     <div v-if="showLogo" class="sidebar-logo-box">
       <logo />
     </div>
@@ -9,8 +9,8 @@
           <el-menu
             :default-active="activeMenu"
             :collapse="isCollapse"
-            :background-color="bgColor"
-            :text-color="textColor"
+            :background-color="menuBackgroundColor"
+            :text-color="menuTextColor"
             :unique-opened="true"
             :active-text-color="theme"
             :collapse-transition="false"
@@ -42,8 +42,11 @@ const sidebarRouters = computed<RouteRecordRaw[]>(() => permissionStore.getSideb
 const showLogo = computed(() => settingsStore.sidebarLogo);
 const sideTheme = computed(() => settingsStore.sideTheme);
 const theme = computed(() => settingsStore.theme);
+
+// 当前设计不走折叠态，保留常量便于后续切回 store 控制。
 const isCollapse = false;
 
+// 路由声明了 activeMenu 时优先使用，兼容“详情页高亮列表菜单”场景。
 const activeMenu = computed(() => {
   const { meta, path } = route;
   if (meta.activeMenu) {
@@ -52,7 +55,7 @@ const activeMenu = computed(() => {
   return path;
 });
 
-// 亚克力侧栏使用透明背景，颜色由样式层接管
-const bgColor = computed(() => 'transparent');
-const textColor = computed(() => (sideTheme.value === 'theme-dark' ? variables.menuColor : 'rgba(26, 49, 78, 0.88)'));
+// 亚克力侧栏使用透明背景，颜色由样式层统一接管。
+const menuBackgroundColor = 'transparent';
+const menuTextColor = computed(() => (sideTheme.value === 'theme-dark' ? variables.menuColor : 'rgba(26, 49, 78, 0.88)'));
 </script>

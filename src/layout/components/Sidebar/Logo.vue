@@ -14,18 +14,20 @@
 <script setup lang="ts">
 import logoUrl from '@/assets/logo/logo.png';
 
-const logoTitle = computed(() => {
+// 标题优先级：自定义 Logo 标题 > 应用标题 > 默认标题。
+const resolveLogoTitle = (): string => {
   const candidates = [import.meta.env.VITE_APP_LOGO_TITLE, import.meta.env.VITE_APP_TITLE, 'Weave-Han'];
-  const value = candidates.map((item) => String(item ?? '').trim()).find((item) => item.length > 0);
+  const value = candidates
+    .map((item) => String(item ?? '').trim())
+    .find((item) => item.length > 0);
   return value || 'Weave-Han';
-});
+};
+
+const logoTitle = computed(resolveLogoTitle);
 </script>
 
 <style lang="scss" scoped>
-.sidebarLogoFade-enter-active {
-  transition: opacity 0.3s;
-}
-
+.sidebarLogoFade-enter-active,
 .sidebarLogoFade-leave-active {
   transition: opacity 0.3s;
 }
@@ -46,53 +48,53 @@ const logoTitle = computed(() => {
   justify-content: center;
   text-align: center;
   overflow: visible;
+}
 
-  & .sidebar-logo-link {
-    width: 100%;
-    height: 100%;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    text-decoration: none;
-    position: relative;
-    inset: auto;
-    z-index: 2;
-    border-radius: 12px;
-    border: none;
-    background: transparent;
-    box-shadow: none;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    overflow: visible;
+// 保持图标和标题在玻璃容器中居中展示。
+.sidebar-logo-link {
+  width: 100%;
+  height: 100%;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-decoration: none;
+  position: relative;
+  z-index: 2;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  overflow: visible;
+}
 
-    & .sidebar-logo-image {
-      width: 38px;
-      height: 38px;
-      object-fit: contain;
-      flex: 0 0 38px;
-      user-select: none;
-    }
+.sidebar-logo-image {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  flex: 0 0 38px;
+  user-select: none;
+}
 
-    & .sidebar-title {
-      display: inline-block;
-      margin: 0;
-      max-width: none;
-      overflow: visible;
-      text-overflow: clip;
-      font-weight: 700;
-      line-height: 1;
-      font-size: 20px;
-      font-family: 'Manrope', 'Noto Sans SC', 'PingFang SC', sans-serif;
-      vertical-align: middle;
-      color: #214f83 !important;
-      letter-spacing: 0.02em;
-      visibility: visible !important;
-      opacity: 1 !important;
-      user-select: none;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-  }
+.sidebar-title {
+  display: inline-block;
+  margin: 0;
+  max-width: none;
+  overflow: visible;
+  text-overflow: clip;
+  font-weight: 700;
+  line-height: 1;
+  font-size: 20px;
+  font-family: 'Manrope', 'Noto Sans SC', 'PingFang SC', sans-serif;
+  vertical-align: middle;
+  color: #214f83 !important;
+  letter-spacing: 0.02em;
+  visibility: visible !important;
+  opacity: 1 !important;
+  user-select: none;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 </style>
