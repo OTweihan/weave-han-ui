@@ -17,9 +17,7 @@ import logoUrl from '@/assets/logo/logo.png';
 // 标题优先级：自定义 Logo 标题 > 应用标题 > 默认标题。
 const resolveLogoTitle = (): string => {
   const candidates = [import.meta.env.VITE_APP_LOGO_TITLE, import.meta.env.VITE_APP_TITLE, 'Weave-Han'];
-  const value = candidates
-    .map((item) => String(item ?? '').trim())
-    .find((item) => item.length > 0);
+  const value = candidates.map((item) => String(item ?? '').trim()).find((item) => item.length > 0);
   return value || 'Weave-Han';
 };
 
@@ -57,7 +55,6 @@ const logoTitle = computed(resolveLogoTitle);
   display: flex !important;
   align-items: center;
   justify-content: center;
-  gap: 12px;
   text-decoration: none;
   position: relative;
   z-index: 2;
@@ -71,11 +68,15 @@ const logoTitle = computed(resolveLogoTitle);
 }
 
 .sidebar-logo-image {
-  width: 38px;
-  height: 38px;
+  width: 70px;
+  height: 70px;
   object-fit: contain;
-  flex: 0 0 38px;
   user-select: none;
+  transition: transform 0.3s ease;
+}
+
+.sidebar-logo-link:hover .sidebar-logo-image {
+  transform: scale(1.1);
 }
 
 .sidebar-title {
@@ -86,7 +87,7 @@ const logoTitle = computed(resolveLogoTitle);
   text-overflow: clip;
   font-weight: 700;
   line-height: 1;
-  font-size: 20px;
+  font-size: 22px;
   font-family: 'Manrope', 'Noto Sans SC', 'PingFang SC', sans-serif;
   vertical-align: middle;
   color: #214f83 !important;
@@ -96,5 +97,10 @@ const logoTitle = computed(resolveLogoTitle);
   user-select: none;
   white-space: nowrap;
   flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.sidebar-logo-link:hover .sidebar-title {
+  transform: scale(1.1);
 }
 </style>

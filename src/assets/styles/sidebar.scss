@@ -2,8 +2,17 @@
 
 // 统一侧栏常用颜色，减少散落的硬编码。
 $sidebar-item-active-color: #1f4f84;
-$sidebar-glass-border: rgba(255, 255, 255, 0.76);
-$sidebar-glass-shadow: 0 10px 22px rgba(58, 94, 136, 0.11);
+// 参考 glassmorphism 示例的核心参数。
+$sidebar-glass-bg: rgba(255, 255, 255, 0.15);
+$sidebar-glass-border: rgba(255, 255, 255, 0.1);
+$sidebar-glass-shadow:
+  inset 0 1px 0 rgba(255, 255, 255, 0.22),
+  0 3px 8px rgba(0, 0, 0, 0.08),
+  0 12px 30px rgba(0, 0, 0, 0.14);
+$sidebar-glass-shadow-hover:
+  inset 0 1px 0 rgba(255, 255, 255, 0.28),
+  0 6px 14px rgba(0, 0, 0, 0.1),
+  0 16px 38px rgba(0, 0, 0, 0.16);
 
 // 基础布局：控制主内容区与固定侧栏的位移关系。
 #app {
@@ -146,15 +155,29 @@ $sidebar-glass-shadow: 0 10px 22px rgba(58, 94, 136, 0.11);
 
     .sidebar-logo-box,
     .sidebar-menu-box {
+      position: relative;
       border: 1px solid $sidebar-glass-border;
-      border-radius: 16px;
-      background: linear-gradient(150deg, rgba(255, 255, 255, 0.52), rgba(245, 251, 255, 0.3) 56%, rgba(226, 240, 255, 0.34));
-      box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.82),
-        $sidebar-glass-shadow;
-      backdrop-filter: blur(18px) saturate(145%);
-      -webkit-backdrop-filter: blur(18px) saturate(145%);
+      border-radius: 20px;
+      -webkit-border-radius: 20px;
+      background: $sidebar-glass-bg;
+      box-shadow: $sidebar-glass-shadow;
+      -webkit-box-shadow: $sidebar-glass-shadow;
+      backdrop-filter: blur(25px) saturate(150%) contrast(100%) brightness(100%);
+      -webkit-backdrop-filter: blur(25px) saturate(150%) contrast(100%) brightness(100%);
+      color: #333333;
       overflow: hidden;
+      isolation: isolate;
+      // 保持文字稳定，卡片仅做阴影和边框过渡。
+      will-change: box-shadow, border-color;
+      transition:
+        box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+      &:hover {
+        border-color: rgba(255, 255, 255, 0.18);
+        box-shadow: $sidebar-glass-shadow-hover;
+        -webkit-box-shadow: $sidebar-glass-shadow-hover;
+      }
     }
 
     .sidebar-logo-box {
@@ -251,7 +274,6 @@ $sidebar-glass-shadow: 0 10px 22px rgba(58, 94, 136, 0.11);
       .sub-menu-title-noDropdown:not(.is-active):hover,
       .el-sub-menu__title:hover,
       .el-sub-menu .el-menu-item:not(.is-active):hover {
-        transform: translateX(2px);
         background: var(--sidebar-item-hover-bg) !important;
         color: var(--sidebar-item-hover-color) !important;
         box-shadow: var(--sidebar-item-hover-shadow);
@@ -282,6 +304,19 @@ $sidebar-glass-shadow: 0 10px 22px rgba(58, 94, 136, 0.11);
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  #app .sidebar-container {
+    .sidebar-logo-box,
+    .sidebar-menu-box {
+      transition: none;
+
+      &:hover {
+        transform: none;
+      }
+    }
+  }
+}
+
 .el-menu--vertical {
   & > .el-menu {
     background: rgba(245, 251, 255, 0.86) !important;
@@ -307,7 +342,6 @@ $sidebar-glass-shadow: 0 10px 22px rgba(58, 94, 136, 0.11);
 
   & > .el-menu .el-menu-item:not(.is-active):hover,
   & > .el-menu .el-sub-menu__title:hover {
-    transform: translateX(2px);
     background: rgba(255, 255, 255, 0.56) !important;
     color: var(--el-color-primary) !important;
   }
