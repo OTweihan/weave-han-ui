@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { getNormalPath } from '@/utils/ruoyi';
+import { getNormalPath } from '@/utils/common';
 import { isExternal } from '@/utils/validate';
 import { RouteRecordRaw } from 'vue-router';
 import AppLink from './Link.vue';

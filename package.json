@@ -1,9 +1,9 @@
 {
   "$schema": "https://json.schemastore.org/package",
-  "name": "ruoyi-vue-plus",
+  "name": "weave-han",
   "version": "5.5.1-2.5.1",
-  "description": "RuoYi-Vue-Plus多租户管理系统",
-  "author": "LionLi",
+  "description": "WeaveHan博客系统",
+  "author": "WeiHan",
   "license": "MIT",
   "type": "module",
   "scripts": {

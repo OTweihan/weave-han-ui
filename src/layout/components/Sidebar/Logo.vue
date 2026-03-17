@@ -2,18 +2,23 @@
   <div class="sidebar-logo-container">
     <transition name="sidebarLogoFade">
       <router-link key="expand" class="sidebar-logo-link" to="/index/home">
-        <h1 class="sidebar-title">{{ title }}</h1>
+        <img :src="logoUrl" alt="logo" class="sidebar-logo-image" />
+        <span class="sidebar-title" :title="logoTitle">
+          {{ logoTitle }}
+        </span>
       </router-link>
     </transition>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useSettingsStore } from '@/store/modules/settings';
+import logoUrl from '@/assets/logo/logo.png';
 
-const title = import.meta.env.VITE_APP_LOGO_TITLE;
-const settingsStore = useSettingsStore();
-computed(() => settingsStore.sideTheme);
+const logoTitle = computed(() => {
+  const candidates = [import.meta.env.VITE_APP_LOGO_TITLE, import.meta.env.VITE_APP_TITLE, 'Weave-Han'];
+  const value = candidates.map((item) => String(item ?? '').trim()).find((item) => item.length > 0);
+  return value || 'Weave-Han';
+});
 </script>
 
 <style lang="scss" scoped>
@@ -33,50 +38,60 @@ computed(() => settingsStore.sideTheme);
 .sidebar-logo-container {
   position: relative;
   width: 100%;
-  height: 50px;
-  line-height: 50px;
-  background: #ffffff;
+  height: 100%;
+  padding: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  overflow: hidden;
+  overflow: visible;
 
   & .sidebar-logo-link {
-    height: 100%;
     width: 100%;
+    height: 100%;
     display: flex !important;
     align-items: center;
     justify-content: center;
+    gap: 12px;
     text-decoration: none;
-    position: absolute;
-    left: 0;
-    top: 0;
+    position: relative;
+    inset: auto;
+    z-index: 2;
+    border-radius: 12px;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    overflow: visible;
 
-    & .logo-mark {
-      width: 32px;
-      height: 32px;
-      line-height: 32px;
-      background: linear-gradient(220.55deg, #7cf7ff 0%, #4b73ff 100%);
-      color: #fff;
-      font-weight: 700;
-      font-size: 18px;
-      border-radius: 6px;
-      box-shadow: 0 2px 6px rgba(75, 115, 255, 0.3);
+    & .sidebar-logo-image {
+      width: 38px;
+      height: 38px;
+      object-fit: contain;
+      flex: 0 0 38px;
       user-select: none;
     }
 
     & .sidebar-title {
       display: inline-block;
       margin: 0;
+      max-width: none;
+      overflow: visible;
+      text-overflow: clip;
       font-weight: 700;
-      line-height: 50px;
+      line-height: 1;
       font-size: 20px;
-      font-family: Avenir, 'Helvetica Neue', Arial, Helvetica, sans-serif;
+      font-family: 'Manrope', 'Noto Sans SC', 'PingFang SC', sans-serif;
       vertical-align: middle;
-      background: linear-gradient(220.55deg, #7cf7ff 0%, #4b73ff 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      letter-spacing: 0.5px;
+      color: #214f83 !important;
+      letter-spacing: 0.02em;
+      visibility: visible !important;
+      opacity: 1 !important;
       user-select: none;
       white-space: nowrap;
+      flex-shrink: 0;
     }
   }
 }
