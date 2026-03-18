@@ -1,5 +1,5 @@
 <template>
-  <div class="sidebar-shell" :class="{ 'has-logo': showLogo }" :style="{ backgroundColor: menuBackgroundColor }">
+  <div class="sidebar-shell">
     <div v-if="showLogo" class="sidebar-logo-box">
       <logo />
     </div>
@@ -9,7 +9,7 @@
           <el-menu
             :default-active="activeMenu"
             :collapse="isCollapse"
-            :background-color="menuBackgroundColor"
+            background-color="transparent"
             :text-color="menuTextColor"
             :unique-opened="true"
             :active-text-color="theme"
@@ -55,7 +55,7 @@ const activeMenu = computed(() => {
   return path;
 });
 
-// 亚克力侧栏使用透明背景，颜色由样式层统一接管。
-const menuBackgroundColor = 'transparent';
-const menuTextColor = computed(() => (sideTheme.value === 'theme-dark' ? variables.menuColor : 'rgba(26, 49, 78, 0.88)'));
+// 统一浅色主题菜单文字色，避免模板里散落硬编码颜色。
+const menuTextColorLight = 'rgba(26, 49, 78, 0.88)';
+const menuTextColor = computed(() => (sideTheme.value === 'theme-dark' ? variables.menuColor : menuTextColorLight));
 </script>

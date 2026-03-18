@@ -88,9 +88,7 @@ const handleClickOutside = () => {
   min-height: 100vh;
   width: 100%;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 15% 16%, rgba(255, 255, 255, 0.5), transparent 42%),
-    radial-gradient(circle at 87% 78%, rgba(193, 223, 255, 0.55), transparent 38%), linear-gradient(155deg, #e8f0f8 0%, #dce9f5 48%, #d4e2f0 100%);
+  background: #ffffff;
 
   &.mobile.openSidebar {
     position: fixed;
@@ -99,6 +97,7 @@ const handleClickOutside = () => {
 }
 
 .layout-bg {
+  display: none;
   position: absolute;
   inset: 0;
   pointer-events: none;

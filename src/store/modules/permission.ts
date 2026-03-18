@@ -7,17 +7,17 @@ import { RouteRecordRaw } from 'vue-router';
 import Layout from '@/layout/index.vue';
 import ParentView from '@/components/ParentView/index.vue';
 import InnerLink from '@/layout/components/InnerLink/index.vue';
-import { ref } from 'vue';
+import { shallowRef } from 'vue';
 import { createCustomNameComponent } from '@/utils/createCustomNameComponent';
 
 // 匹配views里面所有的.vue文件
 const modules = import.meta.glob('./../../views/**/*.vue');
 export const usePermissionStore = defineStore('permission', () => {
-  const routes = ref<RouteRecordRaw[]>([]);
-  const addRoutes = ref<RouteRecordRaw[]>([]);
-  const defaultRoutes = ref<RouteRecordRaw[]>([]);
-  const topbarRouters = ref<RouteRecordRaw[]>([]);
-  const sidebarRouters = ref<RouteRecordRaw[]>([]);
+  const routes = shallowRef<RouteRecordRaw[]>([]);
+  const addRoutes = shallowRef<RouteRecordRaw[]>([]);
+  const defaultRoutes = shallowRef<RouteRecordRaw[]>([]);
+  const topbarRouters = shallowRef<RouteRecordRaw[]>([]);
+  const sidebarRouters = shallowRef<RouteRecordRaw[]>([]);
 
   const getRoutes = (): RouteRecordRaw[] => {
     return routes.value as RouteRecordRaw[];

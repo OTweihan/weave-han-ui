@@ -58,6 +58,7 @@ const logoTitle = computed(resolveLogoTitle);
   text-decoration: none;
   position: relative;
   z-index: 2;
+  gap: 8px;
   border-radius: 12px;
   border: none;
   background: transparent;

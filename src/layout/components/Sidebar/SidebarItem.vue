@@ -1,10 +1,6 @@
 <template>
-  <div v-if="!sidebarItem.hidden">
-    <template
-      v-if="
-        hasOneShowingChild(sidebarItem, sidebarItem.children) && (!onlyOneChild.children || onlyOneChild.noShowingChildren) && !sidebarItem.alwaysShow
-      "
-    >
+  <div v-if="!menuRoute.hidden">
+    <template v-if="showSingleMenu">
       <app-link v-if="onlyOneChild.meta" :to="resolvePath(onlyOneChild.path, onlyOneChild.query)">
         <el-menu-item :index="resolveMenuIndex(onlyOneChild.path)" :class="{ 'sub-menu-title-noDropdown': !isNest }">
           <template #title>
@@ -14,13 +10,13 @@
       </app-link>
     </template>
 
-    <el-sub-menu v-else ref="subMenu" :index="resolveMenuIndex(sidebarItem.path)" teleported>
-      <template v-if="sidebarItem.meta" #title>
-        <span class="menu-title" :title="resolveTitleTooltip(sidebarItem.meta?.title)">{{ sidebarItem.meta?.title }}</span>
+    <el-sub-menu v-else ref="subMenu" :index="resolveMenuIndex(menuRoute.path)" teleported>
+      <template v-if="menuRoute.meta" #title>
+        <span class="menu-title" :title="resolveTitleTooltip(menuRoute.meta?.title)">{{ menuRoute.meta?.title }}</span>
       </template>
 
       <sidebar-item
-        v-for="(child, index) in sidebarItem.children || []"
+        v-for="(child, index) in menuChildren"
         :key="child.path + index"
         :is-nest="true"
         :item="child"
@@ -66,12 +62,15 @@ const props = defineProps({
   }
 });
 
-const sidebarItem = computed(() => props.item as SidebarRoute);
+const menuRoute = computed(() => props.item as SidebarRoute);
+const menuChildren = computed(() => menuRoute.value.children || []);
 
-// 当只有一个可见子路由时，直接渲染成一级菜单。
-const onlyOneChild = ref<SidebarRoute>({} as SidebarRoute);
+type SingleChildResult = {
+  onlyChild: SidebarRoute;
+  hasOneShowingChild: boolean;
+};
 
-const hasOneShowingChild = (parent: SidebarRoute, children: SidebarRoute[] = []): boolean => {
+const resolveSingleShowingChild = (parent: SidebarRoute, children: SidebarRoute[] = []): SingleChildResult => {
   const showingChildren: SidebarRoute[] = [];
 
   for (const child of children) {
@@ -87,17 +86,34 @@ const hasOneShowingChild = (parent: SidebarRoute, children: SidebarRoute[] = [])
   }
 
   if (showingChildren.length === 1) {
-    onlyOneChild.value = showingChildren[0];
-    return true;
+    return {
+      onlyChild: showingChildren[0],
+      hasOneShowingChild: true
+    };
   }
 
   if (showingChildren.length === 0) {
-    onlyOneChild.value = { ...parent, path: '', noShowingChildren: true };
-    return true;
+    return {
+      onlyChild: { ...parent, path: '', noShowingChildren: true },
+      hasOneShowingChild: true
+    };
   }
 
-  return false;
+  return {
+    onlyChild: {} as SidebarRoute,
+    hasOneShowingChild: false
+  };
 };
+
+// 避免在模板中执行带副作用的方法，统一收敛到计算属性中。
+const singleChildResult = computed(() => resolveSingleShowingChild(menuRoute.value, menuChildren.value));
+const onlyOneChild = computed(() => singleChildResult.value.onlyChild);
+const showSingleMenu = computed(
+  () =>
+    singleChildResult.value.hasOneShowingChild &&
+    (!onlyOneChild.value.children || onlyOneChild.value.noShowingChildren) &&
+    !menuRoute.value.alwaysShow
+);
 
 const resolvePath = (routePath: string, routeQuery?: string): string | { path: string; query: Record<string, unknown> } => {
   if (isExternal(routePath)) {
@@ -108,7 +124,8 @@ const resolvePath = (routePath: string, routeQuery?: string): string | { path: s
     return props.basePath;
   }
 
-  const normalizedPath = getNormalPath(`${props.basePath}/${routePath}`);
+  const fullPath = routePath.startsWith('/') ? routePath : `${props.basePath}/${routePath}`;
+  const normalizedPath = getNormalPath(fullPath);
 
   // 后端可能返回 query JSON 字符串，解析失败时降级为纯路径，避免菜单渲染中断。
   if (routeQuery) {
@@ -139,56 +156,7 @@ const resolveTitleTooltip = (title: string | undefined): string => {
 </script>
 
 <style lang="scss" scoped>
-:deep(.el-menu-item) {
-  height: 50px;
-  margin: 4px 0;
-  border-radius: 8px;
-  transition:
-    background-color 0.3s ease-in-out,
-    color 0.3s ease-in-out;
-
-  &:not(.is-active):hover {
-    background-color: #eef2ff;
-  }
-
-  &.is-active {
-    background-color: #e0e7ff;
-    &::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 4px;
-      height: 24px;
-      background: linear-gradient(180deg, #4f46e5 0%, #3b82f6 100%);
-      border-radius: 0 4px 4px 0;
-    }
-
-    .menu-title {
-      color: #3730a3 !important;
-      font-weight: 700;
-    }
-  }
-}
-
-:deep(.el-sub-menu__title) {
-  height: 50px;
-  margin: 4px 0;
-  border-radius: 8px;
-  transition:
-    background-color 0.3s ease-in-out,
-    color 0.3s ease-in-out;
-
-  &:hover {
-    background-color: #eef2ff;
-  }
-}
-
 .menu-title {
-  font-size: 15px;
-  letter-spacing: 0.5px;
-  line-height: 1;
-  transition: color 0.2s ease;
+  line-height: 1.2;
 }
 </style>
