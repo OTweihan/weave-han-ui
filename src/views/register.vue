@@ -1,19 +1,11 @@
 <template>
   <div class="login-page">
-    <div class="login-bg">
-      <span class="bg-mesh"></span>
-      <span class="bg-light-sweep"></span>
-      <span class="bg-orb bg-orb-a"></span>
-      <span class="bg-orb bg-orb-b"></span>
-      <span class="bg-orb bg-orb-c"></span>
-    </div>
-
     <div class="login-shell">
       <section class="login-card">
+        <span class="card-ambient card-ambient-a"></span>
+        <span class="card-ambient card-ambient-b"></span>
         <div class="card-header">
-          <div class="card-header-top">
-            <p class="brand-kicker">WEAVE HAN</p>
-          </div>
+          <p class="brand-kicker">WEAVE HAN</p>
           <h1 class="brand-title">{{ title }}</h1>
           <h2>{{ proxy.$t('register.register') }}</h2>
           <p>欢迎加入，请完成账号创建</p>

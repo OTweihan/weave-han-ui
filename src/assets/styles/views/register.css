@@ -1,87 +1,25 @@
 .login-page {
+  /* --- 变量优化：定义一个更稳固的悬浮背景色 --- */
   --brand-ink: #0f1f33;
   --brand-soft: #3e5873;
   --primary: #2b74d8;
   --primary-hover: #1f61bc;
-  --card-bg: rgba(255, 255, 255, 0.22);
-  --card-border: rgba(255, 255, 255, 0.64);
+
+  /* 初始状态：轻微透明的浅蓝色 */
+  --card-bg: rgba(222, 235, 248, 0.86);
+  /* 悬浮状态：更实体、略微加深的蓝色，用于对抗白色背景 */
+  --card-bg-hover: rgba(210, 227, 243, 0.98);
+
+  --card-border: rgba(255, 255, 255, 0.6);
   --border: rgba(15, 31, 51, 0.12);
+
   position: relative;
   min-height: 100vh;
   padding: 28px 16px 72px;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 15% 16%, rgba(255, 255, 255, 0.5), transparent 42%),
-    radial-gradient(circle at 87% 78%, rgba(193, 223, 255, 0.55), transparent 38%), linear-gradient(155deg, #e8f0f8 0%, #dce9f5 48%, #d4e2f0 100%);
   font-family: 'Noto Sans SC', 'Manrope', 'PingFang SC', sans-serif;
-}
-
-.login-bg {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.bg-mesh {
-  position: absolute;
-  inset: -120px;
-  background:
-    repeating-linear-gradient(120deg, rgba(255, 255, 255, 0.16) 0, rgba(255, 255, 255, 0.16) 1px, transparent 1px, transparent 24px),
-    repeating-linear-gradient(30deg, rgba(255, 255, 255, 0.12) 0, rgba(255, 255, 255, 0.12) 1px, transparent 1px, transparent 22px);
-  opacity: 0.28;
-}
-
-.bg-light-sweep {
-  position: absolute;
-  width: 720px;
-  height: 720px;
-  left: -240px;
-  top: -240px;
-  border-radius: 50%;
-  background: conic-gradient(
-    from 40deg,
-    rgba(255, 255, 255, 0.4),
-    rgba(255, 255, 255, 0) 32%,
-    rgba(111, 167, 235, 0.22) 58%,
-    rgba(255, 255, 255, 0.06) 76%,
-    rgba(255, 255, 255, 0.4)
-  );
-  filter: blur(34px);
-  opacity: 0.45;
-}
-
-.bg-orb {
-  position: absolute;
-  border-radius: 999px;
-  filter: blur(4px);
-  opacity: 0.42;
-}
-
-.bg-orb-a {
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(115, 170, 234, 0.34), rgba(115, 170, 234, 0));
-  top: -120px;
-  right: -90px;
-}
-
-.bg-orb-b {
-  width: 560px;
-  height: 560px;
-  background: radial-gradient(circle, rgba(88, 142, 208, 0.24), rgba(88, 142, 208, 0));
-  left: -240px;
-  top: 44%;
-  animation-delay: 1.3s;
-}
-
-.bg-orb-c {
-  width: 340px;
-  height: 340px;
-  background: radial-gradient(circle, rgba(77, 180, 202, 0.22), rgba(77, 180, 202, 0));
-  right: 16%;
-  bottom: -120px;
-  animation-delay: 2.3s;
+  /* 确保背景是纯白，以测试对比度 */
+  background-color: #ffffff;
 }
 
 .login-shell {
@@ -97,23 +35,50 @@
   overflow: hidden;
   border-radius: 26px;
   padding: 32px 28px 24px;
-  background: var(--card-bg);
+
+  /* 使用变量 */
+  background-color: var(--card-bg);
   border: 1px solid var(--card-border);
+
+  /* --- 初始阴影：保持克制 --- */
   box-shadow:
-    0 26px 56px rgba(35, 71, 111, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.78),
-    inset 0 -18px 40px rgba(255, 255, 255, 0.16);
-  backdrop-filter: blur(24px) saturate(170%);
-  -webkit-backdrop-filter: blur(24px) saturate(170%);
+    0 4px 6px -1px rgba(35, 71, 111, 0.07),
+    0 10px 20px -5px rgba(35, 71, 111, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -18px 40px rgba(255, 255, 255, 0.12);
+
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+
+  /* 过渡：增加背景色过渡，让颜色变化更平滑 */
+  transition:
+    transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.4s ease,
+    background-color 0.35s ease,
+    border-color 0.35s ease;
+  will-change: transform, box-shadow;
 }
 
+/* --- 悬浮状态优化：解决“太亮”和“冲突”问题 --- */
 .login-card:hover {
+  transform: translateY(-8px); /* 略微加大浮动距离，强化物理感 */
+
+  /* 1. 颜色实体化：变得更不透明，且色调略微加深，确保在白底上清晰可见 */
+  background-color: var(--card-bg-hover);
+
+  /* 2. 边框微调：稍微加深边框，明确卡片边界 */
+  border-color: rgba(255, 255, 255, 0.4);
+
+  /* 3. 分层阴影：模拟远离地面时投影变大、变柔和，使用负扩散值避免显脏 */
   box-shadow:
-    0 32px 62px rgba(35, 71, 111, 0.24),
-    inset 0 1px 0 rgba(255, 255, 255, 0.84),
-    inset 0 -18px 40px rgba(255, 255, 255, 0.2);
+    0 8px 12px -3px rgba(35, 71, 111, 0.06),
+    0 20px 40px -10px rgba(35, 71, 111, 0.2),
+    /* 核心体积影 */ 0 35px 70px -15px rgba(35, 71, 111, 0.12),
+    /* 远端氛围影 */ inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    /* 保持内高光 */ inset 0 -18px 40px rgba(255, 255, 255, 0.15);
 }
 
+/* 移除 hover 时的扫光效果，因为它会增加亮度，导致对比度下降 */
 .login-card::before {
   content: '';
   position: absolute;
@@ -124,8 +89,10 @@
   transform: rotate(22deg);
   background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.42) 50%, rgba(255, 255, 255, 0) 100%);
   opacity: 0;
+  /* 移除 hover 时的 opacity 变化 */
 }
 
+/* 保留静态的内高光渐变，增强体积感 */
 .login-card::after {
   content: '';
   position: absolute;
@@ -215,6 +182,7 @@
   border-radius: 12px;
   background: rgba(248, 251, 255, 0.52);
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  transition: all 0.2s ease;
 }
 
 :deep(.login-input .el-input__wrapper:hover) {
@@ -284,12 +252,14 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .wechat-btn:hover {
   color: #1e9f57;
   border-color: rgba(30, 159, 87, 0.24);
   background: rgba(30, 159, 87, 0.08);
+  transform: scale(1.1);
 }
 
 .login-submit {
@@ -311,11 +281,13 @@
   font-weight: 700;
   letter-spacing: 0.03em;
   background: linear-gradient(130deg, #2b74d8 0%, #3d87ea 46%, #4ea3ff 100%);
-  box-shadow: 0 12px 28px rgba(43, 116, 216, 0.34);
+  box-shadow: 0 8px 20px rgba(43, 116, 216, 0.3);
   transition:
     transform 0.2s ease,
     box-shadow 0.28s ease,
     background 0.28s ease;
+  color: white;
+  cursor: pointer;
 }
 
 .submit-btn::before {
@@ -334,30 +306,15 @@
   pointer-events: none;
 }
 
-.submit-btn::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0.08) 24%, rgba(255, 255, 255, 0) 58%);
-  opacity: 0;
-  transition: opacity 0.24s ease;
-  pointer-events: none;
-}
-
 .submit-btn:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   background: linear-gradient(130deg, #246cd0 0%, #3d8eed 52%, #66b5ff 100%);
-  box-shadow: 0 14px 30px rgba(43, 116, 216, 0.42);
+  box-shadow: 0 12px 28px rgba(43, 116, 216, 0.45);
 }
 
 .submit-btn:hover::before {
   opacity: 0.78;
   transform: scale(1);
-}
-
-.submit-btn:hover::after {
-  opacity: 0.72;
 }
 
 .card-footer {
@@ -373,6 +330,7 @@
   color: #2b68bf;
   text-decoration: none;
   font-weight: 600;
+  transition: color 0.2s ease;
 }
 
 .register-link:hover {
@@ -386,6 +344,7 @@
   color: #7a8ea4;
   cursor: pointer;
   padding: 0;
+  transition: color 0.2s ease;
 }
 
 .main-link:hover {
@@ -409,7 +368,7 @@
   }
 
   .login-shell {
-    max-width: 460px;
+    max-width: 420px;
   }
 
   .login-card {
@@ -420,21 +379,6 @@
   .brand-title {
     font-size: 26px;
   }
-}
-
-.card-header-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.register-lang :deep(.lang-select--style) {
-  color: #7a8ea4;
-}
-
-.register-lang :deep(.lang-select--style):hover {
-  color: #50667f;
 }
 
 .register-footer-actions {

@@ -1,13 +1,5 @@
 <template>
   <div class="login-page">
-    <div class="login-bg">
-      <span class="bg-mesh"></span>
-      <span class="bg-light-sweep"></span>
-      <span class="bg-orb bg-orb-a"></span>
-      <span class="bg-orb bg-orb-b"></span>
-      <span class="bg-orb bg-orb-c"></span>
-    </div>
-
     <div class="login-shell">
       <section class="login-card">
         <span class="card-ambient card-ambient-a"></span>
