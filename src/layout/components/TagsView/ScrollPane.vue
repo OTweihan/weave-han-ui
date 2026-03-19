@@ -5,9 +5,9 @@
 </template>
 
 <script setup lang="ts">
-import { RouteLocationNormalized } from 'vue-router';
 import { useTagsViewStore } from '@/store/modules/tagsView';
 import { ElScrollbar } from 'element-plus';
+import { RouteLocationNormalized } from 'vue-router';
 
 const emits = defineEmits(['scroll']);
 const tagsViewStore = useTagsViewStore();
@@ -114,7 +114,7 @@ defineExpose({
 
   // 调整滚动区域高度以适应标签
   :deep(.el-scrollbar__wrap) {
-    height: 55px;
+    height: 39px;
   }
 }
 </style>

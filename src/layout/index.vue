@@ -10,7 +10,7 @@
     <div v-if="device === 'mobile' && sidebar.opened" class="drawer-bg" @click="handleClickOutside" />
     <side-bar v-if="!sidebar.hide" class="sidebar-container" />
     <div :class="{ hasTagsView: needTagsView, sidebarHide: sidebar.hide }" class="main-container">
-      <div :class="{ 'fixed-header': fixedHeader }">
+      <div class="layout-header" :class="{ 'fixed-header': fixedHeader }">
         <navbar ref="navbarRef" />
         <tags-view v-if="needTagsView" />
       </div>
@@ -178,6 +178,10 @@ const handleClickOutside = () => {
   height: 100%;
   position: absolute;
   z-index: 999;
+}
+
+.layout-header {
+  padding-top: 12px;
 }
 
 .fixed-header {

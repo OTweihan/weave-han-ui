@@ -31,13 +31,13 @@
 </template>
 
 <script setup lang="ts">
-import ScrollPane from './ScrollPane.vue';
-import { getNormalPath } from '@/utils/common';
-import { useSettingsStore } from '@/store/modules/settings';
 import { usePermissionStore } from '@/store/modules/permission';
+import { useSettingsStore } from '@/store/modules/settings';
 import { useTagsViewStore } from '@/store/modules/tagsView';
-import { RouteRecordRaw, RouteLocationNormalized } from 'vue-router';
+import { getNormalPath } from '@/utils/common';
 import { Back, CircleClose, Close, RefreshRight, Right } from '@element-plus/icons-vue';
+import { RouteLocationNormalized, RouteRecordRaw } from 'vue-router';
+import ScrollPane from './ScrollPane.vue';
 
 const visible = ref(false);
 const top = ref(0);
@@ -259,83 +259,122 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .tags-view-container {
-  height: 38px;
-  width: 100%;
-  background: #fff;
-  border-bottom: 1px solid #d8dce5;
-  box-shadow:
-    0 1px 3px 0 rgba(0, 0, 0, 0.12),
-    0 0 3px 0 rgba(0, 0, 0, 0.04);
+  /* 引用完全相同的玻璃拟态参数，保持高度统一 */
+  --nav-glass-bg: rgba(255, 255, 255, 0.85);
+  --nav-glass-border: rgba(0, 0, 0, 0.1);
+  --nav-glass-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  --nav-glass-shadow-hover: inset 0 0 0 1px rgba(64, 158, 255, 0.25);
+
+  height: 40px; /* 微调高度，留出舒适的上下边距 */
+  width: calc(100% - 8px);
+  margin-right: 8px;
+  margin-left: 8px;
+  margin-top: 0;
+  box-sizing: border-box;
+  background: var(--nav-glass-bg);
+  border: 1px solid var(--nav-glass-border);
+  border-top: none;
+  border-radius: 0 0 4px 4px !important;
+  box-shadow: var(--nav-glass-shadow);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    border-color: rgba(0, 0, 0, 0.2);
+    box-shadow: var(--nav-glass-shadow-hover);
+  }
+
   .tags-view-wrapper {
     .tags-view-item {
       display: inline-block;
       position: relative;
       cursor: pointer;
-      height: 30px;
-      line-height: 28px;
-      border: 1px solid #d8dce5;
+      height: 28px;
+      line-height: 26px;
+      /* 将白底灰框改为更清透的半透明底 */
+      border: 1px solid rgba(0, 0, 0, 0.05);
       color: #495060;
-      background: #fff;
+      background: rgba(255, 255, 255, 0.5);
       padding: 0 12px;
       font-size: 12px;
       margin-left: 6px;
-      margin-top: 4px;
-      border-radius: 4px;
+      margin-top: 5px; /* 垂直居中对齐 */
+      border-radius: 6px; /* 更柔和的圆角 */
       transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+
       &:hover {
-        border-color: var(--el-color-primary-light-5);
+        border-color: rgba(64, 158, 255, 0.3);
         color: var(--el-color-primary);
-        background-color: var(--el-color-primary-light-9);
+        background-color: rgba(64, 158, 255, 0.05);
       }
+
       &:first-of-type {
-        margin-left: 15px;
+        margin-left: 12px;
       }
+
       &:last-of-type {
-        margin-right: 15px;
+        margin-right: 12px;
       }
+
+      /* 激活状态：清爽的蓝底白字 */
       &.active {
         background-color: var(--el-color-primary);
         color: #fff;
         border-color: var(--el-color-primary);
+        box-shadow: 0 2px 6px rgba(64, 158, 255, 0.2); /* 给激活的标签加一点点专属呼吸感阴影 */
+
         &::before {
           content: '';
           background: #fff;
           display: inline-block;
-          width: 8px;
-          height: 8px;
+          width: 6px;
+          height: 6px;
           border-radius: 50%;
           position: relative;
           margin-right: 6px;
+          vertical-align: 1px;
         }
       }
     }
   }
+
   .tags-view-item.active.has-icon::before {
     content: none !important;
   }
+
   .tags-view-item-title {
     margin-left: 4px;
     margin-right: 3px;
   }
+
+  /* 右键菜单也统一为极简亚克力风格 */
   .contextmenu {
     margin: 0;
-    background: #ffffff;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
     z-index: 3000;
     position: absolute;
     list-style-type: none;
-    padding: 5px 0;
-    border-radius: 4px;
-    font-size: 12px;
+    padding: 6px 0;
+    border-radius: 8px;
+    font-size: 13px;
     font-weight: 400;
-    border: 1px solid #e4e7ed;
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+
     li {
       margin: 0;
-      padding: 7px 16px;
+      padding: 8px 20px;
       cursor: pointer;
       color: #606266;
+      display: flex;
+      align-items: center;
+      gap: 6px; /* 图标和文字的间距 */
+      transition: all 0.2s;
+
       &:hover {
-        background: #f5f7fa;
+        background: rgba(64, 158, 255, 0.08);
         color: var(--el-color-primary);
       }
     }
@@ -344,33 +383,37 @@ onMounted(() => {
 </style>
 
 <style lang="scss">
+/* 标签内的关闭图标样式优化 */
 .tags-view-wrapper {
   .tags-view-item {
     .el-icon-close {
       width: 14px;
       height: 14px;
-      vertical-align: 2px;
+      vertical-align: -1px;
       border-radius: 50%;
       text-align: center;
       transition: all 0.2s;
       transform-origin: 100% 50%;
       color: #909399;
+
       &:before {
-        transform: scale(0.7);
+        transform: scale(0.8);
         display: inline-block;
-        vertical-align: -3px;
       }
+
       &:hover {
-        background-color: #f56c6c;
+        background-color: rgba(245, 108, 108, 0.8); /* 柔和一点的红色 */
         color: #ffffff;
         width: 14px !important;
         height: 14px !important;
       }
     }
+
     &.active .el-icon-close {
       color: rgba(255, 255, 255, 0.8);
+
       &:hover {
-        background-color: rgba(255, 255, 255, 0.2);
+        background-color: rgba(255, 255, 255, 0.3);
         color: #ffffff;
       }
     }

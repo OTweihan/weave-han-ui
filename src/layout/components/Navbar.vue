@@ -67,15 +67,15 @@
 </template>
 
 <script setup lang="ts">
-import SearchMenu from './TopBar/search.vue';
-import { useAppStore } from '@/store/modules/app';
-import { useUserStore } from '@/store/modules/user';
-import { useSettingsStore } from '@/store/modules/settings';
-import { useNoticeStore } from '@/store/modules/notice';
-import notice from './notice/index.vue';
 import router from '@/router';
-import { ElMessageBoxOptions } from 'element-plus/es/components/message-box/src/message-box.type';
+import { useAppStore } from '@/store/modules/app';
+import { useNoticeStore } from '@/store/modules/notice';
+import { useSettingsStore } from '@/store/modules/settings';
+import { useUserStore } from '@/store/modules/user';
 import { CaretBottom } from '@element-plus/icons-vue';
+import { ElMessageBoxOptions } from 'element-plus/es/components/message-box/src/message-box.type';
+import notice from './notice/index.vue';
+import SearchMenu from './TopBar/search.vue';
 
 const appStore = useAppStore();
 const userStore = useUserStore();
@@ -132,6 +132,7 @@ watch(
 </script>
 
 <style lang="scss" scoped>
+/* Element Plus 样式覆盖 */
 :deep(.el-select .el-input__wrapper) {
   height: 30px;
 }
@@ -150,17 +151,36 @@ watch(
   align-items: center;
 }
 
+/* 导航栏主体 */
 .navbar {
+  /* 统一的玻璃拟态变量 */
+  --nav-glass-bg: rgba(255, 255, 255, 0.85);
+  --nav-glass-border: rgba(0, 0, 0, 0.1);
+  --nav-glass-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  --nav-glass-shadow-hover: inset 0 0 0 1px rgba(64, 158, 255, 0.25);
+
   height: 50px;
-  overflow: hidden;
+  overflow: visible;
   position: relative;
-  background: #ffffff;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+  background: var(--nav-glass-bg);
+  border: 1px solid var(--nav-glass-border);
+  border-bottom: none;
+  box-shadow: var(--nav-glass-shadow);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 4px 4px 0 0 !important;
   z-index: 1000;
   display: flex;
   align-items: center;
   padding: 0 20px;
+  margin-right: 8px;
+  margin-left: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    border-color: rgba(0, 0, 0, 0.2);
+    box-shadow: var(--nav-glass-shadow-hover);
+  }
 
   .breadcrumb-container {
     height: 100%;
@@ -171,11 +191,6 @@ watch(
   .topmenu-container {
     position: absolute;
     left: 50px;
-  }
-
-  .errLog-container {
-    display: inline-block;
-    vertical-align: top;
   }
 
   .right-menu {
@@ -194,20 +209,21 @@ watch(
       align-items: center;
       justify-content: center;
       padding: 0 8px;
-      height: 34px;
-      border-radius: 8px;
+      height: 36px;
       margin: 0 4px;
       font-size: 18px;
-      color: #606266;
-      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      color: rgba(30, 45, 70, 0.75);
+      border: 1px solid transparent;
+      transition: all 0.3s ease;
 
       &.hover-effect {
         cursor: pointer;
         position: relative;
 
         &:hover {
-          background: rgba(0, 0, 0, 0.05);
-          color: var(--el-color-primary, #409eff);
+          background: rgba(0, 0, 0, 0.04);
+          color: #1a2a44;
+          border-color: transparent;
         }
       }
     }
@@ -220,38 +236,38 @@ watch(
   .avatar-container {
     margin-right: 0;
     padding-left: 0;
-    height: 100%;
+    height: auto;
     display: flex;
     align-items: center;
 
     .right-menu-item {
-      height: 100%;
-      margin: 0;
-      border-radius: 0;
-
-      &:hover {
-        background: rgba(0, 0, 0, 0.025);
-        color: inherit;
-      }
+      height: 40px;
+      margin: 0 0 0 6px;
     }
 
     .avatar-wrapper {
-      margin-top: 0;
       position: relative;
       display: flex;
       align-items: center;
       gap: 8px;
       cursor: pointer;
       padding: 0 10px;
-      height: 100%;
+      height: 40px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: rgba(0, 0, 0, 0.04);
+      }
 
       .user-avatar {
-        width: 36px;
-        height: 36px;
+        width: 32px;
+        height: 32px;
         border-radius: 50%;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        box-shadow: none;
+        border: 1px solid rgba(0, 0, 0, 0.1);
         transition: transform 0.3s ease;
-        border: 2px solid #fff;
 
         &:hover {
           transform: scale(1.05);
@@ -260,7 +276,7 @@ watch(
 
       .icon-caret {
         font-size: 12px;
-        color: #909399;
+        color: #4b5b76;
         transition: transform 0.3s;
       }
 

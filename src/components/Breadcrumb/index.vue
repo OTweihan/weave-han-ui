@@ -17,8 +17,8 @@
 </template>
 
 <script setup lang="ts">
-import { RouteLocationMatched } from 'vue-router';
 import { usePermissionStore } from '@/store/modules/permission';
+import { RouteLocationMatched } from 'vue-router';
 
 const route = useRoute();
 const router = useRouter();
@@ -89,7 +89,7 @@ onMounted(() => {
   display: inline-block;
   font-size: 14px;
   line-height: 50px;
-  margin-left: 18px;
+  margin-left: 8px;
 
   .breadcrumb-item-inner {
     display: flex;
