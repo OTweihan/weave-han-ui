@@ -81,9 +81,18 @@ const appStore = useAppStore();
 const userStore = useUserStore();
 const settingsStore = useSettingsStore();
 const noticeStore = storeToRefs(useNoticeStore());
-const newNotice = ref(<number>0);
+
+type NoticeItem = {
+  read?: boolean;
+};
 
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+
+// 未读消息数：由 store 派生，避免额外深度监听
+const newNotice = computed(() => {
+  const notices = noticeStore.state.value.notices as NoticeItem[] | undefined;
+  return notices?.filter((item) => !item.read).length ?? 0;
+});
 
 // 搜索菜单
 const searchMenuRef = ref<InstanceType<typeof SearchMenu>>();
@@ -92,13 +101,16 @@ const openSearchMenu = () => {
   searchMenuRef.value?.openSearch();
 };
 
+// 用户确认后退出并回到登录页
 const logout = async () => {
-  await ElMessageBox.confirm('确定注销并退出系统吗？', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  } as ElMessageBoxOptions);
-  userStore.logout().then(() => {
+  try {
+    await ElMessageBox.confirm('确定注销并退出系统吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    } as ElMessageBoxOptions);
+
+    await userStore.logout();
     router.replace({
       path: '/login',
       query: {
@@ -106,29 +118,22 @@ const logout = async () => {
       }
     });
     proxy?.$tab.closeAllPage();
-  });
+  } catch {
+    // 用户取消时不做额外处理
+  }
 };
 
-// 定义Command方法对象 通过key直接调用方法
-const commandMap: { [key: string]: any } = {
+type NavbarCommand = 'logout';
+
+// 命令映射：下拉菜单按 command 路由到对应处理函数
+const commandMap: Record<NavbarCommand, () => Promise<void>> = {
   logout
 };
 
 const handleCommand = (command: string) => {
-  // 判断是否存在该方法
-  if (commandMap[command]) {
-    commandMap[command]();
-  }
+  const action = commandMap[command as NavbarCommand];
+  action?.();
 };
-
-//用深度监听 消息
-watch(
-  () => noticeStore.state.value.notices,
-  (newVal) => {
-    newNotice.value = newVal.filter((item: any) => !item.read).length;
-  },
-  { deep: true }
-);
 </script>
 
 <style lang="scss" scoped>
@@ -257,10 +262,6 @@ watch(
       border: 1px solid transparent;
       transition: all 0.3s ease;
 
-      &:hover {
-        background: rgba(0, 0, 0, 0.04);
-      }
-
       .user-avatar {
         width: 32px;
         height: 32px;
@@ -268,10 +269,6 @@ watch(
         box-shadow: none;
         border: 1px solid rgba(0, 0, 0, 0.1);
         transition: transform 0.3s ease;
-
-        &:hover {
-          transform: scale(1.05);
-        }
       }
 
       .icon-caret {

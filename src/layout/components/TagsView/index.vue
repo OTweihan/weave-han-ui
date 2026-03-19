@@ -39,10 +39,14 @@ import { Back, CircleClose, Close, RefreshRight, Right } from '@element-plus/ico
 import { RouteLocationNormalized, RouteRecordRaw } from 'vue-router';
 import ScrollPane from './ScrollPane.vue';
 
+const permissionStore = usePermissionStore();
+const settingsStore = useSettingsStore();
+const tagsViewStore = useTagsViewStore();
+
 const visible = ref(false);
 const top = ref(0);
 const left = ref(0);
-const selectedTag = ref<RouteLocationNormalized>();
+const selectedTag = ref<RouteLocationNormalized | undefined>();
 const affixTags = ref<RouteLocationNormalized[]>([]);
 const scrollPaneRef = ref<InstanceType<typeof ScrollPane>>();
 
@@ -50,15 +54,24 @@ const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const route = useRoute();
 const router = useRouter();
 
-const visitedViews = computed(() => useTagsViewStore().getVisitedViews());
-const routes = computed(() => usePermissionStore().getRoutes());
-const tagsIcon = computed(() => useSettingsStore().tagsIcon);
+const visitedViews = computed(() => tagsViewStore.getVisitedViews());
+const routes = computed(() => permissionStore.getRoutes());
+const tagsIcon = computed(() => settingsStore.tagsIcon);
 
+// 激活标签的样式常量，避免重复创建对象
+const activeTagStyle = Object.freeze({
+  'background-color': 'var(--el-color-primary)',
+  'border-color': 'var(--el-color-primary)',
+  color: '#ffffff'
+});
+
+// 路由变化时同步标签列表和滚动位置
 watch(route, () => {
   addTags();
   moveToCurrentTag();
 });
 
+// 右键菜单打开时挂 body 点击事件，关闭时移除
 watch(visible, (value) => {
   if (value) {
     document.body.addEventListener('click', closeMenu);
@@ -67,45 +80,31 @@ watch(visible, (value) => {
   }
 });
 
-const isActive = (r: RouteLocationNormalized): boolean => {
-  return r.path === route.path;
-};
+const isActive = (r: RouteLocationNormalized): boolean => r.path === route.path;
 
-const activeStyle = (tag: RouteLocationNormalized) => {
-  if (!isActive(tag)) return {};
-  return {
-    'background-color': 'var(--el-color-primary)',
-    'border-color': 'var(--el-color-primary)',
-    'color': '#ffffff'
-  };
-};
+const activeStyle = (tag: RouteLocationNormalized) => (isActive(tag) ? activeTagStyle : undefined);
 
-const isAffix = (tag: RouteLocationNormalized) => {
-  return tag?.meta && tag?.meta?.affix;
-};
+const isAffix = (tag?: RouteLocationNormalized) => Boolean(tag?.meta?.affix);
 
 const isFirstView = () => {
-  try {
-    return selectedTag.value.fullPath === '/index' || selectedTag.value.fullPath === visitedViews.value[1].fullPath;
-  } catch (err) {
-    return false;
-  }
+  const selectedFullPath = selectedTag.value?.fullPath;
+  if (!selectedFullPath) return false;
+  return selectedFullPath === '/index' || selectedFullPath === visitedViews.value[1]?.fullPath;
 };
 
 const isLastView = () => {
-  try {
-    return selectedTag.value.fullPath === visitedViews.value[visitedViews.value.length - 1].fullPath;
-  } catch (err) {
-    return false;
-  }
+  const selectedFullPath = selectedTag.value?.fullPath;
+  if (!selectedFullPath) return false;
+  return selectedFullPath === visitedViews.value[visitedViews.value.length - 1]?.fullPath;
 };
 
-const filterAffixTags = (routes: RouteRecordRaw[], basePath = '') => {
+// 递归收集固定标签（affix）
+const filterAffixTags = (routeList: RouteRecordRaw[], basePath = '') => {
   let tags: RouteLocationNormalized[] = [];
 
-  routes.forEach((route) => {
-    if (route.meta && route.meta.affix) {
-      const tagPath = getNormalPath(basePath + '/' + route.path);
+  routeList.forEach((routeItem) => {
+    if (routeItem.meta && routeItem.meta.affix) {
+      const tagPath = getNormalPath(basePath + '/' + routeItem.path);
       tags.push({
         hash: '',
         matched: [],
@@ -114,38 +113,43 @@ const filterAffixTags = (routes: RouteRecordRaw[], basePath = '') => {
         redirectedFrom: undefined,
         fullPath: tagPath,
         path: tagPath,
-        name: route.name as string,
-        meta: { ...route.meta }
+        name: routeItem.name as string,
+        meta: { ...routeItem.meta }
       });
     }
-    if (route.children) {
-      const tempTags = filterAffixTags(route.children, route.path);
+
+    if (routeItem.children) {
+      const tempTags = filterAffixTags(routeItem.children, routeItem.path);
       if (tempTags.length >= 1) {
         tags = [...tags, ...tempTags];
       }
     }
   });
+
   return tags;
 };
 
 const initTags = () => {
-  const res = filterAffixTags(routes.value);
-  affixTags.value = res;
-  for (const tag of res) {
-    // Must have tag name
+  const affixTagList = filterAffixTags(routes.value);
+  affixTags.value = affixTagList;
+
+  for (const tag of affixTagList) {
+    // 固定标签必须有 name，才能被 keep-alive 正确识别
     if (tag.name) {
-      useTagsViewStore().addVisitedView(tag);
+      tagsViewStore.addVisitedView(tag);
     }
   }
 };
 
 const addTags = () => {
   const { name } = route;
+
   if (route.query.title) {
     route.meta.title = route.query.title as string;
   }
+
   if (name) {
-    useTagsViewStore().addView(route as any);
+    tagsViewStore.addView(route as RouteLocationNormalized);
   }
 };
 
@@ -154,57 +158,72 @@ const moveToCurrentTag = () => {
     for (const r of visitedViews.value) {
       if (r.path === route.path) {
         scrollPaneRef.value?.moveToTarget(r);
-        // when query is different then update
+        // query 变化时更新已访问标签，保持标题等信息最新
         if (r.fullPath !== route.fullPath) {
-          useTagsViewStore().updateVisitedView(route);
+          tagsViewStore.updateVisitedView(route);
         }
+        break;
       }
     }
   });
 };
 
-const refreshSelectedTag = (view: RouteLocationNormalized) => {
+const refreshSelectedTag = (view?: RouteLocationNormalized) => {
+  if (!view) return;
+
   proxy?.$tab.refreshPage(view);
   if (route.meta.link) {
-    useTagsViewStore().delIframeView(route);
+    tagsViewStore.delIframeView(route);
   }
 };
 
-const closeSelectedTag = (view: RouteLocationNormalized) => {
-  proxy?.$tab.closePage(view).then(({ visitedViews }: any) => {
+const closeSelectedTag = (view?: RouteLocationNormalized) => {
+  if (!view) return;
+
+  proxy?.$tab.closePage(view).then(({ visitedViews }: { visitedViews: RouteLocationNormalized[] }) => {
     if (isActive(view)) {
       toLastView(visitedViews, view);
     }
   });
 };
 
+const ensureCurrentRouteExists = (nextVisitedViews: RouteLocationNormalized[]) => {
+  const currentExists = nextVisitedViews.some((item) => item.fullPath === route.fullPath);
+  if (!currentExists) {
+    toLastView(nextVisitedViews);
+  }
+};
+
 const closeRightTags = () => {
-  proxy?.$tab.closeRightPage(selectedTag.value).then((visitedViews: RouteLocationNormalized[]) => {
-    if (!visitedViews.find((i: RouteLocationNormalized) => i.fullPath === route.fullPath)) {
-      toLastView(visitedViews);
-    }
+  if (!selectedTag.value) return;
+
+  proxy?.$tab.closeRightPage(selectedTag.value).then((nextVisitedViews: RouteLocationNormalized[]) => {
+    ensureCurrentRouteExists(nextVisitedViews);
   });
 };
 
 const closeLeftTags = () => {
-  proxy?.$tab.closeLeftPage(selectedTag.value).then((visitedViews: RouteLocationNormalized[]) => {
-    if (!visitedViews.find((i: RouteLocationNormalized) => i.fullPath === route.fullPath)) {
-      toLastView(visitedViews);
-    }
+  if (!selectedTag.value) return;
+
+  proxy?.$tab.closeLeftPage(selectedTag.value).then((nextVisitedViews: RouteLocationNormalized[]) => {
+    ensureCurrentRouteExists(nextVisitedViews);
   });
 };
 
 const closeOthersTags = () => {
+  if (!selectedTag.value) return;
+
   if (selectedTag.value?.fullPath) {
     router.push(selectedTag.value.fullPath).catch(() => {});
   }
+
   proxy?.$tab.closeOtherPage(selectedTag.value).then(() => {
     moveToCurrentTag();
   });
 };
 
-const closeAllTags = (view: RouteLocationNormalized) => {
-  proxy?.$tab.closeAllPage().then(({ visitedViews }) => {
+const closeAllTags = (view?: RouteLocationNormalized) => {
+  proxy?.$tab.closeAllPage().then(({ visitedViews }: { visitedViews: RouteLocationNormalized[] }) => {
     if (affixTags.value.some((tag) => tag.path === route.path)) {
       return;
     }
@@ -214,46 +233,48 @@ const closeAllTags = (view: RouteLocationNormalized) => {
 
 const toLastView = (visitedViews: RouteLocationNormalized[], view?: RouteLocationNormalized) => {
   const latestView = visitedViews.slice(-1)[0];
+
   if (latestView) {
     router.push(latestView.fullPath as string);
-  } else {
-    if (view?.name === 'Dashboard') {
-      router.replace({ path: '/redirect' + view?.fullPath });
-    } else {
-      router.push('/');
-    }
+    return;
   }
+
+  if (view?.name === 'Dashboard') {
+    router.replace({ path: '/redirect' + view?.fullPath });
+    return;
+  }
+
+  router.push('/');
 };
 
 const openMenu = (tag: RouteLocationNormalized, e: MouseEvent) => {
+  const container = proxy?.$el as HTMLElement | undefined;
+  if (!container) return;
+
   const menuMinWidth = 105;
-  const offsetLeft = proxy?.$el.getBoundingClientRect().left;
-  const offsetWidth = proxy?.$el.offsetWidth;
-  const maxLeft = offsetWidth - menuMinWidth;
+  const offsetLeft = container.getBoundingClientRect().left;
+  const offsetWidth = container.offsetWidth;
+  const maxLeft = Math.max(offsetWidth - menuMinWidth, 0);
   const l = e.clientX - offsetLeft + 15;
 
-  if (l > maxLeft) {
-    left.value = maxLeft;
-  } else {
-    left.value = l;
-  }
-
+  left.value = l > maxLeft ? maxLeft : l;
   top.value = e.clientY;
   visible.value = true;
   selectedTag.value = tag;
 };
 
-const closeMenu = () => {
-  visible.value = false;
-};
+const closeMenu = () => (visible.value = false);
 
-const handleScroll = () => {
-  closeMenu();
-};
+// 滚动标签栏时关闭右键菜单，防止菜单悬空
+const handleScroll = () => closeMenu();
 
 onMounted(() => {
   initTags();
   addTags();
+});
+
+onBeforeUnmount(() => {
+  document.body.removeEventListener('click', closeMenu);
 });
 </script>
 
@@ -266,8 +287,7 @@ onMounted(() => {
   --nav-glass-shadow-hover: inset 0 0 0 1px rgba(64, 158, 255, 0.25);
 
   height: 40px; /* 微调高度，留出舒适的上下边距 */
-  width: calc(100% - 8px);
-  margin-right: 8px;
+  width: calc(100% - 16px);
   margin-left: 8px;
   margin-top: 0;
   box-sizing: border-box;
