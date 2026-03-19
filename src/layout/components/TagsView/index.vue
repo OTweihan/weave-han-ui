@@ -252,13 +252,15 @@ const openMenu = (tag: RouteLocationNormalized, e: MouseEvent) => {
   if (!container) return;
 
   const menuMinWidth = 105;
-  const offsetLeft = container.getBoundingClientRect().left;
-  const offsetWidth = container.offsetWidth;
-  const maxLeft = Math.max(offsetWidth - menuMinWidth, 0);
+  const containerRect = container.getBoundingClientRect();
+  const offsetLeft = containerRect.left;
+  const offsetTop = containerRect.top;
+  const maxLeft = Math.max(containerRect.width - menuMinWidth, 0);
   const l = e.clientX - offsetLeft + 15;
 
   left.value = l > maxLeft ? maxLeft : l;
-  top.value = e.clientY;
+  // 使用容器相对坐标，避免 fixed-header 场景下被 Navbar 覆盖
+  top.value = e.clientY - offsetTop;
   visible.value = true;
   selectedTag.value = tag;
 };
@@ -286,6 +288,8 @@ onBeforeUnmount(() => {
   --nav-glass-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
   --nav-glass-shadow-hover: inset 0 0 0 1px rgba(64, 158, 255, 0.25);
 
+  position: relative; /* 作为右键菜单定位参考 */
+  z-index: 1001; /* 高于 Navbar 的 1000，避免菜单被压在下方 */
   height: 40px; /* 微调高度，留出舒适的上下边距 */
   width: calc(100% - 16px);
   margin-left: 8px;

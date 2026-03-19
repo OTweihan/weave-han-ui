@@ -1,23 +1,25 @@
 <template>
-  <div class="p-2">
+  <div class="p-2 h-full flex flex-col min-h-0">
     <transition :enter-active-class="proxy?.animate.searchAnimate.enter" :leave-active-class="proxy?.animate.searchAnimate.leave">
-      <div class="search" v-show="showSearch">
-        <el-form :model="queryParams" ref="queryFormRef" :inline="true" label-width="68px">
-          <el-form-item label="分类名称" prop="name">
-            <el-input v-model="queryParams.name" placeholder="请输入分类名称" clearable @keyup.enter="handleQuery" />
-          </el-form-item>
-          <el-form-item label="分类别名" prop="slug">
-            <el-input v-model="queryParams.slug" placeholder="请输入分类别名" clearable @keyup.enter="handleQuery" />
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
-            <el-button icon="Refresh" @click="resetQuery">重置</el-button>
-          </el-form-item>
-        </el-form>
+      <div v-show="showSearch" class="mb-[10px]">
+        <el-card shadow="hover" class="search-card">
+          <el-form :model="queryParams" ref="queryFormRef" :inline="true" label-width="68px">
+            <el-form-item label="分类名称" prop="name">
+              <el-input v-model="queryParams.name" placeholder="请输入分类名称" clearable @keyup.enter="handleQuery" />
+            </el-form-item>
+            <el-form-item label="分类别名" prop="slug">
+              <el-input v-model="queryParams.slug" placeholder="请输入分类别名" clearable @keyup.enter="handleQuery" />
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
+              <el-button icon="Refresh" @click="resetQuery">重置</el-button>
+            </el-form-item>
+          </el-form>
+        </el-card>
       </div>
     </transition>
 
-    <el-card shadow="never">
+    <el-card shadow="hover" class="flex-1 min-h-0 flex flex-col overflow-hidden table-card">
       <template #header>
         <el-row :gutter="10" class="mb8">
           <el-col :span="1.5">
@@ -30,32 +32,36 @@
         </el-row>
       </template>
 
-      <el-table
-        v-if="refreshTable"
-        v-loading="loading"
-        :data="categoryList"
-        border
-        row-key="categoryId"
-        :default-expand-all="isExpandAll"
-        :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
-      >
-        <el-table-column label="分类名称" prop="name" align="left" width="240" />
-        <el-table-column label="别名" prop="slug" align="center" width="240" />
-        <el-table-column label="描述" prop="description" :show-overflow-tooltip="true" align="center" />
-        <el-table-column label="文章数" prop="postCount" width="100" align="center" />
-        <el-table-column label="创建时间" align="center" prop="createTime" width="200">
-          <template #default="scope">
-            <span>{{ parseTime(scope.row.createTime) }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="240">
-          <template #default="scope">
-            <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['blog:category:edit']">修改</el-button>
-            <el-button link type="primary" icon="Plus" @click="handleAdd(scope.row)" v-hasPermi="['blog:category:add']">新增</el-button>
-            <el-button link type="danger" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['blog:category:remove']">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
+      <div class="flex-1 min-h-0 overflow-hidden">
+        <el-table
+          v-if="refreshTable"
+          v-loading="loading"
+          :data="categoryList"
+          border
+          row-key="categoryId"
+          height="100%"
+          class="flex-1 min-h-0"
+          :default-expand-all="isExpandAll"
+          :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
+        >
+          <el-table-column label="分类名称" prop="name" align="left" width="240" />
+          <el-table-column label="别名" prop="slug" align="center" width="240" />
+          <el-table-column label="描述" prop="description" :show-overflow-tooltip="true" align="center" />
+          <el-table-column label="文章数" prop="postCount" width="100" align="center" />
+          <el-table-column label="创建时间" align="center" prop="createTime" width="200">
+            <template #default="scope">
+              <span>{{ parseTime(scope.row.createTime) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="240">
+            <template #default="scope">
+              <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['blog:category:edit']">修改</el-button>
+              <el-button link type="primary" icon="Plus" @click="handleAdd(scope.row)" v-hasPermi="['blog:category:add']">新增</el-button>
+              <el-button link type="danger" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['blog:category:remove']">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
     </el-card>
 
     <!-- 添加或修改分类对话框 -->
@@ -298,3 +304,22 @@ onMounted(() => {
   getList();
 });
 </script>
+
+<style lang="scss" scoped>
+.search-card {
+  :deep(.el-card__body) {
+    padding-bottom: 7px !important;
+  }
+}
+
+.table-card {
+  :deep(.el-card__body) {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    padding: 0;
+  }
+}
+</style>

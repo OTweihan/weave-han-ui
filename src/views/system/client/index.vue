@@ -1,32 +1,30 @@
 <template>
   <div class="p-2 h-full flex flex-col">
     <transition :enter-active-class="proxy?.animate.searchAnimate.enter" :leave-active-class="proxy?.animate.searchAnimate.leave">
-      <div v-show="showSearch" class="search">
-        <el-form ref="queryFormRef" :model="queryParams" :inline="true" label-width="85px">
-          <el-form-item label="客户端key" prop="clientKey">
-            <el-input v-model="queryParams.clientKey" placeholder="请输入客户端key" clearable @keyup.enter="handleQuery" />
-          </el-form-item>
-          <el-form-item label="客户端秘钥" prop="clientSecret">
-            <el-input v-model="queryParams.clientSecret" placeholder="请输入客户端秘钥" clearable @keyup.enter="handleQuery" />
-          </el-form-item>
-          <el-form-item label="状态" prop="status">
-            <el-select v-model="queryParams.status" placeholder="状态" clearable>
-              <el-option v-for="dict in sys_normal_disable" :key="dict.value" :label="dict.label" :value="dict.value" />
-            </el-select>
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
-            <el-button icon="Refresh" @click="resetQuery">重置</el-button>
-          </el-form-item>
-        </el-form>
+      <div v-show="showSearch" class="mb-[10px]">
+        <el-card shadow="hover" class="search-card">
+          <el-form ref="queryFormRef" :model="queryParams" :inline="true" label-width="85px">
+            <el-form-item label="客户端key" prop="clientKey">
+              <el-input v-model="queryParams.clientKey" placeholder="请输入客户端key" clearable @keyup.enter="handleQuery" />
+            </el-form-item>
+            <el-form-item label="客户端秘钥" prop="clientSecret">
+              <el-input v-model="queryParams.clientSecret" placeholder="请输入客户端秘钥" clearable @keyup.enter="handleQuery" />
+            </el-form-item>
+            <el-form-item label="状态" prop="status">
+              <el-select v-model="queryParams.status" placeholder="状态" clearable>
+                <el-option v-for="dict in sys_normal_disable" :key="dict.value" :label="dict.label" :value="dict.value" />
+              </el-select>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
+              <el-button icon="Refresh" @click="resetQuery">重置</el-button>
+            </el-form-item>
+          </el-form>
+        </el-card>
       </div>
     </transition>
 
-    <el-card
-      shadow="never"
-      class="flex-1 flex flex-col overflow-hidden"
-      :body-style="{ flex: '1', overflow: 'hidden', display: 'flex', flexDirection: 'column' }"
-    >
+    <el-card shadow="hover" class="flex-1 flex flex-col overflow-hidden table-card">
       <template #header>
         <el-row :gutter="10" class="mb8">
           <el-col :span="1.5">
@@ -49,47 +47,49 @@
         </el-row>
       </template>
 
-      <el-table v-loading="loading" :data="clientList" border height="100%" class="flex-1" @selection-change="handleSelectionChange">
-        <el-table-column type="selection" width="50" align="center" />
-        <el-table-column label="客户端id" align="center" prop="clientId" />
-        <el-table-column label="客户端key" align="center" prop="clientKey" width="120" />
-        <el-table-column label="客户端秘钥" align="center" prop="clientSecret" width="120" />
-        <el-table-column label="授权类型" align="center">
-          <template #default="scope">
-            <dict-tag :options="sys_grant_type" :value="scope.row.grantTypeList" />
-          </template>
-        </el-table-column>
-        <el-table-column label="设备类型" align="center" width="120">
-          <template #default="scope">
-            <dict-tag :options="sys_device_type" :value="scope.row.deviceType" />
-          </template>
-        </el-table-column>
-        <el-table-column label="Token活跃超时时间" align="center" prop="activeTimeout" width="160">
-          <template #default="scope">
-            <span>{{ scope.row.activeTimeout != null ? `${scope.row.activeTimeout} 秒` : '-' }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="Token固定超时时间" align="center" prop="timeout" width="160">
-          <template #default="scope">
-            <span>{{ scope.row.timeout != null ? `${scope.row.timeout} 秒` : '-' }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column key="status" label="状态" align="center" width="120">
-          <template #default="scope">
-            <el-switch v-model="scope.row.status" active-value="0" inactive-value="1" @change="handleStatusChange(scope.row)"></el-switch>
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="120">
-          <template #default="scope">
-            <el-tooltip content="修改" placement="top">
-              <el-button v-hasPermi="['system:client:edit']" link type="primary" icon="Edit" @click="handleUpdate(scope.row)"></el-button>
-            </el-tooltip>
-            <el-tooltip content="删除" placement="top">
-              <el-button v-hasPermi="['system:client:remove']" link type="primary" icon="Delete" @click="handleDelete(scope.row)"></el-button>
-            </el-tooltip>
-          </template>
-        </el-table-column>
-      </el-table>
+      <div class="flex-1 overflow-hidden">
+        <el-table v-loading="loading" :data="clientList" border height="100%" class="flex-1" @selection-change="handleSelectionChange">
+          <el-table-column type="selection" width="50" align="center" />
+          <el-table-column label="客户端id" align="center" prop="clientId" />
+          <el-table-column label="客户端key" align="center" prop="clientKey" width="120" />
+          <el-table-column label="客户端秘钥" align="center" prop="clientSecret" width="120" />
+          <el-table-column label="授权类型" align="center">
+            <template #default="scope">
+              <dict-tag :options="sys_grant_type" :value="scope.row.grantTypeList" />
+            </template>
+          </el-table-column>
+          <el-table-column label="设备类型" align="center" width="120">
+            <template #default="scope">
+              <dict-tag :options="sys_device_type" :value="scope.row.deviceType" />
+            </template>
+          </el-table-column>
+          <el-table-column label="Token活跃超时时间" align="center" prop="activeTimeout" width="160">
+            <template #default="scope">
+              <span>{{ scope.row.activeTimeout != null ? `${scope.row.activeTimeout} 秒` : '-' }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="Token固定超时时间" align="center" prop="timeout" width="160">
+            <template #default="scope">
+              <span>{{ scope.row.timeout != null ? `${scope.row.timeout} 秒` : '-' }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column key="status" label="状态" align="center" width="120">
+            <template #default="scope">
+              <el-switch v-model="scope.row.status" active-value="0" inactive-value="1" @change="handleStatusChange(scope.row)"></el-switch>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="120">
+            <template #default="scope">
+              <el-tooltip content="修改" placement="top">
+                <el-button v-hasPermi="['system:client:edit']" link type="primary" icon="Edit" @click="handleUpdate(scope.row)"></el-button>
+              </el-tooltip>
+              <el-tooltip content="删除" placement="top">
+                <el-button v-hasPermi="['system:client:remove']" link type="primary" icon="Delete" @click="handleDelete(scope.row)"></el-button>
+              </el-tooltip>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
 
       <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
     </el-card>
@@ -330,3 +330,21 @@ onMounted(() => {
   getList();
 });
 </script>
+
+<style lang="scss" scoped>
+.search-card {
+  :deep(.el-card__body) {
+    padding-bottom: 7px !important;
+  }
+}
+
+.table-card {
+  :deep(.el-card__body) {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+    padding: 0;
+  }
+}
+</style>
