@@ -53,8 +53,8 @@ function addIframe() {
 
 <style lang="scss" scoped>
 .app-main {
-  /* 62 = navbar(50) + 顶部间距(12) */
-  height: calc(100vh - 62px);
+  /* 66 = navbar(54) + 顶部间距(12) */
+  height: calc(100vh - 68px);
   width: 100%;
   position: relative;
   overflow-y: auto;
@@ -62,19 +62,19 @@ function addIframe() {
 }
 
 .fixed-header + .app-main {
-  height: calc(100vh - 62px);
-  padding-top: 62px;
+  height: calc(100vh - 68px);
+  padding-top: 68px;
 }
 
 .hasTagsView {
   .app-main {
-    /* 101 = navbar(50) + tags-view(39) + 顶部间距(12) */
-    height: calc(100vh - 101px);
+    /* 112 = navbar(54) + tags-view(46) + 顶部间距(14) */
+    height: calc(100vh - 114px);
   }
 
   .fixed-header + .app-main {
-    height: calc(100vh - 101px);
-    padding-top: 101px;
+    height: calc(100vh - 114px);
+    padding-top: 114px;
   }
 }
 </style>

@@ -141,7 +141,6 @@ const handleCommand = (command: string) => {
 :deep(.el-select .el-input__wrapper) {
   height: 30px;
 }
-
 :deep(.el-badge__content.is-fixed) {
   top: 10px;
   right: 5px;
@@ -151,41 +150,34 @@ const handleCommand = (command: string) => {
 .flex {
   display: flex;
 }
-
 .align-center {
   align-items: center;
 }
 
 /* 导航栏主体 */
 .navbar {
-  /* 统一的玻璃拟态变量 */
-  --nav-glass-bg: rgba(255, 255, 255, 0.85);
-  --nav-glass-border: rgba(0, 0, 0, 0.1);
-  --nav-glass-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
-  --nav-glass-shadow-hover: inset 0 0 0 1px rgba(64, 158, 255, 0.25);
+  /* 优化：使用偏中性的玻璃参数，如果你有暗黑模式，建议换成 var(--el-bg-color-overlay) */
+  --nav-glass-bg: rgba(255, 255, 255, 0.65);
+  --nav-glass-border: rgba(0, 0, 0, 0.06);
+  --nav-glass-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
 
-  height: 50px;
-  overflow: visible;
   position: relative;
-  background: var(--nav-glass-bg);
-  border: 1px solid var(--nav-glass-border);
-  border-bottom: none;
-  box-shadow: var(--nav-glass-shadow);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-radius: 4px 4px 0 0 !important;
   z-index: 1000;
   display: flex;
   align-items: center;
-  padding: 0 20px;
-  margin-right: 8px;
-  margin-left: 8px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 54px; /* 稍微增高一点，呼吸感更好 */
+  padding: 0 16px;
+  margin: 0px 8px 0 8px; /* 留出顶部间距，形成真正的悬浮岛 */
 
-  &:hover {
-    border-color: rgba(0, 0, 0, 0.2);
-    box-shadow: var(--nav-glass-shadow-hover);
-  }
+  background: var(--nav-glass-bg);
+  border: 1px solid var(--nav-glass-border);
+  border-bottom: none;
+  border-radius: 12px 12px 0 0 !important; /* 更现代的大圆角 */
+  box-shadow: var(--nav-glass-shadow);
+
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  transition: background 0.3s ease;
 
   .breadcrumb-container {
     height: 100%;
@@ -203,82 +195,92 @@ const handleCommand = (command: string) => {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    height: 100%;
-
-    &:focus {
-      outline: none;
-    }
+    gap: 4px; /* 使用 gap 控制间距，替代 margin */
 
     .right-menu-item {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 0 8px;
+      width: 36px;
       height: 36px;
-      margin: 0 4px;
       font-size: 18px;
-      color: rgba(30, 45, 70, 0.75);
-      border: 1px solid transparent;
-      transition: all 0.3s ease;
+      color: #4b5b76;
+      border-radius: 8px; /* 统一的交互圆角 */
+      transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
 
       &.hover-effect {
         cursor: pointer;
-        position: relative;
-
         &:hover {
-          background: rgba(0, 0, 0, 0.04);
-          color: #1a2a44;
-          border-color: transparent;
+          background: rgba(0, 0, 0, 0.05);
+          color: var(--el-color-primary);
+          transform: translateY(-1px); /* 微悬浮 */
+        }
+        &:active {
+          transform: translateY(1px); /* 按压反馈 */
         }
       }
-    }
-
-    :deep(svg) {
-      vertical-align: middle;
     }
   }
 
   .avatar-container {
-    margin-right: 0;
-    padding-left: 0;
-    height: auto;
     display: flex;
     align-items: center;
+    margin-left: 8px;
+    padding-left: 8px;
+    position: relative;
 
-    .right-menu-item {
-      height: 40px;
-      margin: 0 0 0 6px;
+    /* 头像左侧加一个极淡的分割线 */
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 20px;
+      width: 1px;
+      background: rgba(0, 0, 0, 0.08);
+    }
+
+    :deep(.right-menu-item) {
+      width: auto !important;
+      height: auto !important;
+      background: transparent !important;
+      transform: none !important;
+      box-shadow: none !important;
+      outline: none !important;
     }
 
     .avatar-wrapper {
-      position: relative;
       display: flex;
       align-items: center;
       gap: 8px;
+      padding: 4px 8px;
+      border-radius: 30px;
       cursor: pointer;
-      padding: 0 10px;
-      height: 40px;
-      border-radius: 8px;
-      border: 1px solid transparent;
-      transition: all 0.3s ease;
+      transition: background 0.2s;
+      box-shadow: none !important;
+
+      &:hover {
+        background: rgba(0, 0, 0, 0.05);
+
+        .icon-caret {
+          transform: rotate(180deg);
+        }
+      }
 
       .user-avatar {
-        width: 32px;
-        height: 32px;
+        width: 30px;
+        height: 30px;
         border-radius: 50%;
-        box-shadow: none;
         border: 1px solid rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease;
+        box-shadow: none !important;
+        object-fit: cover;
       }
 
       .icon-caret {
         font-size: 12px;
-        color: #4b5b76;
-        transition: transform 0.3s;
-      }
-
-      &:hover .icon-caret {
-        transform: rotate(180deg);
+        color: #8da0b4;
+        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
       }
     }
   }

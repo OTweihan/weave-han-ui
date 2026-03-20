@@ -1,7 +1,7 @@
 <template>
-  <div class="login-page">
-    <div class="login-shell">
-      <section class="login-card">
+  <div class="register-page">
+    <div class="register-shell">
+      <section class="register-card">
         <span class="card-ambient card-ambient-a"></span>
         <span class="card-ambient card-ambient-b"></span>
         <div class="card-header">
@@ -11,7 +11,7 @@
           <p>欢迎加入，请完成账号创建</p>
         </div>
 
-        <el-form ref="registerRef" :model="registerForm" :rules="registerRules" class="login-form">
+        <el-form ref="registerRef" :model="registerForm" :rules="registerRules" class="register-form">
           <el-form-item prop="userAccount">
             <div class="field-label">{{ proxy.$t('register.username') }}</div>
             <el-input
@@ -20,7 +20,7 @@
               size="large"
               auto-complete="off"
               :placeholder="proxy.$t('register.username')"
-              class="login-input"
+              class="register-input"
             >
               <template #prefix><svg-icon icon-class="user" class="input-icon" /></template>
             </el-input>
@@ -34,7 +34,7 @@
               size="large"
               auto-complete="off"
               :placeholder="proxy.$t('register.password')"
-              class="login-input"
+              class="register-input"
               @keyup.enter="handleRegister"
             >
               <template #prefix><svg-icon icon-class="password" class="input-icon" /></template>
@@ -49,7 +49,7 @@
               size="large"
               auto-complete="off"
               :placeholder="proxy.$t('register.confirmPassword')"
-              class="login-input"
+              class="register-input"
               @keyup.enter="handleRegister"
             >
               <template #prefix><svg-icon icon-class="password" class="input-icon" /></template>
@@ -64,7 +64,7 @@
                 size="large"
                 auto-complete="off"
                 :placeholder="proxy.$t('register.code')"
-                class="login-input captcha-input"
+                class="register-input captcha-input"
                 @keyup.enter="handleRegister"
               >
                 <template #prefix><svg-icon icon-class="validCode" class="input-icon" /></template>
@@ -75,7 +75,7 @@
             </div>
           </el-form-item>
 
-          <el-form-item class="login-submit">
+          <el-form-item class="register-submit">
             <el-button
               :loading="loading"
               size="large"
@@ -98,7 +98,7 @@
       </section>
     </div>
 
-    <div class="login-copyright">&copy; {{ new Date().getFullYear() }} {{ title }}. All rights reserved.</div>
+    <div class="register-copyright">&copy; {{ new Date().getFullYear() }} {{ title }}. All rights reserved.</div>
   </div>
 </template>
 
@@ -236,3 +236,4 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped src="../assets/styles/views/register.css"></style>
+

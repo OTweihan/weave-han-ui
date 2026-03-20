@@ -282,162 +282,145 @@ onBeforeUnmount(() => {
 
 <style lang="scss" scoped>
 .tags-view-container {
-  /* 引用完全相同的玻璃拟态参数，保持高度统一 */
-  --nav-glass-bg: rgba(255, 255, 255, 0.85);
-  --nav-glass-border: rgba(0, 0, 0, 0.1);
-  --nav-glass-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
-  --nav-glass-shadow-hover: inset 0 0 0 1px rgba(64, 158, 255, 0.25);
+  /* 需与 Navbar 保持一致 */
+  --nav-glass-bg: rgba(255, 255, 255, 0.65);
+  --nav-glass-border: rgba(0, 0, 0, 0.06);
 
-  position: relative; /* 作为右键菜单定位参考 */
-  z-index: 1001; /* 高于 Navbar 的 1000，避免菜单被压在下方 */
-  height: 40px; /* 微调高度，留出舒适的上下边距 */
-  width: calc(100% - 16px);
-  margin-left: 8px;
-  margin-top: 0;
-  box-sizing: border-box;
+  position: relative;
+  z-index: 1001;
+  height: 46px; /* 增高一点，配合 Navbar */
+  width: calc(100% - 16px); /* 对应 Navbar 的 12px margin */
+  margin: 0 0 0px 8px;
   background: var(--nav-glass-bg);
   border: 1px solid var(--nav-glass-border);
-  border-top: none;
-  border-radius: 0 0 4px 4px !important;
-  box-shadow: var(--nav-glass-shadow);
+  border-top: 1px solid rgba(255, 255, 255, 0.4); /* 顶部高光线，区分 Navbar */
+  border-radius: 0 0 12px 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); /* 底部轻微投影 */
+
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-  &:hover {
-    border-color: rgba(0, 0, 0, 0.2);
-    box-shadow: var(--nav-glass-shadow-hover);
-  }
 
   .tags-view-wrapper {
     .tags-view-item {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
       position: relative;
       cursor: pointer;
       height: 28px;
-      line-height: 26px;
-      /* 将白底灰框改为更清透的半透明底 */
-      border: 1px solid rgba(0, 0, 0, 0.05);
-      color: #495060;
-      background: rgba(255, 255, 255, 0.5);
+      line-height: 1;
+      border: 1px solid transparent; /* 默认无边框 */
+      color: #5c6b7e;
+      background: rgba(0, 0, 0, 0.03); /* 未激活状态为极浅的灰色 */
       padding: 0 12px;
-      font-size: 12px;
+      font-size: 13px;
       margin-left: 6px;
-      margin-top: 5px; /* 垂直居中对齐 */
-      border-radius: 6px; /* 更柔和的圆角 */
-      transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
-
-      &:hover {
-        border-color: rgba(64, 158, 255, 0.3);
-        color: var(--el-color-primary);
-        background-color: rgba(64, 158, 255, 0.05);
-      }
+      margin-top: 7px;
+      border-radius: 14px; /* 完全圆角（胶囊形状） */
+      transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
 
       &:first-of-type {
-        margin-left: 12px;
+        margin-left: 16px;
       }
-
       &:last-of-type {
-        margin-right: 12px;
+        margin-right: 16px;
       }
 
-      /* 激活状态：清爽的蓝底白字 */
+      &:hover {
+        color: var(--el-color-primary);
+        background-color: rgba(64, 158, 255, 0.08);
+      }
+
+      /* 激活状态：不需要圆点了，直接用高亮的底色 */
       &.active {
         background-color: var(--el-color-primary);
-        color: #fff;
-        border-color: var(--el-color-primary);
-        box-shadow: 0 2px 6px rgba(64, 158, 255, 0.2); /* 给激活的标签加一点点专属呼吸感阴影 */
-
-        &::before {
-          content: '';
-          background: #fff;
-          display: inline-block;
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          position: relative;
-          margin-right: 6px;
-          vertical-align: 1px;
-        }
+        color: #ffffff;
+        font-weight: 500;
+        box-shadow: 0 2px 8px rgba(64, 158, 255, 0.35); /* 主题色光晕 */
       }
     }
   }
 
-  .tags-view-item.active.has-icon::before {
-    content: none !important;
-  }
-
-  .tags-view-item-title {
-    margin-left: 4px;
-    margin-right: 3px;
-  }
-
-  /* 右键菜单也统一为极简亚克力风格 */
+  /* 极简亚克力右键菜单 */
   .contextmenu {
     margin: 0;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
     z-index: 3000;
     position: absolute;
     list-style-type: none;
-    padding: 6px 0;
-    border-radius: 8px;
+    padding: 6px; /* 给内部项目留出边距 */
+    border-radius: 10px;
     font-size: 13px;
-    font-weight: 400;
     border: 1px solid rgba(0, 0, 0, 0.08);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    box-shadow:
+      0 8px 24px rgba(0, 0, 0, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    transform-origin: top left;
+    animation: menu-pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
     li {
       margin: 0;
-      padding: 8px 20px;
+      padding: 8px 16px;
       cursor: pointer;
-      color: #606266;
+      color: #333;
       display: flex;
       align-items: center;
-      gap: 6px; /* 图标和文字的间距 */
-      transition: all 0.2s;
+      gap: 8px;
+      border-radius: 6px;
+      transition: all 0.15s ease;
 
       &:hover {
-        background: rgba(64, 158, 255, 0.08);
+        background: var(--el-color-primary-light-9);
         color: var(--el-color-primary);
       }
     }
   }
 }
+
+@keyframes menu-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(-5px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
 </style>
 
 <style lang="scss">
-/* 标签内的关闭图标样式优化 */
+/* 非 scoped：标签内的关闭图标样式优化 */
 .tags-view-wrapper {
   .tags-view-item {
     .el-icon-close {
       width: 14px;
       height: 14px;
-      vertical-align: -1px;
+      margin-left: 6px; /* 和文字拉开一点距离 */
       border-radius: 50%;
       text-align: center;
-      transition: all 0.2s;
-      transform-origin: 100% 50%;
+      transition: all 0.2s ease;
       color: #909399;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
 
       &:before {
         transform: scale(0.8);
-        display: inline-block;
       }
 
       &:hover {
-        background-color: rgba(245, 108, 108, 0.8); /* 柔和一点的红色 */
+        background-color: rgba(245, 108, 108, 0.9);
         color: #ffffff;
-        width: 14px !important;
-        height: 14px !important;
       }
     }
 
     &.active .el-icon-close {
-      color: rgba(255, 255, 255, 0.8);
+      color: rgba(255, 255, 255, 0.85);
 
       &:hover {
-        background-color: rgba(255, 255, 255, 0.3);
+        background-color: rgba(0, 0, 0, 0.15); /* 激活态下悬浮关闭按钮，用黑色半透明更克制 */
         color: #ffffff;
       }
     }
