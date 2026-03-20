@@ -65,14 +65,25 @@
           @selection-change="handleSelectionChange"
           row-key="roleId"
         >
-          <el-table-column width="50" align="center" class-name="drag-column">
-            <template #default>
-              <el-icon class="cursor-move drag-handler" style="font-size: 16px; color: #909399"><Rank /></el-icon>
-            </template>
-          </el-table-column>
           <el-table-column type="selection" width="50" align="center" />
 
-          <el-table-column label="角色名称" align="center" prop="roleName" :show-overflow-tooltip="true" min-width="150" />
+          <el-table-column
+            label="角色名称"
+            align="center"
+            header-align="center"
+            class-name="role-name-column"
+            prop="roleName"
+            :show-overflow-tooltip="true"
+            min-width="150"
+          >
+            <template #default="scope">
+              <div class="role-name-cell">
+                <el-icon class="drag-handler role-drag-handler"><Rank /></el-icon>
+                <span class="role-name-text">{{ scope.row.roleName }}</span>
+                <span class="role-name-spacer" aria-hidden="true"></span>
+              </div>
+            </template>
+          </el-table-column>
           <el-table-column label="权限字符" align="center" prop="roleKey" :show-overflow-tooltip="true" min-width="200" />
           <el-table-column label="创建时间" align="center" prop="createTime" width="240">
             <template #default="scope">
@@ -394,5 +405,41 @@ onMounted(() => {
     flex-direction: column;
     overflow: hidden;
   }
+}
+
+.role-name-cell {
+  display: grid;
+  grid-template-columns: 16px 1fr 16px;
+  align-items: center;
+  width: 100%;
+  column-gap: 8px;
+}
+
+.role-name-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.role-name-spacer {
+  width: 16px;
+  height: 16px;
+  visibility: hidden;
+}
+
+.role-drag-handler {
+  justify-self: start;
+  color: #909399;
+  font-size: 16px;
+  cursor: move;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease;
+}
+
+:deep(.el-table__body tr:hover .role-drag-handler) {
+  opacity: 1;
+  visibility: visible;
 }
 </style>

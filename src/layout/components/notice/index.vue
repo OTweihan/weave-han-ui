@@ -66,81 +66,96 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .notice-container {
+  /* 统一玻璃拟态变量 */
+  --nav-glass-bg: rgba(255, 255, 255, 0.96);
+  --nav-glass-border: rgba(0, 0, 0, 0.08);
+
   display: flex;
   flex-direction: column;
+  background: var(--nav-glass-bg);
+  backdrop-filter: blur(20px);
+  border-radius: 12px;
+  overflow: hidden;
 
   .header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 5px 18px;
-    border-bottom: 1px solid var(--el-border-color-lighter);
-    background-color: #fff;
+    padding: 14px 18px; /* 增加高度更显高级 */
+    border-bottom: 1px solid var(--nav-glass-border);
+    background-color: rgba(255, 255, 255, 0.5);
 
     .title {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--el-text-color-primary);
+      font-size: 15px;
+      font-weight: 700;
+      color: #1a2a44;
+      letter-spacing: 0.5px;
     }
 
     .mark-read {
       display: flex;
       align-items: center;
       gap: 4px;
-      font-size: 13px;
+      font-size: 12px;
       color: var(--el-color-primary);
       cursor: pointer;
-      padding: 4px 8px;
-      border-radius: 4px;
-      transition: background-color 0.2s;
+      padding: 4px 10px;
+      border-radius: 20px; /* 胶囊状按钮 */
+      background: rgba(64, 158, 255, 0.05);
+      transition: all 0.3s ease;
 
       &:hover {
-        background-color: var(--el-color-primary-light-9);
+        background-color: var(--el-color-primary);
+        color: #fff;
+        transform: translateY(-1px);
       }
     }
   }
 
   .notice-list {
-    max-height: 350px;
+    max-height: 380px;
     overflow-y: auto;
+    background: transparent;
 
+    /* 优化滚动条 */
     &::-webkit-scrollbar {
-      width: 6px;
+      width: 4px;
     }
     &::-webkit-scrollbar-thumb {
-      background: #e0e0e0;
-      border-radius: 3px;
-    }
-    &::-webkit-scrollbar-track {
-      background: transparent;
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
     }
 
     .notice-item {
       display: flex;
-      padding: 16px 20px;
+      padding: 14px 18px;
       cursor: pointer;
-      transition: all 0.2s ease;
-      border-bottom: 1px solid var(--el-border-color-lighter);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.04);
       position: relative;
+      background: transparent;
 
       &:last-child {
         border-bottom: none;
       }
 
       &:hover {
-        background-color: var(--el-fill-color-light);
+        background-color: rgba(64, 158, 255, 0.04);
+        padding-left: 22px; /* 悬停时轻微右移，增加交互感 */
       }
 
       .notice-status {
         margin-right: 12px;
-        padding-top: 6px;
+        display: flex;
+        align-items: center;
 
         .dot {
-          width: 8px;
-          height: 8px;
+          width: 7px;
+          height: 7px;
           border-radius: 50%;
-          background-color: var(--el-color-danger);
-          box-shadow: 0 0 0 2px rgba(245, 108, 108, 0.2);
+          background-color: var(--el-color-primary); /* 统一用主色点 */
+          box-shadow: 0 0 8px rgba(64, 158, 255, 0.4);
+          transition: all 0.3s;
         }
       }
 
@@ -148,59 +163,70 @@ onMounted(() => {
         flex: 1;
 
         .message {
-          font-size: 14px;
-          color: var(--el-text-color-primary);
-          line-height: 1.5;
-          margin-bottom: 6px;
+          font-size: 13px;
+          color: #334155;
+          line-height: 1.6;
+          margin-bottom: 4px;
+          /* 限制行数 */
           display: -webkit-box;
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
+          transition: color 0.3s;
         }
 
         .time {
-          font-size: 12px;
-          color: var(--el-text-color-secondary);
+          font-size: 11px;
+          color: #94a3b8;
+          font-family: 'Manrope', sans-serif;
         }
       }
 
+      /* 已读状态：大幅度弱化 */
       &.is-read {
-        opacity: 0.7;
+        background-color: transparent;
 
         .notice-status .dot {
-          background-color: var(--el-text-color-placeholder);
+          background-color: #cbd5e1;
           box-shadow: none;
+          transform: scale(0.8);
         }
 
         .message {
-          color: var(--el-text-color-regular);
+          color: #94a3b8;
+        }
+
+        &:hover {
+          background-color: rgba(0, 0, 0, 0.02);
         }
       }
     }
 
     .empty-state {
-      padding: 40px 0;
-      display: flex;
-      justify-content: center;
+      padding: 60px 0;
+      :deep(.el-empty__description) {
+        margin-top: 8px;
+        p {
+          font-size: 13px;
+          color: #94a3b8;
+        }
+      }
     }
   }
 
-  .footer {
+  /* 底部“查看更多”建议增加（可选） */
+  .footer-more {
     padding: 12px;
-    border-top: 1px solid var(--el-border-color-lighter);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
+    text-align: center;
+    font-size: 12px;
+    color: #64748b;
+    border-top: 1px solid var(--nav-glass-border);
     cursor: pointer;
-    background-color: var(--el-fill-color-lighter);
-    color: var(--el-text-color-regular);
-    font-size: 13px;
     transition: all 0.2s;
 
     &:hover {
-      background-color: var(--el-fill-color);
       color: var(--el-color-primary);
+      background: rgba(64, 158, 255, 0.02);
     }
   }
 }
