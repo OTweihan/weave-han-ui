@@ -16,27 +16,26 @@
       :headers="headers"
       :file-list="fileList"
       :on-preview="handlePictureCardPreview"
-      :class="{ hide: fileList.length >= limit }"
+      :class="{ 'hide-upload': fileList.length >= limit }"
+      class="refined-uploader"
     >
-      <el-icon class="avatar-uploader-icon">
-        <plus />
-      </el-icon>
+      <div class="upload-trigger-area">
+        <el-icon class="uploader-icon"><Plus /></el-icon>
+        <span class="upload-text">添加图片</span>
+      </div>
     </el-upload>
-    <!-- 上传提示 -->
-    <div v-if="showTip" class="el-upload__tip">
-      请上传
-      <template v-if="fileSize">
-        大小不超过 <b style="color: #f56c6c">{{ fileSize }}MB</b>
-      </template>
-      <template v-if="fileType">
-        格式为 <b style="color: #f56c6c">{{ fileType.join('/') }}</b>
-      </template>
-      的文件
+
+    <div v-if="showTip" class="upload-tip-container">
+      <el-icon><InfoFilled /></el-icon>
+      <div class="tip-content">
+        建议格式：<span class="highlight">{{ fileType.join('/') }}</span
+        >， 单张不超过 <span class="highlight">{{ fileSize }}MB</span>
+      </div>
     </div>
 
-    <el-dialog v-model="dialogVisible" title="预览" width="720px" append-to-body class="image-preview-dialog">
-      <div class="image-preview-container">
-        <img :src="dialogImageUrl" class="image-preview-content" />
+    <el-dialog v-model="dialogVisible" title="查看原图" width="800px" append-to-body align-center class="custom-preview-dialog">
+      <div class="preview-wrapper">
+        <img :src="dialogImageUrl" class="preview-img" />
       </div>
     </el-dialog>
   </div>
@@ -253,34 +252,169 @@ const listToString = (list: any[], separator?: string) => {
 </script>
 
 <style lang="scss" scoped>
-// .el-upload--picture-card 控制加号部分
-:deep(.hide .el-upload--picture-card) {
+.component-upload-image {
+  width: 100%;
+}
+
+.refined-uploader {
+  line-height: 0;
+
+  :deep(.el-upload-list--picture-card) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    .el-upload-list__item {
+      width: 120px;
+      height: 120px;
+      margin: 0;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        border-color: #cbd5e1;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.1);
+      }
+
+      .el-upload-list__item-actions {
+        background-color: rgba(15, 23, 42, 0.5);
+      }
+    }
+  }
+
+  :deep(.el-upload--picture-card) {
+    width: 120px;
+    height: 120px;
+    background-color: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 10px;
+    transition:
+      border-color 0.2s ease,
+      background-color 0.2s ease,
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
+    margin: 0;
+
+    &:hover {
+      background-color: #ffffff;
+      border-color: var(--el-color-primary);
+      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.12);
+      transform: translateY(-1px);
+
+      .uploader-icon {
+        color: var(--el-color-primary);
+        transform: translateY(-1px);
+      }
+      .upload-text {
+        color: var(--el-color-primary);
+      }
+    }
+  }
+}
+
+.upload-trigger-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+
+  .uploader-icon {
+    font-size: 24px;
+    color: #94a3b8;
+    margin-bottom: 8px;
+    transition: all 0.2s ease;
+  }
+
+  .upload-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    transition: all 0.2s ease;
+  }
+}
+
+.hide-upload :deep(.el-upload--picture-card) {
   display: none;
 }
 
-:deep(.image-preview-dialog) {
-  width: min(720px, calc(100vw - 32px)) !important;
-}
-
-:deep(.image-preview-dialog .el-dialog__body) {
-  padding: 12px 20px 20px;
-}
-
-.image-preview-container {
+.upload-tip-container {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
   width: 100%;
-  height: min(480px, 60vh);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  background: #f5f7fa;
-  border-radius: 8px;
+  margin-top: 14px;
+  padding: 10px 12px;
+  background-color: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.6;
+
+  .el-icon {
+    margin-top: 2px;
+    color: var(--el-color-primary);
+    font-size: 14px;
+  }
+
+  .highlight {
+    color: #334155;
+    font-weight: 600;
+    margin: 0 2px;
+  }
 }
 
-.image-preview-content {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  display: block;
+:deep(.custom-preview-dialog) {
+  .el-dialog {
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 18px 36px rgba(15, 23, 42, 0.12);
+  }
+
+  .el-dialog__header {
+    background: #ffffff;
+    margin: 0;
+    padding: 14px 20px 12px;
+    border-bottom: 1px solid var(--el-border-color-light);
+  }
+
+  .el-dialog__title {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .el-dialog__body {
+    background: #f5f7fb;
+    padding: 18px 20px 20px;
+  }
+}
+
+.preview-wrapper {
+  width: 100%;
+  max-height: 70vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+
+  .preview-img {
+    max-width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  }
 }
 </style>

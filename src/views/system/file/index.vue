@@ -55,7 +55,7 @@
       </template>
 
       <el-table
-        v-if="showTable"
+        :key="tableRenderKey"
         v-loading="loading"
         :data="fileRows"
         border
@@ -96,12 +96,14 @@
       <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
     </el-card>
 
-    <el-dialog v-model="dialog.visible" :title="dialog.title" width="500px" append-to-body>
-      <el-form ref="ossFormRef" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="文件名" prop="file">
-          <fileUpload v-if="type === UPLOAD_TYPE.FILE" v-model="form.file" />
-          <imageUpload v-if="type === UPLOAD_TYPE.IMAGE" v-model="form.file" />
-        </el-form-item>
+    <el-dialog v-model="dialog.visible" :title="dialog.title" :width="uploadDialogWidth" append-to-body class="file-upload-dialog">
+      <el-form ref="ossFormRef" :model="form" :rules="rules" label-position="top" class="upload-dialog-form">
+        <div class="upload-dialog-panel">
+          <el-form-item label="文件名" prop="file" class="upload-dialog-item">
+            <fileUpload v-if="type === UPLOAD_TYPE.FILE" v-model="form.file" />
+            <imageUpload v-if="type === UPLOAD_TYPE.IMAGE" v-model="form.file" />
+          </el-form-item>
+        </div>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -139,10 +141,10 @@ const DEFAULT_SORT: Readonly<{ prop: string; order: SortOrder }> = {
 
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const { copy } = useClipboard();
+const baseUrl = import.meta.env.VITE_APP_BASE_API;
 
 const fileRows = ref<FileVO[]>([]);
-// 通过 v-if 短暂卸载表格，清空列对象上挂载的 multiOrder 状态
-const showTable = ref(true);
+const tableRenderKey = ref(0);
 const loading = ref(true);
 const showSearch = ref(true);
 const ids = ref<Array<string | number>>([]);
@@ -181,6 +183,7 @@ const data = reactive<PageData<FileForm, FileQuery>>({
 });
 
 const { queryParams, form, rules } = toRefs(data);
+const uploadDialogWidth = computed(() => (type.value === UPLOAD_TYPE.IMAGE ? '760px' : '600px'));
 
 /** 基于当前筛选条件构造请求参数，避免 addDateRange 直接污染 queryParams */
 const buildRequestQuery = (): FileQuery => {
@@ -197,7 +200,6 @@ const getList = async () => {
     total.value = response.total;
   } finally {
     loading.value = false;
-    showTable.value = true;
   }
 };
 
@@ -206,7 +208,16 @@ const normalizeFileUrl = (url: string) => {
   if (!url) {
     return url;
   }
-  return url.replace('/resource/storage/', '/resource/file/');
+  const normalizedUrl = url.replace('/resource/storage/', '/resource/file/');
+  if (/^(https?:)?\/\//.test(normalizedUrl) || normalizedUrl.startsWith('blob:') || normalizedUrl.startsWith('data:')) {
+    return normalizedUrl;
+  }
+
+  const normalizedBaseUrl = /^https?:\/\//.test(baseUrl)
+    ? baseUrl.replace(/\/$/, '')
+    : new URL(baseUrl || '/', window.location.origin).href.replace(/\/$/, '');
+
+  return normalizedUrl.startsWith('/') ? `${normalizedBaseUrl}${normalizedUrl}` : `${normalizedBaseUrl}/${normalizedUrl}`;
 };
 
 const formatFileSizeKb = (fileSize?: number) => {
@@ -244,7 +255,8 @@ const handleQuery = () => {
 
 /** 重置按钮操作 */
 const resetQuery = () => {
-  showTable.value = false;
+  loading.value = true;
+  tableRenderKey.value += 1;
   dateRangeCreateTime.value = [];
   queryFormRef.value?.resetFields();
   queryParams.value.orderByColumn = DEFAULT_SORT.prop;
@@ -385,5 +397,48 @@ onMounted(() => {
 
 .table-single-line :deep(.el-table__header .cell) {
   white-space: nowrap;
+}
+
+.file-upload-dialog :deep(.el-dialog__header) {
+  border-bottom: 1px solid var(--el-border-color-light);
+}
+
+.file-upload-dialog :deep(.el-dialog__title) {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.file-upload-dialog :deep(.el-dialog__body) {
+  background-color: #f5f7fb;
+}
+
+.upload-dialog-form {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 8px 18px 4px;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
+}
+
+.upload-dialog-form :deep(.el-form-item__label) {
+  padding-bottom: 8px;
+  color: #334155;
+  font-weight: 600;
+}
+
+.upload-dialog-panel {
+  width: 100%;
+}
+
+.upload-dialog-item {
+  margin-bottom: 0;
+}
+
+.dialog-footer {
+  padding-top: 10px;
+  border-top: 1px solid var(--el-border-color-light);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 </style>
