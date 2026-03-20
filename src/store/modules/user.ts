@@ -6,6 +6,22 @@ import defAva from '@/assets/images/profile.jpg';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
+const baseUrl = import.meta.env.VITE_APP_BASE_API;
+
+export const normalizeAvatarUrl = (url?: string) => {
+  if (!url) {
+    return defAva;
+  }
+  if (/^(https?:)?\/\//.test(url) || url.startsWith('blob:') || url.startsWith('data:')) {
+    return url;
+  }
+  if (!url.startsWith('/resource/') && !url.startsWith('resource/')) {
+    return url;
+  }
+  const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+  return url.startsWith('/') ? `${normalizedBaseUrl}${url}` : `${normalizedBaseUrl}/${url}`;
+};
+
 export const useUserStore = defineStore('user', () => {
   const token = ref(getToken());
   const name = ref('');
@@ -37,7 +53,7 @@ export const useUserStore = defineStore('user', () => {
     if (res) {
       const data = res.data;
       const user = data.user;
-      const profile = user.avatar == '' || user.avatar == null ? defAva : user.avatar;
+      const profile = normalizeAvatarUrl(user.avatar);
 
       if (data.roles && data.roles.length > 0) {
         // 验证返回的roles是否是一个非空数组
@@ -65,7 +81,7 @@ export const useUserStore = defineStore('user', () => {
   };
 
   const setAvatar = (value: string) => {
-    avatar.value = value;
+    avatar.value = normalizeAvatarUrl(value);
   };
 
   return {

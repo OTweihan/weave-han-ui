@@ -59,7 +59,7 @@
 import 'vue-cropper/dist/index.css';
 import { VueCropper } from 'vue-cropper';
 import { uploadAvatar } from '@/api/system/user';
-import { useUserStore } from '@/store/modules/user';
+import { normalizeAvatarUrl, useUserStore } from '@/store/modules/user';
 import { UploadRawFile } from 'element-plus';
 import { Upload } from '@element-plus/icons-vue';
 
@@ -146,9 +146,10 @@ const uploadImg = async () => {
     const formData = new FormData();
     formData.append('avatarFile', data, options.fileName);
     const res = await uploadAvatar(formData);
+    const avatarUrl = normalizeAvatarUrl(res.data.imgUrl);
     open.value = false;
-    options.img = res.data.imgUrl;
-    userStore.setAvatar(options.img);
+    options.img = avatarUrl;
+    userStore.setAvatar(avatarUrl);
     proxy?.$modal.msgSuccess('修改成功');
     visible.value = false;
   });

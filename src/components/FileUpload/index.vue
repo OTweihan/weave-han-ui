@@ -83,6 +83,17 @@ const fileUploadRef = ref<ElUploadInstance>();
 // 监听 fileType 变化，更新 fileAccept
 const fileAccept = computed(() => props.fileType.map((type) => `.${type}`).join(','));
 
+const normalizeFileUrl = (url?: string) => {
+  if (!url) {
+    return '';
+  }
+  if (/^(https?:)?\/\//.test(url) || url.startsWith('blob:') || url.startsWith('data:')) {
+    return url;
+  }
+  const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+  return url.startsWith('/') ? `${normalizedBaseUrl}${url}` : `${normalizedBaseUrl}/${url}`;
+};
+
 watch(
   () => props.modelValue,
   async (val) => {
@@ -100,13 +111,13 @@ watch(
           return {
             id: file.id,
             name: file.originalName,
-            url: file.url
+            url: normalizeFileUrl(file.url)
           };
         });
       }
       // 然后将数组转为对象数组
       fileList.value = list.map((item) => {
-        item = { id: item.id ?? item.ossId, name: item.name, url: item.url };
+        item = { id: item.id ?? item.ossId, name: item.name, url: normalizeFileUrl(item.url) };
         item.uid = item.uid || new Date().getTime() + temp++;
         return item;
       });
@@ -163,7 +174,7 @@ const handleUploadSuccess = (res: any, file: UploadFile) => {
   if (res.code === 200) {
     uploadList.value.push({
       name: res.data.fileName,
-      url: res.data.url,
+      url: normalizeFileUrl(res.data.url),
       id: res.data.id
     });
     uploadedSuccessfully();

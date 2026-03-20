@@ -34,8 +34,10 @@
       的文件
     </div>
 
-    <el-dialog v-model="dialogVisible" title="预览" width="800px" append-to-body>
-      <img :src="dialogImageUrl" style="display: block; max-width: 100%; margin: 0 auto" />
+    <el-dialog v-model="dialogVisible" title="预览" width="720px" append-to-body class="image-preview-dialog">
+      <div class="image-preview-container">
+        <img :src="dialogImageUrl" class="image-preview-content" />
+      </div>
     </el-dialog>
   </div>
 </template>
@@ -91,6 +93,17 @@ const imageUploadRef = ref<ElUploadInstance>();
 // 监听 fileType 变化，更新 fileAccept
 const fileAccept = computed(() => props.fileType.map((type) => `.${type}`).join(','));
 
+const normalizeFileUrl = (url?: string) => {
+  if (!url) {
+    return '';
+  }
+  if (/^(https?:)?\/\//.test(url) || url.startsWith('blob:') || url.startsWith('data:')) {
+    return url;
+  }
+  const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+  return url.startsWith('/') ? `${normalizedBaseUrl}${url}` : `${normalizedBaseUrl}/${url}`;
+};
+
 watch(
   () => props.modelValue,
   async (val: string) => {
@@ -110,10 +123,10 @@ watch(
         // 字符串回显处理 如果此处存的是url可直接回显 如果存的是id需要调用接口查出来
         let itemData;
         if (typeof item === 'string') {
-          itemData = { name: item, url: item };
+          itemData = { name: item, url: normalizeFileUrl(item) };
         } else {
           const fileId = item.id ?? item.ossId;
-          itemData = { id: fileId, name: String(fileId), url: item.url };
+          itemData = { id: fileId, name: String(fileId), url: normalizeFileUrl(item.url) };
         }
         return itemData;
       });
@@ -176,7 +189,7 @@ const handleExceed = () => {
 // 上传成功回调
 const handleUploadSuccess = (res: any, file: UploadFile) => {
   if (res.code === 200) {
-    uploadList.value.push({ id: res.data.id, name: String(res.data.id), url: res.data.url });
+    uploadList.value.push({ id: res.data.id, name: String(res.data.id), url: normalizeFileUrl(res.data.url) });
     uploadedSuccessfully();
   } else {
     number.value--;
@@ -243,5 +256,31 @@ const listToString = (list: any[], separator?: string) => {
 // .el-upload--picture-card 控制加号部分
 :deep(.hide .el-upload--picture-card) {
   display: none;
+}
+
+:deep(.image-preview-dialog) {
+  width: min(720px, calc(100vw - 32px)) !important;
+}
+
+:deep(.image-preview-dialog .el-dialog__body) {
+  padding: 12px 20px 20px;
+}
+
+.image-preview-container {
+  width: 100%;
+  height: min(480px, 60vh);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #f5f7fa;
+  border-radius: 8px;
+}
+
+.image-preview-content {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
 }
 </style>
