@@ -35,7 +35,7 @@
 
     <el-dialog v-model="dialogVisible" title="查看原图" width="800px" append-to-body align-center class="custom-preview-dialog">
       <div class="preview-wrapper">
-        <img :src="dialogImageUrl" class="preview-img" />
+        <img :src="dialogImageUrl" class="preview-img" alt="Uploaded Image" />
       </div>
     </el-dialog>
   </div>
@@ -47,6 +47,7 @@ import { FileVO } from '@/api/system/file/types';
 import { propTypes } from '@/utils/propTypes';
 import { globalHeaders } from '@/utils/request';
 import { compressAccurately } from 'image-conversion';
+import { InfoFilled, Plus } from '@element-plus/icons-vue';
 
 const props = defineProps({
   modelValue: {
@@ -108,7 +109,7 @@ watch(
   async (val: string) => {
     if (val) {
       // 首先将值转为数组
-      let list: FileVO[] = [];
+      let list: FileVO[];
       if (Array.isArray(val)) {
         list = val as FileVO[];
       } else if (typeof val === 'object') {
@@ -120,7 +121,7 @@ watch(
       // 然后将数组转为对象数组
       fileList.value = list.map((item) => {
         // 字符串回显处理 如果此处存的是url可直接回显 如果存的是id需要调用接口查出来
-        let itemData;
+        let itemData: { name: string; url: string; id?: string | number };
         if (typeof item === 'string') {
           itemData = { name: item, url: normalizeFileUrl(item) };
         } else {
@@ -139,7 +140,7 @@ watch(
 
 /** 上传前loading加载 */
 const handleBeforeUpload = (file: any) => {
-  let isImg = false;
+  let isImg: boolean;
   if (props.fileType.length) {
     let fileExtension = '';
     if (file.name.lastIndexOf('.') > -1) {
@@ -147,8 +148,7 @@ const handleBeforeUpload = (file: any) => {
     }
     isImg = props.fileType.some((type: any) => {
       if (file.type.indexOf(type) > -1) return true;
-      if (fileExtension && fileExtension.indexOf(type) > -1) return true;
-      return false;
+      return fileExtension && fileExtension.indexOf(type) > -1;
     });
   } else {
     isImg = file.type.indexOf('image') > -1;
