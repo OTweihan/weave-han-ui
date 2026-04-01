@@ -1,41 +1,30 @@
 <template>
-  <el-card v-loading="loading" shadow="hover" class="flex-1 min-h-0 flex flex-col overflow-hidden editor-card">
-    <template #header>
-      <div class="editor-header">
-        <div class="editor-header__content">
-          <div class="editor-title-row">
-            <div class="editor-title">{{ pageTitle }}</div>
-            <div class="editor-badges">
-              <span class="editor-badge" :class="statusBadgeClass">{{ statusLabel }}</span>
-              <span class="editor-badge editor-badge--soft">{{ sourceTypeLabel }}</span>
-              <span class="editor-badge editor-badge--soft">{{ draftStatusText }}</span>
-            </div>
+  <el-card v-loading="loading" shadow="never" class="flex-1 min-h-0 flex flex-col overflow-hidden editor-card">
+    <div class="editor-body">
+      <div class="editor-top-bar">
+        <div class="top-bar-left">
+          <h1 class="editor-title">{{ pageTitle }}</h1>
+          <div class="editor-badges">
+            <el-tag :type="statusBadgeType" effect="light" round class="status-tag">
+              {{ statusLabel }}
+            </el-tag>
+            <el-tag type="info" effect="plain" round class="source-tag">
+              {{ sourceTypeLabel }}
+            </el-tag>
+            <transition name="fade">
+              <div v-if="hasTouched" class="draft-save-indicator">
+                <el-icon class="is-loading"><Loading /></el-icon>
+                <span>已自动暂存</span>
+              </div>
+            </transition>
           </div>
         </div>
-        <div class="editor-header__actions">
-          <el-button class="action-button" icon="Refresh" @click="handleRefreshOptions">刷新分类/标签</el-button>
-          <el-button class="action-button" @click="handleCancel">返回列表</el-button>
-          <el-button :loading="buttonLoading" type="primary" icon="Check" @click="submitForm">保存并返回</el-button>
-        </div>
-      </div>
-    </template>
-
-    <div class="editor-body">
-      <div class="editor-overview">
-        <div class="overview-card">
-          <span class="overview-card__label">当前状态</span>
-          <strong class="overview-card__value">{{ statusLabel }}</strong>
-          <span class="overview-card__hint">{{ publishStateText }}</span>
-        </div>
-        <div class="overview-card">
-          <span class="overview-card__label">正文进度</span>
-          <strong class="overview-card__value">{{ contentWordCount }} 字</strong>
-          <span class="overview-card__hint">预计阅读 {{ contentReadingTime }} 分钟</span>
-        </div>
-        <div class="overview-card">
-          <span class="overview-card__label">访问方式</span>
-          <strong class="overview-card__value">{{ accessModeText }}</strong>
-          <span class="overview-card__hint">{{ form.allowComment === '1' ? '当前允许评论互动' : '当前关闭评论' }}</span>
+        <div class="top-bar-right">
+          <el-button-group>
+            <el-button icon="Refresh" @click="handleRefreshOptions">刷新</el-button>
+            <el-button @click="handleCancel">返回列表</el-button>
+          </el-button-group>
+          <el-button :loading="buttonLoading" type="primary" icon="Check" @click="submitForm">保存文章</el-button>
         </div>
       </div>
 
@@ -45,7 +34,7 @@
             <div class="tab-intro">
               <div>
                 <div class="tab-intro__title">基础信息</div>
-                <div class="tab-intro__desc">先把文章主信息和发布设置补齐，后面无论是继续写正文还是切出去补数据，都会更顺手。</div>
+                <div class="tab-intro__desc">{{ publishStateText }}</div>
               </div>
               <div class="tab-intro__pill">{{ form.title ? '标题已填写' : '建议先填写标题' }}</div>
             </div>
@@ -172,7 +161,7 @@
             <div class="tab-intro">
               <div>
                 <div class="tab-intro__title">正文编辑</div>
-                <div class="tab-intro__desc">正文区域单独做成了工作区，字数、阅读时长和草稿保护状态会一起展示。</div>
+                <div class="tab-intro__desc">当前 {{ accessModeText }}，正文会自动同步到 HTML 字段并保留草稿。</div>
               </div>
               <div class="tab-intro__pill">内容会自动同步到 HTML 字段</div>
             </div>
@@ -195,7 +184,7 @@
             <div class="tab-intro">
               <div>
                 <div class="tab-intro__title">SEO 设置</div>
-                <div class="tab-intro__desc">把搜索标题、路径和摘要统一梳理一下，发布时就不会显得零散。</div>
+                <div class="tab-intro__desc">当前状态：{{ statusLabel }}，建议把搜索标题、路径和摘要一次整理完整。</div>
               </div>
               <div class="tab-intro__pill">建议描述控制在 70-120 字</div>
             </div>
@@ -228,6 +217,7 @@
 </template>
 
 <script setup name="PostEditorPanel" lang="ts">
+import { Loading } from '@element-plus/icons-vue';
 import { listAllCategory } from '@/api/blog/category';
 import type { CategoryVO } from '@/api/blog/category/types';
 import { addPost, getPost, updatePost } from '@/api/blog/post';
@@ -321,17 +311,17 @@ const publishStateText = computed(() => {
   }
   return '当前是草稿，可继续安心编辑';
 });
-const statusBadgeClass = computed(() => {
+const statusBadgeType = computed(() => {
   if (form.value.status === '1') {
-    return 'editor-badge--success';
+    return 'success';
   }
   if (form.value.status === '2') {
-    return 'editor-badge--warning';
+    return 'warning';
   }
   if (form.value.status === '3') {
-    return 'editor-badge--danger';
+    return 'danger';
   }
-  return 'editor-badge--info';
+  return 'info';
 });
 const seoPreviewUrl = computed(() => `https://your-site.com/post/${form.value.slug || 'your-article-slug'}`);
 const seoPreviewDescription = computed(
@@ -681,18 +671,14 @@ onActivated(() => {
   --editor-primary: #2563eb;
   --editor-ink: #0f172a;
   --editor-muted: #64748b;
-  --editor-border: #e7edf5;
-  --editor-soft: rgba(37, 99, 235, 0.08);
+  --editor-border: #f1f5f9;
+  --editor-bg-alt: #f8fafc;
 
-  border: 1px solid #edf2f7;
-  border-radius: 26px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
   background: #ffffff;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
-
-  :deep(.el-card__header) {
-    padding: 0;
-    border-bottom: none;
-  }
+  display: flex;
+  flex-direction: column;
 
   :deep(.el-card__body) {
     display: flex;
@@ -704,314 +690,66 @@ onActivated(() => {
   }
 }
 
-.editor-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 16px 20px 14px;
-  background: #ffffff;
-  border-bottom: 1px solid #edf2f7;
-}
-
-.editor-header__content {
-  min-width: 0;
-  flex: 1;
-}
-
-.editor-title-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-  flex-wrap: wrap;
-}
-
-.editor-title {
-  color: var(--editor-ink);
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1.15;
-  white-space: nowrap;
-}
-
-.editor-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  min-width: 0;
-}
-
-.editor-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 5px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1;
-}
-
-.editor-badge--soft {
-  background: #f8fafc;
-  color: #475569;
-}
-
-.editor-badge--info {
-  background: #eff6ff;
-  color: #1d4ed8;
-}
-
-.editor-badge--success {
-  background: #ecfdf3;
-  color: #15803d;
-}
-
-.editor-badge--warning {
-  background: #fff7ed;
-  color: #c2410c;
-}
-
-.editor-badge--danger {
-  background: #fef2f2;
-  color: #b91c1c;
-}
-
-.editor-header__actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  flex-shrink: 0;
-  gap: 10px;
-}
-
-.action-button {
-  background: #ffffff;
-  border-color: #dbe5f0;
-  color: #475569;
-}
-
 .editor-body {
   display: flex;
   flex-direction: column;
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  padding: 20px 24px 24px;
   background: #ffffff;
 }
 
-.editor-overview {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 14px;
+.editor-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px 12px;
+  background: #ffffff;
   flex-shrink: 0;
 }
 
-.overview-card {
+.top-bar-left {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 14px 16px 12px;
-  border: 1px solid var(--editor-border);
-  border-radius: 18px;
-  background: #ffffff;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.03);
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
 }
 
-.overview-card__label {
-  color: #94a3b8;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.overview-card__value {
+.editor-title {
   color: var(--editor-ink);
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
+  margin: 0;
   line-height: 1.2;
 }
 
-.overview-card__hint {
-  color: var(--editor-muted);
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.tab-intro {
+.editor-badges {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 18px;
+  gap: 8px;
 }
 
-.tab-intro__title {
-  color: var(--editor-ink);
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.tab-intro__desc {
-  margin-top: 6px;
-  color: var(--editor-muted);
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-.tab-intro__pill {
-  flex-shrink: 0;
-  padding: 8px 12px;
+.draft-save-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  background: #f0fdf4;
+  color: #15803d;
   border-radius: 999px;
-  background: var(--editor-soft);
-  color: var(--editor-primary);
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.form-section {
-  padding: 20px;
-  border: 1px solid var(--editor-border);
-  border-radius: 22px;
-  background: #ffffff;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.03);
-}
-
-.form-section--editor {
-  padding-bottom: 18px;
-}
-
-.switch-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-}
-
-.switch-item {
-  display: inline-flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  gap: 10px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-}
-
-.switch-label {
-  color: #334155;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.editor-form-item {
-  margin-bottom: 0;
-}
-
-.editor-panel {
-  width: 100%;
-}
-
-.content-metrics {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 14px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: #f8fafc;
-  color: #475569;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 500;
-  border: 1px solid #e8eef6;
+  border: 1px solid #dcfce7;
+
+  .el-icon {
+    font-size: 12px;
+  }
 }
 
-.seo-preview {
-  margin-top: 18px;
-  padding: 18px;
-  border-radius: 16px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-}
-
-.seo-preview__title {
-  color: #1d4ed8;
-  font-size: 18px;
-  line-height: 1.4;
-  word-break: break-word;
-}
-
-.seo-preview__url {
-  margin-top: 8px;
-  color: #64748b;
-  font-size: 13px;
-  line-height: 1.5;
-  word-break: break-all;
-}
-
-.seo-preview__desc {
-  margin-top: 10px;
-  color: #4b5563;
-  font-size: 13px;
-  line-height: 1.7;
-  word-break: break-word;
-}
-
-.post-form-tabs {
+.top-bar-right {
   display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-height: 0;
-
-  :deep(.el-tabs__header) {
-    margin-bottom: 18px;
-    flex-shrink: 0;
-  }
-
-  :deep(.el-tabs__nav-wrap) {
-    padding: 8px;
-    border-radius: 18px;
-    background: #f8fafc;
-    border: 1px solid #e8eef6;
-    box-shadow: none;
-  }
-
-  :deep(.el-tabs__nav) {
-    gap: 8px;
-    border: none;
-  }
-
-  :deep(.el-tabs__item) {
-    height: 40px;
-    padding: 0 18px;
-    border: none !important;
-    border-radius: 12px;
-    color: #5d6d84;
-    font-weight: 600;
-    transition: all 0.2s ease;
-  }
-
-  :deep(.el-tabs__item.is-active) {
-    color: var(--editor-primary);
-    background: #ffffff;
-    box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.12);
-  }
-
-  :deep(.el-tabs__active-bar) {
-    display: none;
-  }
-
-  :deep(.el-tabs__content) {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding-right: 4px;
-  }
+  align-items: center;
+  gap: 12px;
 }
 
 .post-form {
@@ -1021,6 +759,170 @@ onActivated(() => {
   min-height: 0;
 }
 
+.post-form-tabs {
+  display: flex !important;
+  flex: 1;
+  flex-direction: column !important;
+  min-height: 0;
+  width: 100%;
+
+  :deep(.el-tabs__header) {
+    order: 1;
+    margin: 0 !important;
+    padding: 0 24px;
+    background: #ffffff;
+    border-bottom: 1px solid var(--editor-border);
+    flex-shrink: 0;
+  }
+
+  :deep(.el-tabs__nav-wrap::after) {
+    display: none;
+  }
+
+  :deep(.el-tabs__item) {
+    height: 48px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--editor-muted);
+    padding: 0 20px;
+    transition: all 0.2s;
+  }
+
+  :deep(.el-tabs__item.is-active) {
+    color: var(--editor-primary);
+    font-weight: 600;
+  }
+
+  :deep(.el-tabs__active-bar) {
+    height: 2px;
+    border-radius: 2px 2px 0 0;
+  }
+
+  :deep(.el-tabs__content) {
+    order: 2;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    background: var(--editor-bg-alt);
+    padding: 24px;
+  }
+}
+
+/* Tab 面板内部组件样式 */
+.tab-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding: 0 0 16px;
+  border-bottom: 1px dashed #e2e8f0;
+}
+
+.tab-intro__title {
+  color: var(--editor-ink);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.tab-intro__desc {
+  margin-top: 4px;
+  color: var(--editor-muted);
+  font-size: 12px;
+}
+
+.tab-intro__pill {
+  flex-shrink: 0;
+  padding: 4px 12px;
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--editor-primary);
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid #e2e8f0;
+}
+
+.form-section {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.switch-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.switch-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 160px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+}
+
+.switch-label {
+  color: #475569;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.content-metrics {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.editor-panel {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.seo-preview {
+  margin-top: 24px;
+  padding: 20px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.seo-preview__title {
+  color: #1a0dab;
+  font-size: 18px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.seo-preview__url {
+  margin-top: 4px;
+  color: #006621;
+  font-size: 13px;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.seo-preview__desc {
+  margin-top: 8px;
+  color: #4b5563;
+  font-size: 13px;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+/* Element Plus 重写 */
 :deep(.el-form-item__label) {
   color: #334155;
   font-weight: 600;
@@ -1030,16 +932,16 @@ onActivated(() => {
 :deep(.el-textarea__inner),
 :deep(.el-select__wrapper),
 :deep(.el-date-editor.el-input__wrapper) {
-  border-radius: 14px;
+  border-radius: 8px;
   background: #ffffff;
-  box-shadow: 0 0 0 1px #d6e0eb inset;
+  box-shadow: 0 0 0 1px #d1d5db inset;
 }
 
 :deep(.el-input__wrapper:hover),
 :deep(.el-textarea__inner:hover),
 :deep(.el-select__wrapper:hover),
 :deep(.el-date-editor.el-input__wrapper:hover) {
-  box-shadow: 0 0 0 1px #b8c7d9 inset;
+  box-shadow: 0 0 0 1px #9ca3af inset;
 }
 
 :deep(.el-input__wrapper.is-focus),
@@ -1047,58 +949,32 @@ onActivated(() => {
 :deep(.el-select__wrapper.is-focused),
 :deep(.el-date-editor.el-input__wrapper.is-focus) {
   box-shadow:
-    0 0 0 1px rgba(37, 99, 235, 0.85) inset,
-    0 0 0 4px rgba(37, 99, 235, 0.06);
-}
-
-:deep(.el-radio-group) {
-  gap: 8px;
+    0 0 0 1px var(--editor-primary) inset,
+    0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
 :deep(.el-radio-button__inner) {
-  border-radius: 12px !important;
-  border-left: 1px solid var(--el-border-color) !important;
+  border-radius: 8px !important;
+  margin-right: 8px;
+  border: 1px solid #d1d5db !important;
 }
 
-@media (max-width: 992px) {
-  .editor-header,
-  .tab-intro {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .editor-header__actions {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .editor-overview {
-    grid-template-columns: 1fr;
-  }
-
-  .editor-body {
-    padding: 16px;
-  }
-
-  .form-section {
-    padding: 16px;
-    border-radius: 18px;
-  }
-
-  .post-form-tabs {
-    :deep(.el-tabs__header) {
-      margin-bottom: 14px;
-    }
-  }
+:deep(.el-radio-button:first-child .el-radio-button__inner) {
+  border-radius: 8px !important;
 }
 
-@media (max-width: 768px) {
-  .editor-header {
-    padding: 14px 16px 12px;
-  }
+:deep(.el-radio-button:last-child .el-radio-button__inner) {
+  border-radius: 8px !important;
+}
 
-  .editor-title {
-    font-size: 22px;
-  }
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-5px);
 }
 </style>

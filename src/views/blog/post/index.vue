@@ -16,11 +16,6 @@
                   <el-option v-for="item in categorySearchOptions" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
               </el-form-item>
-              <el-form-item label="文章状态" prop="status">
-                <el-select v-model="queryParams.status" placeholder="请选择状态" clearable style="width: 160px">
-                  <el-option v-for="item in POST_STATUS_OPTIONS" :key="item.value" :label="item.label" :value="item.value" />
-                </el-select>
-              </el-form-item>
               <el-form-item label="来源类型" prop="sourceType">
                 <el-select v-model="queryParams.sourceType" placeholder="请选择来源" clearable style="width: 160px">
                   <el-option v-for="item in SOURCE_TYPE_OPTIONS" :key="item.value" :label="item.label" :value="item.value" />
@@ -47,17 +42,24 @@
 
       <el-card shadow="hover" class="flex-1 min-h-0 flex flex-col overflow-hidden table-card">
         <template #header>
-          <el-row :gutter="10" class="mb8">
-            <el-col :span="1.5">
-              <el-button v-hasPermi="['blog:post:add']" type="primary" plain icon="Plus" @click="handleAdd">新增</el-button>
-            </el-col>
-            <el-col :span="1.5">
-              <el-button v-hasPermi="['blog:post:remove']" type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete()"
-                >删除</el-button
-              >
-            </el-col>
-            <right-toolbar v-model:show-search="showSearch" @query-table="getList"></right-toolbar>
-          </el-row>
+          <div class="flex items-center justify-between flex-wrap gap-4">
+            <el-tabs v-model="activeStatusTab" class="status-tabs" @tab-change="handleStatusTabChange">
+              <el-tab-pane label="全部文章" name="all" />
+              <el-tab-pane v-for="item in POST_STATUS_OPTIONS" :key="item.value" :label="item.label" :name="item.value" />
+            </el-tabs>
+
+            <el-row :gutter="10" class="mb8">
+              <el-col :span="1.5">
+                <el-button v-hasPermi="['blog:post:add']" type="primary" plain icon="Plus" @click="handleAdd">新增</el-button>
+              </el-col>
+              <el-col :span="1.5">
+                <el-button v-hasPermi="['blog:post:remove']" type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete()"
+                  >删除</el-button
+                >
+              </el-col>
+              <right-toolbar v-model:show-search="showSearch" @query-table="getList"></right-toolbar>
+            </el-row>
+          </div>
         </template>
 
         <div class="flex-1 min-h-0 overflow-hidden">
@@ -83,28 +85,34 @@
                 <el-tag effect="plain">{{ getSourceTypeLabel(scope.row.sourceType) }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="属性" width="190" align="center">
+            <el-table-column label="属性" width="100" align="center">
               <template #default="scope">
-                <div class="flag-list">
-                  <el-tag size="small" :type="scope.row.isTop === '1' ? 'danger' : 'info'" effect="light">
-                    {{ scope.row.isTop === '1' ? '已置顶' : '未置顶' }}
-                  </el-tag>
-                  <el-tag size="small" :type="scope.row.isFeatured === '1' ? 'success' : 'info'" effect="light">
-                    {{ scope.row.isFeatured === '1' ? '已推荐' : '未推荐' }}
-                  </el-tag>
-                  <el-tag size="small" :type="scope.row.allowComment === '1' ? 'warning' : 'info'" effect="light">
-                    {{ scope.row.allowComment === '1' ? '允许评论' : '禁止评论' }}
-                  </el-tag>
+                <div class="flex flex-col gap-1 items-center">
+                  <el-tooltip v-if="scope.row.isTop === '1'" content="已置顶" placement="top">
+                    <el-tag size="small" type="danger" effect="dark">顶</el-tag>
+                  </el-tooltip>
+                  <el-tooltip v-if="scope.row.isFeatured === '1'" content="已推荐" placement="top">
+                    <el-tag size="small" type="success" effect="dark">荐</el-tag>
+                  </el-tooltip>
                 </div>
               </template>
             </el-table-column>
-            <el-table-column label="作者" prop="authorName" width="120" align="center" />
-            <el-table-column label="统计" width="160" align="center">
+            <el-table-column label="作者" prop="authorName" width="100" align="center" />
+            <el-table-column label="数据统计" width="180" align="center">
               <template #default="scope">
-                <div class="stats-list">
-                  <span>浏览 {{ scope.row.viewCount || 0 }}</span>
-                  <span>点赞 {{ scope.row.likeCount || 0 }}</span>
-                  <span>评论 {{ scope.row.commentCount || 0 }}</span>
+                <div class="stats-grid">
+                  <div class="stats-item">
+                    <el-icon><View /></el-icon>
+                    <span>{{ scope.row.viewCount || 0 }}</span>
+                  </div>
+                  <div class="stats-item">
+                    <el-icon><Pointer /></el-icon>
+                    <span>{{ scope.row.likeCount || 0 }}</span>
+                  </div>
+                  <div class="stats-item">
+                    <el-icon><ChatDotRound /></el-icon>
+                    <span>{{ scope.row.commentCount || 0 }}</span>
+                  </div>
                 </div>
               </template>
             </el-table-column>
@@ -140,6 +148,7 @@
 </template>
 
 <script setup name="Post" lang="ts">
+import { View, Pointer, ChatDotRound } from '@element-plus/icons-vue';
 import { listAllCategory } from '@/api/blog/category';
 import type { CategoryVO } from '@/api/blog/category/types';
 import { delPost, listPost } from '@/api/blog/post';
@@ -198,6 +207,7 @@ const multiple = ref(true);
 const total = ref(0);
 const editorMode = ref<EditorMode | undefined>();
 const currentPostId = ref<number | string>();
+const activeStatusTab = ref('all');
 
 const queryFormRef = ref<ElFormInstance>();
 
@@ -215,6 +225,11 @@ const queryParams = reactive<PostQuery>({
 
 const showEditor = computed(() => Boolean(editorMode.value));
 const activeEditorMode = computed<EditorMode>(() => editorMode.value || 'add');
+
+function handleStatusTabChange(name: any) {
+  queryParams.status = name === 'all' ? undefined : name;
+  handleQuery();
+}
 
 function extractList<T>(res: any): T[] {
   if (Array.isArray(res?.rows)) {
@@ -304,6 +319,8 @@ function resetQuery() {
   queryFormRef.value?.resetFields();
   queryParams.pageNum = 1;
   queryParams.pageSize = DEFAULT_PAGE_SIZE;
+  activeStatusTab.value = 'all';
+  queryParams.status = undefined;
   handleQuery();
 }
 
@@ -387,6 +404,11 @@ onActivated(() => {
 }
 
 .table-card {
+  :deep(.el-card__header) {
+    padding: 10px 20px 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
   :deep(.el-card__body) {
     display: flex;
     flex-direction: column;
@@ -397,18 +419,41 @@ onActivated(() => {
   }
 }
 
-.flag-list,
-.stats-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: center;
-  justify-content: center;
+.status-tabs {
+  :deep(.el-tabs__header) {
+    margin: 0;
+    border-bottom: none;
+  }
+
+  :deep(.el-tabs__nav-wrap::after) {
+    display: none;
+  }
+
+  :deep(.el-tabs__item) {
+    height: 48px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #64748b;
+  }
+
+  :deep(.el-tabs__item.is-active) {
+    color: var(--el-color-primary);
+    font-weight: 600;
+  }
 }
 
-.stats-list {
-  color: #475569;
-  font-size: 12px;
-  line-height: 1.4;
+.stats-grid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.stats-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 </style>
